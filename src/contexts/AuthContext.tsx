@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
+import api from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -35,8 +36,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     if (storedToken && storedUser) {
       try {
+        const parsedUser = JSON.parse(storedUser);
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        setUser(parsedUser);
+        
+        // Set token in API service
+        api.setToken(storedToken);
+        
+        console.log('Restored user session:', parsedUser.id);
       } catch (error) {
         console.error('Error parsing stored user data:', error);
         localStorage.removeItem('nekota_token');
@@ -48,8 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (userId: string, password?: string) => {
     try {
-      // For demo purposes, we'll create mock authentication
-      // In production, this would call the actual API
+      console.log('Attempting login for user:', userId);
       
       // Demo users
       const demoUsers = {
@@ -89,9 +95,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setToken(mockToken);
         setUser(demoUser);
         
+        // Set token in API service
+        api.setToken(mockToken);
+        
         localStorage.setItem('nekota_token', mockToken);
         localStorage.setItem('nekota_user', JSON.stringify(demoUser));
         
+        console.log('Demo user logged in successfully:', userId);
         return;
       }
 
@@ -113,8 +123,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setToken(mockToken);
       setUser(basicUser);
       
+      // Set token in API service
+      api.setToken(mockToken);
+      
       localStorage.setItem('nekota_token', mockToken);
       localStorage.setItem('nekota_user', JSON.stringify(basicUser));
+
+      console.log('Basic user created and logged in:', userId);
 
     } catch (error) {
       console.error('Login error:', error);
@@ -123,8 +138,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('User logged out');
     setUser(null);
     setToken(null);
+    
+    // Clear token from API service
+    api.setToken(null);
+    
     localStorage.removeItem('nekota_token');
     localStorage.removeItem('nekota_user');
   };
@@ -136,8 +156,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // In demo mode, just generate a new mock token
       const mockToken = `mock_jwt_token_${user.id}_${Date.now()}`;
       setToken(mockToken);
+      
+      // Set token in API service
+      api.setToken(mockToken);
+      
       localStorage.setItem('nekota_token', mockToken);
+      console.log('Token refreshed for user:', user.id);
     } catch (error) {
+      console.error('Token refresh failed:', error);
       logout();
       throw error;
     }

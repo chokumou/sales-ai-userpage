@@ -10,19 +10,79 @@ class APIService {
 
   setToken(token: string | null) {
     this.token = token;
+    console.log('API Token set:', token ? 'Token present' : 'No token');
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    // For demo mode, return mock data instead of making real API calls
-    return this.getMockData<T>(endpoint, options);
+    // Check if we're in demo mode (mock token)
+    const isDemoMode = this.token?.startsWith('mock_jwt_token_');
+    
+    if (isDemoMode) {
+      console.log(`[DEMO MODE] API Request: ${options.method || 'GET'} ${endpoint}`);
+      return this.getMockData<T>(endpoint, options);
+    }
+
+    // Real API call
+    const url = `${this.baseURL}${endpoint}`;
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`;
+      console.log('Authorization header added:', `Bearer ${this.token.substring(0, 20)}...`);
+    }
+
+    console.log(`API Request: ${options.method || 'GET'} ${url}`, {
+      headers,
+      body: options.body
+    });
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+
+      console.log(`API Response: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        
+        // Handle specific error codes
+        switch (response.status) {
+          case 401:
+            throw new Error('認証が必要です。ログインし直してください。');
+          case 403:
+            throw new Error('この操作を実行する権限がありません。');
+          case 422:
+            throw new Error('入力データが無効です。内容を確認してください。');
+          case 500:
+            throw new Error('サーバーエラーが発生しました。しばらく待ってから再試行してください。');
+          default:
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('API Response Data:', data);
+      return data;
+    } catch (error) {
+      console.error('API Request Failed:', error);
+      throw error;
+    }
   }
 
   private async getMockData<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 700));
+
+    console.log(`[MOCK] ${options.method || 'GET'} ${endpoint}`, options.body);
 
     // Mock responses based on endpoint
     if (endpoint.includes('/auth/user/token')) {
@@ -45,30 +105,94 @@ class APIService {
       } as T;
     }
 
+    if (endpoint.includes('/api/user/model')) {
+      if (options.method === 'PATCH') {
+        return { success: true, model: JSON.parse(options.body as string).model } as T;
+      }
+      return { model: 'deepseek' } as T;
+    }
+
     if (endpoint.includes('/api/memory/')) {
       if (options.method === 'POST') {
-        return { id: `memory_${Date.now()}`, success: true } as T;
+        const requestBody = JSON.parse(options.body as string);
+        console.log('[MOCK] Creating memory:', requestBody);
+        
+        // Validate input
+        if (!requestBody.text || requestBody.text.trim().length === 0) {
+          throw new Error('メモリの内容を入力してください。');
+        }
+        
+        if (requestBody.text.length > 1000) {
+          throw new Error('メモリの内容は1000文字以内で入力してください。');
+        }
+
+        // Simulate successful creation
+        return { 
+          id: `memory_${Date.now()}`, 
+          user_id: requestBody.user_id,
+          text: requestBody.text,
+          timestamp: new Date().toISOString(),
+          category: requestBody.category || null
+        } as T;
       }
+      
+      if (options.method === 'DELETE') {
+        console.log('[MOCK] Deleting memory:', endpoint);
+        return { success: true } as T;
+      }
+
+      // GET request - return paginated memories
+      const url = new URL(`http://localhost${endpoint}`);
+      const page = parseInt(url.searchParams.get('page') || '1');
+      const limit = parseInt(url.searchParams.get('limit') || '20');
+      
+      const allMemories = [
+        {
+          id: '1',
+          user_id: 'demo_user',
+          text: '朝のミーティングを好む',
+          timestamp: new Date().toISOString(),
+          category: 'Work'
+        },
+        {
+          id: '2',
+          user_id: 'demo_user',
+          text: '好きなコーヒーはカプチーノ',
+          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          category: 'Personal'
+        },
+        {
+          id: '3',
+          user_id: 'demo_user',
+          text: 'プログラミング言語はTypeScriptが得意',
+          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          category: 'Work'
+        },
+        {
+          id: '4',
+          user_id: 'demo_user',
+          text: '週末は読書をして過ごすことが多い',
+          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          category: 'Personal'
+        },
+        {
+          id: '5',
+          user_id: 'demo_user',
+          text: 'AIと機械学習に興味がある',
+          timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+          category: 'Ideas'
+        }
+      ];
+
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedMemories = allMemories.slice(startIndex, endIndex);
+      
       return {
-        memories: [
-          {
-            id: '1',
-            user_id: 'demo_user',
-            text: 'Remember that I prefer morning meetings',
-            timestamp: new Date().toISOString(),
-            category: 'Work'
-          },
-          {
-            id: '2',
-            user_id: 'demo_user',
-            text: 'My favorite coffee is cappuccino',
-            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-            category: 'Personal'
-          }
-        ],
-        total: 2,
-        page: 1,
-        pages: 1
+        memories: paginatedMemories,
+        total: allMemories.length,
+        page: page,
+        pages: Math.ceil(allMemories.length / limit)
       } as T;
     }
 
@@ -93,6 +217,16 @@ class APIService {
           last_message_time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
         }
       ] as T;
+    }
+
+    if (endpoint.includes('/api/friend/request')) {
+      console.log('[MOCK] Friend request sent');
+      return { success: true } as T;
+    }
+
+    if (endpoint.includes('/api/friend/accept')) {
+      console.log('[MOCK] Friend request accepted');
+      return { success: true } as T;
     }
 
     if (endpoint.includes('/api/voice/list')) {
@@ -129,6 +263,13 @@ class APIService {
       ] as T;
     }
 
+    if (endpoint.includes('/api/payment/create-checkout-session')) {
+      return {
+        url: 'https://checkout.stripe.com/pay/demo_session',
+        session_id: 'cs_demo_session'
+      } as T;
+    }
+
     if (endpoint.includes('/api/admin/users')) {
       return {
         users: [
@@ -158,7 +299,13 @@ class APIService {
       ] as T;
     }
 
+    if (endpoint.includes('/api/admin/ban')) {
+      console.log('[MOCK] User banned');
+      return { success: true } as T;
+    }
+
     // Default empty response
+    console.log('[MOCK] No specific handler for endpoint:', endpoint);
     return {} as T;
   }
 
@@ -167,8 +314,57 @@ class APIService {
     file: File,
     additionalData?: Record<string, string>
   ): Promise<T> {
-    // Mock file upload
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const isDemoMode = this.token?.startsWith('mock_jwt_token_');
+    
+    if (isDemoMode) {
+      console.log(`[DEMO MODE] File Upload: ${endpoint}`, { fileName: file.name, fileSize: file.size });
+      return this.getMockFileUpload<T>(endpoint, file, additionalData);
+    }
+
+    const url = `${this.baseURL}${endpoint}`;
+    const formData = new FormData();
+    formData.append('file', file);
+
+    if (additionalData) {
+      Object.entries(additionalData).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+    }
+
+    const headers: HeadersInit = {};
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`;
+    }
+
+    console.log(`File Upload: POST ${url}`, { fileName: file.name, fileSize: file.size });
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('File Upload Error:', errorText);
+        throw new Error(`Upload Error: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('File Upload Failed:', error);
+      throw error;
+    }
+  }
+
+  private async getMockFileUpload<T>(
+    endpoint: string,
+    file: File,
+    additionalData?: Record<string, string>
+  ): Promise<T> {
+    // Simulate upload delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
     
     if (endpoint.includes('/api/voice/register')) {
       return {
@@ -177,6 +373,13 @@ class APIService {
         file_url: URL.createObjectURL(file),
         created_at: new Date().toISOString(),
         is_verified: false
+      } as T;
+    }
+
+    if (endpoint.includes('/api/message/send')) {
+      return {
+        id: `message_${Date.now()}`,
+        success: true
       } as T;
     }
 
@@ -256,11 +459,25 @@ class APIService {
 
   // Memory API
   memory = {
-    create: (userId: string, text: string) =>
-      this.request<any>('/api/memory/', {
+    create: (userId: string, text: string, category?: string) => {
+      // Client-side validation
+      if (!text || text.trim().length === 0) {
+        throw new Error('メモリの内容を入力してください。');
+      }
+      
+      if (text.length > 1000) {
+        throw new Error('メモリの内容は1000文字以内で入力してください。');
+      }
+
+      return this.request<any>('/api/memory/', {
         method: 'POST',
-        body: JSON.stringify({ user_id: userId, text }),
-      }),
+        body: JSON.stringify({ 
+          user_id: userId, 
+          text: text.trim(),
+          category: category || null
+        }),
+      });
+    },
 
     list: (userId: string, page: number = 1, limit: number = 20) =>
       this.request<{ memories: any[]; total: number; page: number; pages: number }>(
@@ -298,11 +515,17 @@ class APIService {
 
   // Voice API
   voice = {
-    register: (userId: string, audioFile: File, name: string) =>
-      this.uploadFile<any>('/api/voice/register', audioFile, {
+    register: (userId: string, audioFile: File, name: string) => {
+      // Validate file size (500KB limit)
+      if (audioFile.size > 500 * 1024) {
+        throw new Error('音声ファイルのサイズは500KB以下にしてください。');
+      }
+
+      return this.uploadFile<any>('/api/voice/register', audioFile, {
         user_id: userId,
         name,
-      }),
+      });
+    },
 
     list: (userId: string) =>
       this.request<any[]>(`/api/voice/list?user_id=${userId}`),

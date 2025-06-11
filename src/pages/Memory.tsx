@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, Plus, Search, Trash2, Edit3, Calendar, Filter, X } from 'lucide-react';
+import { Brain, Plus, Search, Trash2, Edit3, Calendar, Filter, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { memoryAPI } from '../services/api';
@@ -33,6 +33,9 @@ const Memory: React.FC = () => {
   const [newMemoryCategory, setNewMemoryCategory] = useState('');
   const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
 
   const categories = ['Personal', 'Work', 'Ideas', 'Important', 'Other'];
   const itemsPerPage = 10;
@@ -41,17 +44,36 @@ const Memory: React.FC = () => {
     loadMemories();
   }, [user, currentPage]);
 
+  // Clear messages after 5 seconds
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
+
   const loadMemories = async () => {
     if (!user) return;
 
     try {
       setIsLoading(true);
+      setError('');
+      
+      console.log('Loading memories for user:', user.id, 'page:', currentPage);
+      
       const response: MemoryResponse = await memoryAPI.list(user.id, currentPage, itemsPerPage);
+      
+      console.log('Memories loaded:', response);
+      
       setMemories(response.memories || []);
       setTotalPages(response.pages || 1);
       setTotalMemories(response.total || 0);
     } catch (error) {
       console.error('Error loading memories:', error);
+      setError('メモリの読み込みに失敗しました。');
       setMemories([]);
     } finally {
       setIsLoading(false);
@@ -59,29 +81,66 @@ const Memory: React.FC = () => {
   };
 
   const handleCreateMemory = async () => {
-    if (!user || !newMemoryText.trim()) return;
+    if (!user || !newMemoryText.trim()) {
+      setError('メモリの内容を入力してください。');
+      return;
+    }
+
+    if (newMemoryText.length > 1000) {
+      setError('メモリの内容は1000文字以内で入力してください。');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+    setSuccess('');
 
     try {
-      await memoryAPI.create(user.id, newMemoryText);
+      console.log('Creating memory:', {
+        user_id: user.id,
+        text: newMemoryText.trim(),
+        category: newMemoryCategory || undefined
+      });
+
+      await memoryAPI.create(user.id, newMemoryText.trim(), newMemoryCategory || undefined);
+      
+      console.log('Memory created successfully');
+      
+      // Reload memories to show the new one
       await loadMemories();
+      
+      // Reset form
       setNewMemoryText('');
       setNewMemoryCategory('');
       setShowAddModal(false);
+      setSuccess('メモリが正常に追加されました。');
+      
     } catch (error) {
       console.error('Error creating memory:', error);
-      alert('Failed to create memory. Please try again.');
+      setError(error instanceof Error ? error.message : 'メモリの作成に失敗しました。');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteMemory = async (memoryId: string) => {
-    if (!confirm('Are you sure you want to delete this memory?')) return;
+    if (!confirm('このメモリを削除してもよろしいですか？')) return;
 
     try {
+      setError('');
+      console.log('Deleting memory:', memoryId);
+      
       await memoryAPI.delete(memoryId);
+      
+      console.log('Memory deleted successfully');
+      
+      // Reload memories
       await loadMemories();
+      setSuccess('メモリが削除されました。');
+      
     } catch (error) {
       console.error('Error deleting memory:', error);
-      alert('Failed to delete memory. Please try again.');
+      setError('メモリの削除に失敗しました。');
     }
   };
 
@@ -98,13 +157,21 @@ const Memory: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const getCharacterCount = () => {
+    return newMemoryText.length;
+  };
+
+  const isCharacterLimitExceeded = () => {
+    return newMemoryText.length > 1000;
   };
 
   if (isLoading && currentPage === 1) {
@@ -126,24 +193,45 @@ const Memory: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">AI Memory</h1>
+          <h1 className="text-3xl font-bold text-gray-900">AIメモリ</h1>
           <p className="text-gray-600 mt-2">
-            Store and manage important information for your AI to remember across conversations.
+            AIが会話で覚えておくべき重要な情報を保存・管理します。
           </p>
         </div>
         <div className="mt-4 sm:mt-0 flex items-center space-x-2">
           <span className="text-sm text-gray-500">
-            {totalMemories} memories total
+            {totalMemories} 件のメモリ
           </span>
           <button
             onClick={() => setShowAddModal(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Memory</span>
+            <span>メモリ追加</span>
           </button>
         </div>
       </div>
+
+      {/* Status Messages */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
+          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-medium text-red-900">エラー</h3>
+            <p className="text-red-700 text-sm mt-1">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3">
+          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-medium text-green-900">成功</h3>
+            <p className="text-green-700 text-sm mt-1">{success}</p>
+          </div>
+        </div>
+      )}
 
       {/* Search and Filter */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -152,7 +240,7 @@ const Memory: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search memories..."
+              placeholder="メモリを検索..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -166,7 +254,7 @@ const Memory: React.FC = () => {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white min-w-[150px]"
             >
-              <option value="">All Categories</option>
+              <option value="">全カテゴリ</option>
               {categories.map(category => (
                 <option key={category} value={category}>{category}</option>
               ))}
@@ -181,12 +269,12 @@ const Memory: React.FC = () => {
           <div className="text-center py-16">
             <Brain className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {memories.length === 0 ? 'No memories yet' : 'No memories match your search'}
+              {memories.length === 0 ? 'メモリがありません' : '検索条件に一致するメモリがありません'}
             </h3>
             <p className="text-gray-600 mb-6">
               {memories.length === 0 
-                ? 'Start building your AI\'s knowledge base by adding your first memory.'
-                : 'Try adjusting your search terms or category filter.'
+                ? '最初のメモリを追加して、AIの知識ベースを構築しましょう。'
+                : '検索条件やカテゴリフィルターを調整してください。'
               }
             </p>
             {memories.length === 0 && (
@@ -194,7 +282,7 @@ const Memory: React.FC = () => {
                 onClick={() => setShowAddModal(true)}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Add Your First Memory
+                最初のメモリを追加
               </button>
             )}
           </div>
@@ -225,14 +313,14 @@ const Memory: React.FC = () => {
                     <button
                       onClick={() => setEditingMemory(memory)}
                       className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Edit memory"
+                      title="メモリを編集"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteMemory(memory.id)}
                       className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete memory"
+                      title="メモリを削除"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -248,7 +336,7 @@ const Memory: React.FC = () => {
       {totalPages > 1 && (
         <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-6">
           <div className="text-sm text-gray-700">
-            Showing page {currentPage} of {totalPages} ({totalMemories} total memories)
+            ページ {currentPage} / {totalPages} （全 {totalMemories} 件）
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -256,7 +344,7 @@ const Memory: React.FC = () => {
               disabled={currentPage <= 1}
               className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              前へ
             </button>
             {[...Array(Math.min(5, totalPages))].map((_, i) => {
               const page = i + Math.max(1, currentPage - 2);
@@ -280,7 +368,7 @@ const Memory: React.FC = () => {
               disabled={currentPage >= totalPages}
               className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              次へ
             </button>
           </div>
         </div>
@@ -292,10 +380,16 @@ const Memory: React.FC = () => {
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Add New Memory</h3>
+                <h3 className="text-lg font-semibold text-gray-900">新しいメモリを追加</h3>
                 <button
-                  onClick={() => setShowAddModal(false)}
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setNewMemoryText('');
+                    setNewMemoryCategory('');
+                    setError('');
+                  }}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={isSubmitting}
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
@@ -305,27 +399,41 @@ const Memory: React.FC = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Memory Content
+                  メモリの内容 <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={newMemoryText}
                   onChange={(e) => setNewMemoryText(e.target.value)}
-                  placeholder="Enter information you want your AI to remember..."
+                  placeholder="AIに覚えてもらいたい情報を入力してください..."
                   rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                    isCharacterLimitExceeded() ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  disabled={isSubmitting}
                 />
+                <div className="flex justify-between items-center mt-2">
+                  <div className="text-xs text-gray-500">
+                    AIが会話で参照できる重要な情報を入力してください
+                  </div>
+                  <div className={`text-xs ${
+                    isCharacterLimitExceeded() ? 'text-red-500' : 'text-gray-500'
+                  }`}>
+                    {getCharacterCount()} / 1000文字
+                  </div>
+                </div>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category (Optional)
+                  カテゴリ（任意）
                 </label>
                 <select
                   value={newMemoryCategory}
                   onChange={(e) => setNewMemoryCategory(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isSubmitting}
                 >
-                  <option value="">Select a category</option>
+                  <option value="">カテゴリを選択</option>
                   {categories.map(category => (
                     <option key={category} value={category}>{category}</option>
                   ))}
@@ -335,17 +443,30 @@ const Memory: React.FC = () => {
             
             <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
               <button
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setNewMemoryText('');
+                  setNewMemoryCategory('');
+                  setError('');
+                }}
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={isSubmitting}
               >
-                Cancel
+                キャンセル
               </button>
               <button
                 onClick={handleCreateMemory}
-                disabled={!newMemoryText.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                disabled={isSubmitting || !newMemoryText.trim() || isCharacterLimitExceeded()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
               >
-                Add Memory
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>追加中...</span>
+                  </>
+                ) : (
+                  <span>メモリを追加</span>
+                )}
               </button>
             </div>
           </div>
