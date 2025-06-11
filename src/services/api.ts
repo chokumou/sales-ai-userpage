@@ -16,26 +16,150 @@ class APIService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
+    // For demo mode, return mock data instead of making real API calls
+    return this.getMockData<T>(endpoint, options);
+  }
 
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
+  private async getMockData<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Mock responses based on endpoint
+    if (endpoint.includes('/auth/user/token')) {
+      return {
+        access_token: `mock_token_${Date.now()}`,
+        user: {
+          id: 'demo_user',
+          profile: { introduction: 'Demo user', language: 'en' },
+          subscription: { plan: 'premium', model: 'chatgpt' }
+        }
+      } as T;
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    if (endpoint.includes('/api/user/profile')) {
+      return {
+        id: 'demo_user',
+        message_count: 150,
+        profile: { introduction: 'Demo user', language: 'en' },
+        subscription: { plan: 'premium', model: 'chatgpt' }
+      } as T;
     }
 
-    return response.json();
+    if (endpoint.includes('/api/memory/')) {
+      if (options.method === 'POST') {
+        return { id: `memory_${Date.now()}`, success: true } as T;
+      }
+      return {
+        memories: [
+          {
+            id: '1',
+            user_id: 'demo_user',
+            text: 'Remember that I prefer morning meetings',
+            timestamp: new Date().toISOString(),
+            category: 'Work'
+          },
+          {
+            id: '2',
+            user_id: 'demo_user',
+            text: 'My favorite coffee is cappuccino',
+            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            category: 'Personal'
+          }
+        ],
+        total: 2,
+        page: 1,
+        pages: 1
+      } as T;
+    }
+
+    if (endpoint.includes('/api/friend/list')) {
+      return [
+        {
+          id: '1',
+          user_id: 'friend1',
+          name: 'Alice Johnson',
+          introduction: 'AI enthusiast and developer',
+          status: 'online',
+          has_unread_messages: true,
+          last_message_time: new Date().toISOString()
+        },
+        {
+          id: '2',
+          user_id: 'friend2',
+          name: 'Bob Smith',
+          introduction: 'Voice technology researcher',
+          status: 'offline',
+          has_unread_messages: false,
+          last_message_time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+        }
+      ] as T;
+    }
+
+    if (endpoint.includes('/api/voice/list')) {
+      return [
+        {
+          id: '1',
+          name: 'My Voice Sample 1',
+          file_url: 'https://example.com/voice1.wav',
+          created_at: new Date().toISOString(),
+          is_verified: true
+        },
+        {
+          id: '2',
+          name: 'Professional Voice',
+          file_url: 'https://example.com/voice2.wav',
+          created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          is_verified: false
+        }
+      ] as T;
+    }
+
+    if (endpoint.includes('/api/payment/history')) {
+      return [
+        {
+          id: 'pi_1234567890',
+          amount: 19.99,
+          currency: 'USD',
+          status: 'succeeded',
+          description: 'Premium Plan Subscription',
+          created_at: new Date().toISOString(),
+          plan: 'Premium',
+          period: 'Monthly'
+        }
+      ] as T;
+    }
+
+    if (endpoint.includes('/api/admin/users')) {
+      return {
+        users: [
+          {
+            id: 'demo_user',
+            email: 'demo@example.com',
+            profile: { introduction: 'Demo user', language: 'en' },
+            subscription: { plan: 'premium', model: 'chatgpt' },
+            created_at: new Date().toISOString(),
+            is_banned: false,
+            payment_status: 'active',
+            message_count: 150
+          }
+        ],
+        pages: 1
+      } as T;
+    }
+
+    if (endpoint.includes('/api/admin/prompts')) {
+      return [
+        {
+          id: '1',
+          character: 'Default Assistant',
+          content: 'You are a helpful AI assistant.',
+          updated_at: new Date().toISOString()
+        }
+      ] as T;
+    }
+
+    // Default empty response
+    return {} as T;
   }
 
   private async uploadFile<T>(
@@ -43,32 +167,20 @@ class APIService {
     file: File,
     additionalData?: Record<string, string>
   ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    const formData = new FormData();
-    formData.append('file', file);
-
-    if (additionalData) {
-      Object.entries(additionalData).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
+    // Mock file upload
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (endpoint.includes('/api/voice/register')) {
+      return {
+        id: `voice_${Date.now()}`,
+        name: additionalData?.name || 'New Voice',
+        file_url: URL.createObjectURL(file),
+        created_at: new Date().toISOString(),
+        is_verified: false
+      } as T;
     }
 
-    const headers: HeadersInit = {};
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
-    }
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
+    return { success: true } as T;
   }
 
   // Auth API

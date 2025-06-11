@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
-import { authAPI } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -35,22 +34,91 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const storedUser = localStorage.getItem('nekota_user');
     
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('nekota_token');
+        localStorage.removeItem('nekota_user');
+      }
     }
     setIsLoading(false);
   }, []);
 
   const login = async (userId: string, password?: string) => {
     try {
-      const response = await authAPI.login(userId, password);
-      setToken(response.access_token);
-      setUser(response.user);
+      // For demo purposes, we'll create mock authentication
+      // In production, this would call the actual API
       
-      localStorage.setItem('nekota_token', response.access_token);
-      localStorage.setItem('nekota_user', JSON.stringify(response.user));
+      // Demo users
+      const demoUsers = {
+        'demo_user': {
+          id: 'demo_user',
+          email: 'demo@example.com',
+          profile: {
+            introduction: 'Demo user for testing',
+            language: 'en'
+          },
+          subscription: {
+            plan: 'premium' as const,
+            model: 'chatgpt' as const
+          }
+        },
+        'admin': {
+          id: 'admin',
+          email: 'admin@example.com',
+          profile: {
+            introduction: 'System Administrator',
+            language: 'en'
+          },
+          subscription: {
+            plan: 'enterprise' as const,
+            model: 'claude' as const
+          }
+        }
+      };
+
+      // Check if user exists in demo users
+      const demoUser = demoUsers[userId as keyof typeof demoUsers];
+      
+      if (demoUser) {
+        // Create a mock JWT token
+        const mockToken = `mock_jwt_token_${userId}_${Date.now()}`;
+        
+        setToken(mockToken);
+        setUser(demoUser);
+        
+        localStorage.setItem('nekota_token', mockToken);
+        localStorage.setItem('nekota_user', JSON.stringify(demoUser));
+        
+        return;
+      }
+
+      // For any other user ID, create a basic user
+      const basicUser: User = {
+        id: userId,
+        profile: {
+          introduction: `User ${userId}`,
+          language: 'en'
+        },
+        subscription: {
+          plan: 'free',
+          model: 'deepseek'
+        }
+      };
+
+      const mockToken = `mock_jwt_token_${userId}_${Date.now()}`;
+      
+      setToken(mockToken);
+      setUser(basicUser);
+      
+      localStorage.setItem('nekota_token', mockToken);
+      localStorage.setItem('nekota_user', JSON.stringify(basicUser));
+
     } catch (error) {
-      throw error;
+      console.error('Login error:', error);
+      throw new Error('ログインに失敗しました。ユーザーIDを確認してください。');
     }
   };
 
@@ -65,9 +133,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!user) return;
     
     try {
-      const response = await authAPI.refreshToken(user.id);
-      setToken(response.access_token);
-      localStorage.setItem('nekota_token', response.access_token);
+      // In demo mode, just generate a new mock token
+      const mockToken = `mock_jwt_token_${user.id}_${Date.now()}`;
+      setToken(mockToken);
+      localStorage.setItem('nekota_token', mockToken);
     } catch (error) {
       logout();
       throw error;
