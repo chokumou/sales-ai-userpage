@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://your-api-server.onrender.com';
+const API_BASE_URL = 'https://nekota-server-production.up.railway.app';
 
 class APIService {
   private baseURL: string;
