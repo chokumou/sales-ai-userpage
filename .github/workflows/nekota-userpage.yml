@@ -1,0 +1,25 @@
+name: Nekota Userpage CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - feature/*
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm install
+      - name: Run build
+        run: npm run build
+      - name: Run tests
+        run: npm test 
