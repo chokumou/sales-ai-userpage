@@ -1,7 +1,8 @@
 // @ts-nocheck
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { v5 as uuidv5 } from 'uuid';
 import { digest } from 'js-crypto-hash';
+import { useRouter } from 'next/router';
 
 // サーバーと同じアルゴリズムで端末番号からUUIDを生成
 async function generateDeviceUUID(deviceNumber: string): Promise<string> {
@@ -21,6 +22,7 @@ const RegisterDevice: React.FC = () => {
   const [step, setStep] = useState<'input'|'registering'|'done'>('input');
   const [userId, setUserId] = useState('');
   const [jwt, setJwt] = useState('');
+  const router = useRouter();
 
   const handleCheck = async () => {
     setChecking(true);
@@ -61,6 +63,14 @@ const RegisterDevice: React.FC = () => {
       setStep('done');
     }, 1000);
   };
+
+  useEffect(() => {
+    if (step === 'done') {
+      setTimeout(() => {
+        router.push('/Dashboard');
+      }, 1000);
+    }
+  }, [step, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
