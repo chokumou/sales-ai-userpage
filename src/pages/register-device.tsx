@@ -24,7 +24,10 @@ const RegisterDevice: React.FC = () => {
   const [jwt, setJwt] = useState('');
   const router = useRouter();
 
+  console.log('RegisterDevice: 初期レンダリング');
+
   const handleCheck = async () => {
+    console.log('handleCheck: start', deviceNumber);
     setChecking(true);
     setError('');
     setExists(null);
@@ -34,8 +37,10 @@ const RegisterDevice: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ device_number: deviceNumber })
       });
+      console.log('handleCheck: fetch result', res);
       if (!res.ok) throw new Error('APIエラー');
       const data = await res.json();
+      console.log('handleCheck: data', data);
       setExists(data.exists);
       if (!data.exists) {
         setError('この端末番号は存在しません');
@@ -44,6 +49,7 @@ const RegisterDevice: React.FC = () => {
       setStep('registering');
       await handleRegister(deviceNumber);
     } catch (e) {
+      console.error('handleCheck: error', e);
       setError('API通信エラー');
     } finally {
       setChecking(false);
@@ -52,8 +58,10 @@ const RegisterDevice: React.FC = () => {
 
   // ユーザーID発行・Supabaseユーザー登録・JWT取得のダミー処理
   const handleRegister = async (deviceNumber: string) => {
+    console.log('handleRegister: start', deviceNumber);
     // 1. UUID生成
     const uuid = await generateDeviceUUID(deviceNumber);
+    console.log('handleRegister: uuid', uuid);
     setUserId(uuid);
     // 2. Supabaseユーザー登録（本番はAPI経由で）
     // 3. usersテーブル登録（本番はAPI経由で）
@@ -61,12 +69,15 @@ const RegisterDevice: React.FC = () => {
     setTimeout(() => {
       setJwt('dummy-jwt-token-for-' + uuid);
       setStep('done');
+      console.log('handleRegister: done');
     }, 1000);
   };
 
   useEffect(() => {
+    console.log('useEffect: step', step);
     if (step === 'done') {
       setTimeout(() => {
+        console.log('useEffect: redirect to /Dashboard');
         router.push('/Dashboard');
       }, 1000);
     }
