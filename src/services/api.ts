@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://nekota-server-production.up.railway.app';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nekota-server-production.up.railway.app';
 
 class APIService {
   private baseURL: string;
