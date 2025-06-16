@@ -25,6 +25,9 @@ const DeviceRegistration: React.FC = () => {
     setError(null);
 
     try {
+      console.log('Sending request to:', `${import.meta.env.VITE_API_BASE_URL}/api/device/exists`);
+      console.log('Request body:', { device_number: deviceNumber });
+
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/device/exists`, {
         method: 'POST',
         headers: {
@@ -34,24 +37,38 @@ const DeviceRegistration: React.FC = () => {
         credentials: 'include',
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok) {
-        // 認証情報を保存
-        localStorage.setItem('nekota_token', data.token);
-        localStorage.setItem('nekota_user', JSON.stringify(data.user));
-        
-        // ユーザー情報を更新
-        setUser(data.user);
-        
-        // ダッシュボードにリダイレクト
-        navigate('/dashboard');
+        if (!data.token || !data.user) {
+          console.error('Missing token or user data:', data);
+          setError('サーバーからの応答が不正です');
+          return;
+        }
+
+        try {
+          // 認証情報を保存
+          localStorage.setItem('nekota_token', data.token);
+          localStorage.setItem('nekota_user', JSON.stringify(data.user));
+          
+          // ユーザー情報を更新
+          setUser(data.user);
+          
+          // ダッシュボードにリダイレクト
+          navigate('/dashboard');
+        } catch (storageError) {
+          console.error('Error saving auth data:', storageError);
+          setError('認証情報の保存に失敗しました');
+        }
       } else {
+        console.error('API error:', data);
         setError(data.detail || 'デバイス登録に失敗しました');
       }
     } catch (err) {
-      setError('サーバーとの通信に失敗しました');
       console.error('Device registration error:', err);
+      setError('サーバーとの通信に失敗しました');
     } finally {
       setIsSubmitting(false);
     }
