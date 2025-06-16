@@ -1,18 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
+import { Container, Box, Typography, TextField, Button, Alert } from '@mui/material';
 
 const DeviceRegistration: React.FC = () => {
   const [deviceNumber, setDeviceNumber] = useState('');
-  const [error, setError] = useState('');
-  const { user } = useAuth();
-  const { t } = useLanguage();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated, setUser } = useAuth();
+
+  useEffect(() => {
+    // すでにログインしている場合はダッシュボードにリダイレクト
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    if (isSubmitting) return; // 重複送信を防ぐ
+
+    setIsSubmitting(true);
+    setError(null);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/device/exists`, {
@@ -21,60 +31,72 @@ const DeviceRegistration: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ device_number: deviceNumber }),
+        credentials: 'include',
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        navigate('/');
+        // 認証情報を保存
+        localStorage.setItem('nekota_token', data.token);
+        localStorage.setItem('nekota_user', JSON.stringify(data.user));
+        
+        // ユーザー情報を更新
+        setUser(data.user);
+        
+        // ダッシュボードにリダイレクト
+        navigate('/dashboard');
       } else {
-        const data = await response.json();
-        setError(data.detail || 'デバイス番号が無効です');
+        setError(data.detail || 'デバイス登録に失敗しました');
       }
     } catch (err) {
-      setError('接続エラーが発生しました');
+      setError('サーバーとの通信に失敗しました');
+      console.error('Device registration error:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            デバイス登録
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            デバイス番号を入力してください
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="device-number" className="sr-only">
-              デバイス番号
-            </label>
-            <input
-              id="device-number"
-              name="device-number"
-              type="text"
-              required
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="デバイス番号"
-              value={deviceNumber}
-              onChange={(e) => setDeviceNumber(e.target.value)}
-            />
-          </div>
+    <Container maxWidth="sm">
+      <Box sx={{ mt: 8, mb: 4 }}>
+        <Typography component="h1" variant="h4" align="center" gutterBottom>
+          デバイス登録
+        </Typography>
+        <Typography variant="body1" align="center" color="text.secondary" paragraph>
+          デバイスに表示されている番号を入力してください
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="deviceNumber"
+            label="デバイス番号"
+            name="deviceNumber"
+            autoComplete="off"
+            value={deviceNumber}
+            onChange={(e) => setDeviceNumber(e.target.value)}
+            error={!!error}
+            disabled={isSubmitting}
+          />
           {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
           )}
-          <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              登録
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '登録中...' : '登録'}
+          </Button>
+        </Box>
+      </Box>
+    </Container>
   );
 };
 

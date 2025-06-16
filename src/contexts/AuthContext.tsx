@@ -9,6 +9,8 @@ interface AuthContextType {
   logout: () => void;
   refreshToken: () => Promise<void>;
   isLoading: boolean;
+  setUser: (user: User | null) => void;
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('nekota_token');
@@ -44,6 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         api.setToken(storedToken);
         
         console.log('Restored user session:', parsedUser.id);
+        setIsAuthenticated(true);
       } catch (error) {
         console.error('Error parsing stored user data:', error);
         localStorage.removeItem('nekota_token');
@@ -102,6 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem('nekota_user', JSON.stringify(demoUser));
         
         console.log('Demo user logged in successfully:', userId);
+        setIsAuthenticated(true);
         return;
       }
 
@@ -130,6 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('nekota_user', JSON.stringify(basicUser));
 
       console.log('Basic user created and logged in:', userId);
+      setIsAuthenticated(true);
 
     } catch (error) {
       console.error('Login error:', error);
@@ -147,6 +153,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     localStorage.removeItem('nekota_token');
     localStorage.removeItem('nekota_user');
+    setIsAuthenticated(false);
   };
 
   const refreshToken = async () => {
@@ -176,7 +183,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       login,
       logout,
       refreshToken,
-      isLoading
+      isLoading,
+      setUser,
+      isAuthenticated
     }}>
       {children}
     </AuthContext.Provider>
