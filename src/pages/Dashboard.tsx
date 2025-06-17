@@ -25,23 +25,57 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedModel, setSelectedModel] = useState('deepseek');
 
+  // デバッグ: コンポーネントマウント時の状態確認
+  useEffect(() => {
+    console.log('Dashboard mounted:', {
+      user,
+      localStorage: {
+        token: localStorage.getItem('nekota_token'),
+        user: localStorage.getItem('nekota_user')
+      }
+    });
+  }, []);
+
   useEffect(() => {
     loadDashboardData();
   }, [user]);
 
   const loadDashboardData = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error('No user data available');
+      return;
+    }
 
     try {
       setIsLoading(true);
+      console.log('Loading dashboard data for user:', user);
       
       // Load user profile and stats
       const [profileData, memoriesData, friendsData, modelData] = await Promise.all([
-        userAPI.getProfile(user.id).catch(() => ({})),
-        memoryAPI.list(user.id, 1, 1).catch(() => ({ total: 0 })),
-        friendAPI.list(user.id).catch(() => []),
-        userAPI.getModel(user.id).catch(() => ({ model: 'deepseek' }))
+        userAPI.getProfile(user.id).catch((error) => {
+          console.error('Error loading profile:', error);
+          return {};
+        }),
+        memoryAPI.list(user.id, 1, 1).catch((error) => {
+          console.error('Error loading memories:', error);
+          return { total: 0 };
+        }),
+        friendAPI.list(user.id).catch((error) => {
+          console.error('Error loading friends:', error);
+          return [];
+        }),
+        userAPI.getModel(user.id).catch((error) => {
+          console.error('Error loading model:', error);
+          return { model: 'deepseek' };
+        })
       ]);
+
+      console.log('Loaded dashboard data:', {
+        profile: profileData,
+        memories: memoriesData,
+        friends: friendsData,
+        model: modelData
+      });
 
       setStats({
         totalMessages: profileData?.message_count || 0,

@@ -1,5 +1,11 @@
 export interface User {
   id: string;
+  device_id: string;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  last_login: string | null;
   email?: string;
   profile?: {
     introduction: string;

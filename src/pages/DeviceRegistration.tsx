@@ -49,12 +49,30 @@ const DeviceRegistration: React.FC = () => {
         }
 
         try {
+          // デバッグ: 保存前のデータ確認
+          console.log('Saving auth data:', {
+            token: data.token,
+            user: data.user
+          });
+
           // 認証情報を保存
           localStorage.setItem('nekota_token', data.token);
           localStorage.setItem('nekota_user', JSON.stringify(data.user));
           
+          // デバッグ: 保存後のデータ確認
+          console.log('Saved auth data:', {
+            token: localStorage.getItem('nekota_token'),
+            user: localStorage.getItem('nekota_user')
+          });
+          
           // ユーザー情報を更新
           setUser(data.user);
+          
+          // デバッグ: コンテキスト更新後の状態確認
+          console.log('Auth context after update:', {
+            user: data.user,
+            isAuthenticated: true
+          });
           
           // ダッシュボードにリダイレクト
           navigate('/dashboard');

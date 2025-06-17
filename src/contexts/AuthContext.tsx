@@ -1,10 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface User {
-  id: string;
-  device_number: string;
-  created_at: string;
-}
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -31,45 +26,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    const loadUser = async () => {
       try {
-        const storedToken = localStorage.getItem('nekota_token');
         const storedUser = localStorage.getItem('nekota_user');
+        const token = localStorage.getItem('nekota_token');
 
-        if (storedToken && storedUser) {
-          try {
-            const parsedUser = JSON.parse(storedUser);
-            if (parsedUser && parsedUser.id) {
-              setUser(parsedUser);
-              setIsAuthenticated(true);
-              console.log('Restored user session:', parsedUser.id);
-            } else {
-              console.warn('Invalid user data in storage');
-              localStorage.removeItem('nekota_token');
-              localStorage.removeItem('nekota_user');
-            }
-          } catch (error) {
-            console.error('Error parsing stored user data:', error);
-            localStorage.removeItem('nekota_token');
-            localStorage.removeItem('nekota_user');
-          }
+        console.log('Loading user from storage:', {
+          storedUser,
+          token
+        });
+
+        if (storedUser && token) {
+          const parsedUser = JSON.parse(storedUser);
+          console.log('Parsed user data:', parsedUser);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('Error loading user:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    initializeAuth();
+    loadUser();
   }, []);
 
   const login = (token: string, userData: User) => {
     try {
-      localStorage.setItem('nekota_token', token);
+      console.log('Logging in user:', {
+        userData,
+        token
+      });
+
       localStorage.setItem('nekota_user', JSON.stringify(userData));
+      localStorage.setItem('nekota_token', token);
       setUser(userData);
       setIsAuthenticated(true);
+
+      console.log('User logged in successfully');
     } catch (error) {
       console.error('Error during login:', error);
       throw error;
@@ -77,14 +72,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    try {
-      localStorage.removeItem('nekota_token');
-      localStorage.removeItem('nekota_user');
-      setUser(null);
-      setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
+    console.log('Logging out user');
+    localStorage.removeItem('nekota_user');
+    localStorage.removeItem('nekota_token');
+    setUser(null);
+    setIsAuthenticated(false);
+    console.log('User logged out successfully');
   };
 
   const refreshToken = async () => {
