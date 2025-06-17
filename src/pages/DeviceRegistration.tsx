@@ -75,7 +75,7 @@ const DeviceRegistration: React.FC = () => {
           });
           
           // ダッシュボードにリダイレクト
-          navigate('/dashboard');
+          navigate('/');
         } catch (storageError) {
           console.error('Error saving auth data:', storageError);
           setError('認証情報の保存に失敗しました');
