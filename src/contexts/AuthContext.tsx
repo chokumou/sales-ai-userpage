@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
+import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -41,6 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('Parsed user data:', parsedUser);
           setUser(parsedUser);
           setIsAuthenticated(true);
+          api.setToken(token);
         }
       } catch (error) {
         console.error('Error loading user:', error);
@@ -63,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('nekota_token', token);
       setUser(userData);
       setIsAuthenticated(true);
+      api.setToken(token);
 
       console.log('User logged in successfully');
     } catch (error) {
@@ -77,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('nekota_token');
     setUser(null);
     setIsAuthenticated(false);
+    api.setToken(null);
     console.log('User logged out successfully');
   };
 

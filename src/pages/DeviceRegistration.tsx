@@ -8,12 +8,12 @@ const DeviceRegistration: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated, setUser } = useAuth();
+  const { isAuthenticated, login } = useAuth();
 
   useEffect(() => {
     // すでにログインしている場合はダッシュボードにリダイレクト
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
@@ -56,17 +56,7 @@ const DeviceRegistration: React.FC = () => {
           });
 
           // 認証情報を保存
-          localStorage.setItem('nekota_token', data.token);
-          localStorage.setItem('nekota_user', JSON.stringify(data.user));
-          
-          // デバッグ: 保存後のデータ確認
-          console.log('Saved auth data:', {
-            token: localStorage.getItem('nekota_token'),
-            user: localStorage.getItem('nekota_user')
-          });
-          
-          // ユーザー情報を更新
-          setUser(data.user);
+          login(data.token, data.user);
           
           // デバッグ: コンテキスト更新後の状態確認
           console.log('Auth context after update:', {
