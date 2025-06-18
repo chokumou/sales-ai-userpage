@@ -442,7 +442,7 @@ class APIService {
   // Friend API
   friend = {
     request: (fromUserId: string, toUserId: string) =>
-      this.request<any>('/api/friend/request', {
+      this.request<any>('/api/friend/', {
         method: 'POST',
         body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
       }),
