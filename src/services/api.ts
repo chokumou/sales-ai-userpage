@@ -455,6 +455,9 @@ class APIService {
 
     list: (userId: string) =>
       this.request<any[]>(`/api/friend/list?user_id=${userId}`),
+
+    requests: () =>
+      this.request<any[]>(`/api/friend/requests`),
   };
 
   // Memory API

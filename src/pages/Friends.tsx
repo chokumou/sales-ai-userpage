@@ -48,22 +48,12 @@ const Friends: React.FC = () => {
       setIsLoading(true);
       const friendsData = await friendAPI.list(user.id);
       setFriends(friendsData || []);
-      
-      // Mock friend requests for demo
-      setFriendRequests([
-        {
-          id: '1',
-          from_user_id: 'demo_user_2',
-          to_user_id: user.id,
-          from_user_name: 'Jane Smith',
-          message: 'Hello! I\'d like to connect with you.',
-          timestamp: new Date().toISOString(),
-          status: 'pending'
-        }
-      ]);
+      const requestsData = await friendAPI.requests();
+      setFriendRequests(requestsData || []);
     } catch (error) {
       console.error('Error loading friends:', error);
       setFriends([]);
+      setFriendRequests([]);
     } finally {
       setIsLoading(false);
     }
