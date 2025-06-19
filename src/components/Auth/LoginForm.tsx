@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { Mic, Eye, EyeOff, Loader2, AlertCircle, Smartphone } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -11,7 +11,7 @@ const LoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
@@ -27,8 +27,10 @@ const LoginForm: React.FC = () => {
     setError('');
 
     try {
-      await login(userId.trim(), token || undefined);
-      navigate('/');
+      await login(userId.trim(), token || undefined, () => {
+        console.log('Login successful, redirecting to dashboard');
+        navigate('/');
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'ログインに失敗しました');
     } finally {
@@ -41,8 +43,10 @@ const LoginForm: React.FC = () => {
     setError('');
 
     try {
-      await login(demoUserId);
-      navigate('/');
+      await login(demoUserId, undefined, () => {
+        console.log('Demo login successful, redirecting to dashboard');
+        navigate('/');
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'ログインに失敗しました');
     } finally {
@@ -166,6 +170,20 @@ const LoginForm: React.FC = () => {
                 <strong>任意のユーザーID:</strong> 上記以外のIDでもログイン可能です（フリープランとして作成されます）
               </p>
             </div>
+          </div>
+
+          {/* Device Registration Button */}
+          <div className="mt-6">
+            <button
+              onClick={() => navigate('/RegisterDevice')}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium py-3 px-4 rounded-lg hover:from-green-600 hover:to-emerald-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
+            >
+              <Smartphone className="w-5 h-5 mr-2" />
+              デバイス登録
+            </button>
+            <p className="text-xs text-gray-500 text-center mt-2">
+              新しいデバイスを登録する場合はこちら
+            </p>
           </div>
         </div>
       </div>

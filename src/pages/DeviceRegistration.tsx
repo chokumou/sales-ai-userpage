@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Container, Box, Typography, TextField, Button, Alert } from '@mui/material';
+import api from '../services/api';
 
 const DeviceRegistration: React.FC = () => {
   const [deviceNumber, setDeviceNumber] = useState('');
@@ -9,13 +10,6 @@ const DeviceRegistration: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated, login } = useAuth();
-
-  useEffect(() => {
-    // すでにログインしている場合はダッシュボードにリダイレクト
-    if (isAuthenticated) {
-      navigate('/');
-    }
-  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,58 +19,54 @@ const DeviceRegistration: React.FC = () => {
     setError(null);
 
     try {
-      console.log('Sending request to:', `${import.meta.env.VITE_API_BASE_URL}/api/device/exists`);
-      console.log('Request body:', { device_number: deviceNumber });
+      console.log('Sending device registration request for device:', deviceNumber);
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/device/exists`, {
+      // 直接fetchを使用してローカルAPIにリクエスト
+      const response = await fetch('http://localhost:8080/api/device/exists', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ device_number: deviceNumber }),
-        credentials: 'include',
       });
 
       console.log('Response status:', response.status);
       const data = await response.json();
       console.log('Response data:', data);
+      console.log('Token type:', typeof data.token);
+      console.log('Token value:', data.token);
 
       if (response.ok) {
-        if (!data.token || !data.user) {
+        if (data.token && data.user) {
+          try {
+            // デバッグ: 保存前のデータ確認
+            console.log('Saving auth data:', {
+              token: data.token,
+              tokenType: typeof data.token,
+              user: data.user
+            });
+
+            // 認証情報を保存してダッシュボードにリダイレクト
+            await login(data.token, data.user, () => {
+              console.log('Device registration successful, redirecting to dashboard');
+              navigate('/');
+            });
+            
+          } catch (storageError) {
+            console.error('Error saving auth data:', storageError);
+            setError('認証情報の保存に失敗しました');
+          }
+        } else {
           console.error('Missing token or user data:', data);
           setError('サーバーからの応答が不正です');
-          return;
-        }
-
-        try {
-          // デバッグ: 保存前のデータ確認
-          console.log('Saving auth data:', {
-            token: data.token,
-            user: data.user
-          });
-
-          // 認証情報を保存
-          login(data.token, data.user);
-          
-          // デバッグ: コンテキスト更新後の状態確認
-          console.log('Auth context after update:', {
-            user: data.user,
-            isAuthenticated: true
-          });
-          
-          // ダッシュボードにリダイレクト
-          navigate('/');
-        } catch (storageError) {
-          console.error('Error saving auth data:', storageError);
-          setError('認証情報の保存に失敗しました');
         }
       } else {
         console.error('API error:', data);
         setError(data.detail || 'デバイス登録に失敗しました');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Device registration error:', err);
-      setError('サーバーとの通信に失敗しました');
+      setError(err.message || 'デバイス登録に失敗しました');
     } finally {
       setIsSubmitting(false);
     }

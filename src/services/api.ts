@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nekota-server-production.up.railway.app';
+const API_BASE_URL = 'http://localhost:8080';
 
 class APIService {
   private baseURL: string;
@@ -11,6 +11,21 @@ class APIService {
   setToken(token: string | null) {
     this.token = token;
     console.log('API Token set:', token ? 'Token present' : 'No token');
+  }
+
+  // 現在のユーザーIDを取得するヘルパーメソッド
+  private getCurrentUserId(): string | null {
+    const token = this.token;
+    if (!token) return null;
+    
+    try {
+      // JWTトークンをデコードしてユーザーIDを取得
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.user_id || payload.sub;
+    } catch (error) {
+      console.error('JWTトークンのデコードに失敗:', error);
+      return null;
+    }
   }
 
   private async request<T>(
@@ -27,10 +42,14 @@ class APIService {
 
     // Real API call
     const url = `${this.baseURL}${endpoint}`;
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
     };
+
+    // Add custom headers
+    if (options.headers) {
+      Object.assign(headers, options.headers);
+    }
 
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
@@ -389,19 +408,19 @@ class APIService {
   // Auth API
   auth = {
     login: (userId: string, password?: string) =>
-      this.request<{ access_token: string; user: any }>('/auth/user/token', {
+      this.request<{ token: string; expires_at: string }>('/api/auth/user/token', {
         method: 'POST',
         body: JSON.stringify({ user_id: userId, password }),
       }),
 
     register: (userData: { user_id: string; introduction?: string; language?: string }) =>
-      this.request<{ token: string; expires_at: string }>('/auth/user/register', {
+      this.request<{ token: string; expires_at: string }>('/api/auth/user/register', {
         method: 'POST',
         body: JSON.stringify(userData),
       }),
 
     refreshToken: (userId: string) =>
-      this.request<{ access_token: string }>('/auth/user/token', {
+      this.request<{ token: string; expires_at: string }>('/api/auth/user/token', {
         method: 'POST',
         body: JSON.stringify({ user_id: userId }),
       }),
@@ -419,11 +438,11 @@ class APIService {
       }),
 
     getModel: (userId: string) =>
-      this.request<{ model: string }>(`/api/user/model?user_id=${userId}`),
+      this.request<{ model: string }>(`/api/?user_id=${userId}`),
 
     updateModel: (userId: string, model: string) =>
-      this.request<any>('/api/user/model', {
-        method: 'PATCH',
+      this.request<any>('/api/', {
+        method: 'PUT',
         body: JSON.stringify({ user_id: userId, model }),
       }),
   };
@@ -435,29 +454,86 @@ class APIService {
         to_user_id: toUserId,
       }),
 
-    pull: (userId: string) =>
-      this.request<any[]>(`/api/message/pull?user_id=${userId}`),
+    pull: async (userId: string) => {
+      const response = await this.request<any>(`/api/message/pull?user_id=${userId}`);
+      return ensureArray(response, 'messages');
+    },
   };
 
   // Friend API
   friend = {
-    request: (fromUserId: string, toUserId: string) =>
-      this.request<any>('/api/friend/', {
+    sendRequest: async (friendId: string): Promise<void> => {
+      console.log('=== 友達申請デバッグ ===');
+      console.log('API_BASE_URL:', API_BASE_URL);
+      console.log('friendId:', friendId);
+      console.log('token:', this.token);
+      
+      // 現在のユーザーIDを取得（JWTトークンから）
+      const currentUserId = this.getCurrentUserId();
+      if (!currentUserId) {
+        throw new Error('ユーザーIDが取得できません。ログインしてください。');
+      }
+      
+      try {
+        await this.request('/api/friend/', {
+          method: 'POST',
+          body: JSON.stringify({ 
+            from_user_id: currentUserId, 
+            to_user_id: friendId 
+          }),
+        });
+        console.log('友達申請成功');
+      } catch (error) {
+        console.error('友達申請エラー:', error);
+        throw error;
+      }
+    },
+
+    accept: (fromUserId: string, toUserId: string) => {
+      console.log('=== フレンド承認デバッグ ===');
+      console.log('fromUserId:', fromUserId);
+      console.log('toUserId:', toUserId);
+      const requestBody = { from_user_id: fromUserId, to_user_id: toUserId };
+      console.log('Request body:', requestBody);
+      
+      return this.request<any>('/api/friend/accept', {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+      });
+    },
+
+    list: async (userId: string) => {
+      const response = await this.request<any>(`/api/friend/list?user_id=${userId}`);
+      return ensureArray(response, 'friends');
+    },
+
+    requests: async (userId: string) => {
+      const response = await this.request<any>(`/api/friend/requests?user_id=${userId}`);
+      return ensureArray(response, 'requests');
+    },
+
+    // Test endpoints (no authentication required)
+    testRequest: (fromUserId: string, toUserId: string) =>
+      this.request<any>('/api/friend/test', {
         method: 'POST',
         body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
       }),
 
-    accept: (fromUserId: string, toUserId: string) =>
-      this.request<any>('/api/friend/accept', {
+    testAccept: (fromUserId: string, toUserId: string) =>
+      this.request<any>('/api/friend/test/accept', {
         method: 'POST',
         body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
       }),
 
-    list: (userId: string) =>
-      this.request<any[]>(`/api/friend/list?user_id=${userId}`),
+    testList: async (userId: string) => {
+      const response = await this.request<any>(`/api/friend/test/list/${userId}`);
+      return ensureArray(response, 'friends');
+    },
 
-    requests: () =>
-      this.request<any[]>(`/api/friend/requests`),
+    testRequests: async (userId: string) => {
+      const response = await this.request<any>(`/api/friend/test/requests/${userId}`);
+      return ensureArray(response, 'requests');
+    },
   };
 
   // Memory API
@@ -482,10 +558,10 @@ class APIService {
       });
     },
 
-    list: (userId: string, page: number = 1, limit: number = 20) =>
-      this.request<{ memories: any[]; total: number; page: number; pages: number }>(
-        `/api/memory/?user_id=${userId}&page=${page}&limit=${limit}`
-      ),
+    list: async (userId: string, page: number = 1, limit: number = 20) => {
+      const response = await this.request<any>(`/api/memory/?user_id=${userId}&page=${page}&limit=${limit}`);
+      return ensureArray(response, 'memories');
+    },
 
     delete: (memoryId: string) =>
       this.request<any>(`/api/memory/${memoryId}`, {
@@ -501,8 +577,10 @@ class APIService {
         body: JSON.stringify(alarmData),
       }),
 
-    list: (userId: string) =>
-      this.request<any[]>(`/api/alarm/?user_id=${userId}`),
+    list: async (userId: string) => {
+      const response = await this.request<any>(`/api/alarm/?user_id=${userId}`);
+      return ensureArray(response, 'alarms');
+    },
 
     update: (alarmId: string, alarmData: any) =>
       this.request<any>(`/api/alarm/${alarmId}`, {
@@ -530,8 +608,10 @@ class APIService {
       });
     },
 
-    list: (userId: string) =>
-      this.request<any[]>(`/api/voice/list?user_id=${userId}`),
+    list: async (userId: string) => {
+      const response = await this.request<any>(`/api/voice/list?user_id=${userId}`);
+      return ensureArray(response, 'voices');
+    },
 
     delete: (userId: string, speakerId: string) =>
       this.request<any>('/api/voice/delete', {
@@ -551,14 +631,18 @@ class APIService {
         body: JSON.stringify({ user_id: userId, price_id: priceId }),
       }),
 
-    getHistory: (userId: string) =>
-      this.request<any[]>(`/api/payment/history?user_id=${userId}`),
+    getHistory: async (userId: string) => {
+      const response = await this.request<any>(`/api/payment/history?user_id=${userId}`);
+      return ensureArray(response, 'payments');
+    },
   };
 
   // Admin API
   admin = {
-    getUsers: (page: number = 1, limit: number = 50) =>
-      this.request<any>(`/api/admin/users?page=${page}&limit=${limit}`),
+    getUsers: async (page: number = 1, limit: number = 50) => {
+      const response = await this.request<any>(`/api/admin/users?page=${page}&limit=${limit}`);
+      return ensureArray(response, 'users');
+    },
 
     banUser: (userId: string, reason?: string) =>
       this.request<any>('/api/admin/ban', {
@@ -566,8 +650,10 @@ class APIService {
         body: JSON.stringify({ user_id: userId, reason }),
       }),
 
-    getPrompts: () =>
-      this.request<any[]>('/api/admin/prompts'),
+    getPrompts: async () => {
+      const response = await this.request<any>('/api/admin/prompts');
+      return ensureArray(response, 'prompts');
+    },
 
     updatePrompt: (promptId: string, content: string) =>
       this.request<any>(`/api/admin/prompts/${promptId}`, {
@@ -575,6 +661,13 @@ class APIService {
         body: JSON.stringify({ content }),
       }),
   };
+}
+
+// 共通: レスポンスから配列を安全に取り出す関数
+function ensureArray<T>(response: any, key: string): T[] {
+  if (Array.isArray(response)) return response;
+  if (response && Array.isArray(response[key])) return response[key];
+  return [];
 }
 
 export const api = new APIService(API_BASE_URL);

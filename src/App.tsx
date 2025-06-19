@@ -14,7 +14,9 @@ import Admin from './pages/Admin';
 import DeviceRegistration from './pages/DeviceRegistration';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
+
+  console.log('ProtectedRoute check:', { user, isLoading, isAuthenticated });
 
   if (isLoading) {
     return (
@@ -24,15 +26,17 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  return user ? <>{children}</> : <Navigate to="/login" />;
+  return user && isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
 const AppRoutes: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+
+  console.log('AppRoutes render:', { user, isAuthenticated });
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" /> : <LoginForm />} />
+      <Route path="/login" element={user && isAuthenticated ? <Navigate to="/" /> : <LoginForm />} />
       <Route path="/RegisterDevice" element={<DeviceRegistration />} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
