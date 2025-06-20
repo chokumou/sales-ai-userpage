@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mic, Play, Pause, Trash2, Upload, Download, Volume2 } from 'lucide-react';
+import { Mic, Trash2, Upload, Volume2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { voiceAPI } from '../services/api';
@@ -19,7 +19,6 @@ const VoiceRegistration: React.FC = () => {
   const [voices, setVoices] = useState<VoiceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
-  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [newVoiceName, setNewVoiceName] = useState('');
   const [showRecorder, setShowRecorder] = useState(false);
 
@@ -92,24 +91,6 @@ const VoiceRegistration: React.FC = () => {
       console.error('Error deleting voice:', error);
       alert('Failed to delete voice. Please try again.');
     }
-  };
-
-  const playAudio = (audioUrl: string, voiceId: string) => {
-    if (playingAudio === voiceId) {
-      setPlayingAudio(null);
-      return;
-    }
-
-    const audio = new Audio(audioUrl);
-    setPlayingAudio(voiceId);
-    
-    audio.onended = () => setPlayingAudio(null);
-    audio.onerror = () => {
-      setPlayingAudio(null);
-      alert('Error playing audio');
-    };
-    
-    audio.play();
   };
 
   if (isLoading) {
@@ -277,27 +258,6 @@ const VoiceRegistration: React.FC = () => {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => playAudio(voice.file_url, voice.id)}
-                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Play voice sample"
-                  >
-                    {playingAudio === voice.id ? (
-                      <Pause className="w-5 h-5" />
-                    ) : (
-                      <Play className="w-5 h-5" />
-                    )}
-                  </button>
-                  
-                  <a
-                    href={voice.file_url}
-                    download={`${voice.name}.wav`}
-                    className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                    title="Download voice file"
-                  >
-                    <Download className="w-5 h-5" />
-                  </a>
-                  
                   <button
                     onClick={() => handleDeleteVoice(voice.id)}
                     className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

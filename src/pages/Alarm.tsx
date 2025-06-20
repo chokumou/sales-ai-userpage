@@ -169,38 +169,50 @@ const Alarm: React.FC = () => {
     }
   };
 
-  const formatDateTime = (alarmTime: string, timezone: string, alarmDate?: string) => {
+  const formatDateTime = (timeStr: string | null | undefined, timezone: string | null | undefined, dateStr: string | null | undefined) => {
+    if (!timeStr || !dateStr) {
+      return { date: '日付未設定', time: '時刻未設定' };
+    }
+
+    // YYYY/MM/DD 形式を YYYY-MM-DD に置換
+    const normalizedDateStr = dateStr.replace(/\//g, '-');
+    
+    const tz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
     try {
-      const [hours, minutes] = alarmTime.split(':');
-      let date: Date;
-      
-      if (alarmDate) {
-        // alarm_dateフィールドがある場合はそれを使用
-        date = new Date(`${alarmDate}T${alarmTime}:00`);
-      } else {
-        // 後方互換性のため、現在の日付を使用
-        date = new Date();
-        date.setUTCHours(parseInt(hours), parseInt(minutes));
+      const date = new Date(`${normalizedDateStr}T${timeStr}`);
+      if (isNaN(date.getTime())) {
+        // ここでも無効な日付をチェック
+        return { date: '日付形式エラー', time: '時刻形式エラー' };
       }
-      
-      const timeString = date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: timezone
-      });
-      
-      const dateString = date.toLocaleDateString('ja-JP', {
-        month: 'short',
+
+      const dateOptions: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'long',
         day: 'numeric',
         weekday: 'short',
-        timeZone: timezone
-      });
-      
-      return { time: timeString, date: dateString };
-    } catch {
-      return { time: alarmTime, date: '' };
+        timeZone: tz
+      };
+
+      const timeOptions: Intl.DateTimeFormatOptions = {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: tz
+      };
+
+      return {
+        date: new Intl.DateTimeFormat('ja-JP', dateOptions).format(date),
+        time: new Intl.DateTimeFormat('ja-JP', timeOptions).format(date)
+      };
+    } catch (error) {
+      console.error("Error formatting date/time:", error);
+      return { date: '表示エラー', time: '表示エラー' };
     }
+  };
+
+  const groupAlarmsByDate = (alarms: Alarm[]) => {
+    // ... existing code ...
   };
 
   if (isLoading) {
