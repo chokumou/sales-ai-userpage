@@ -12,6 +12,7 @@ interface Alarm {
   timezone: string;
   fired: boolean;
   created_at: string;
+  alarm_date?: string;
 }
 
 const Alarm: React.FC = () => {
@@ -22,6 +23,7 @@ const Alarm: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null);
   const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
     time: '',
     text: '',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -55,23 +57,25 @@ const Alarm: React.FC = () => {
 
     try {
       if (editingAlarm) {
-        // Update existing alarm
         await alarmAPI.update(editingAlarm.id, {
+          date: formData.date,
           time: formData.time,
           timezone: formData.timezone,
           text: formData.text
         });
         setEditingAlarm(null);
       } else {
-        // Create new alarm
         await alarmAPI.create({
-          ...formData,
+          date: formData.date,
+          time: formData.time,
+          timezone: formData.timezone,
+          text: formData.text,
           user_id: user.id
         });
       }
 
-      // Reset form and reload alarms
       setFormData({
+        date: new Date().toISOString().split('T')[0],
         time: '',
         text: '',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -86,7 +90,22 @@ const Alarm: React.FC = () => {
 
   const handleEdit = (alarm: Alarm) => {
     setEditingAlarm(alarm);
+    
+    // アラーム時刻から日付と時刻を分離
+    const [hours, minutes] = alarm.alarm_time.split(':');
+    let date: Date;
+    
+    if (alarm.alarm_date) {
+      // alarm_dateフィールドがある場合はそれを使用
+      date = new Date(`${alarm.alarm_date}T${alarm.alarm_time}:00`);
+    } else {
+      // 後方互換性のため、現在の日付を使用
+      date = new Date();
+      date.setUTCHours(parseInt(hours), parseInt(minutes));
+    }
+    
     setFormData({
+      date: date.toISOString().split('T')[0],
       time: alarm.alarm_time,
       text: alarm.message,
       timezone: alarm.timezone
@@ -110,9 +129,26 @@ const Alarm: React.FC = () => {
     setShowCreateForm(false);
     setEditingAlarm(null);
     setFormData({
+      date: new Date().toISOString().split('T')[0],
       time: '',
       text: '',
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
+  };
+
+  const setToday = () => {
+    setFormData({
+      ...formData,
+      date: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  const setTomorrow = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    setFormData({
+      ...formData,
+      date: tomorrow.toISOString().split('T')[0]
     });
   };
 
@@ -130,6 +166,40 @@ const Alarm: React.FC = () => {
       });
     } catch {
       return alarmTime;
+    }
+  };
+
+  const formatDateTime = (alarmTime: string, timezone: string, alarmDate?: string) => {
+    try {
+      const [hours, minutes] = alarmTime.split(':');
+      let date: Date;
+      
+      if (alarmDate) {
+        // alarm_dateフィールドがある場合はそれを使用
+        date = new Date(`${alarmDate}T${alarmTime}:00`);
+      } else {
+        // 後方互換性のため、現在の日付を使用
+        date = new Date();
+        date.setUTCHours(parseInt(hours), parseInt(minutes));
+      }
+      
+      const timeString = date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: timezone
+      });
+      
+      const dateString = date.toLocaleDateString('ja-JP', {
+        month: 'short',
+        day: 'numeric',
+        weekday: 'short',
+        timeZone: timezone
+      });
+      
+      return { time: timeString, date: dateString };
+    } catch {
+      return { time: alarmTime, date: '' };
     }
   };
 
@@ -176,6 +246,36 @@ const Alarm: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date
+                  </label>
+                  <div className="space-y-2">
+                    <input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                    <div className="flex space-x-2">
+                      <button
+                        type="button"
+                        onClick={setToday}
+                        className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+                      >
+                        今日
+                      </button>
+                      <button
+                        type="button"
+                        onClick={setTomorrow}
+                        className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                      >
+                        明日
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Time
                   </label>
                   <input
@@ -186,21 +286,21 @@ const Alarm: React.FC = () => {
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Timezone
-                  </label>
-                  <select
-                    value={formData.timezone}
-                    onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-                    <option value="UTC">UTC</option>
-                    <option value="America/New_York">America/New_York (EST)</option>
-                    <option value="Europe/London">Europe/London (GMT)</option>
-                  </select>
-                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Timezone
+                </label>
+                <select
+                  value={formData.timezone}
+                  onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                  <option value="UTC">UTC</option>
+                  <option value="America/New_York">America/New_York (EST)</option>
+                  <option value="Europe/London">Europe/London (GMT)</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -266,13 +366,17 @@ const Alarm: React.FC = () => {
                       <div>
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-semibold text-gray-900">
-                            {formatTime(alarm.alarm_time, alarm.timezone)}
+                            {formatDateTime(alarm.alarm_time, alarm.timezone, alarm.alarm_date).time}
                           </span>
                           <span className="text-sm text-gray-500">
                             ({alarm.timezone})
                           </span>
                         </div>
-                        <p className="text-gray-600">{alarm.message}</p>
+                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          <span>{formatDateTime(alarm.alarm_time, alarm.timezone, alarm.alarm_date).date}</span>
+                          <span>•</span>
+                          <span>{alarm.message}</span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">

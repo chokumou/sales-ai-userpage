@@ -565,7 +565,7 @@ class APIService {
 
   // Alarm API
   alarm = {
-    create: (alarmData: { user_id: string; time: string; timezone: string; text: string }) =>
+    create: (alarmData: { user_id: string; date: string; time: string; timezone: string; text: string }) =>
       this.request<any>('/api/alarm', {
         method: 'POST',
         body: JSON.stringify(alarmData),
@@ -574,7 +574,7 @@ class APIService {
     list: (userId: string) =>
       this.request<{ alarms: any[] }>(`/api/alarm/?user_id=${userId}`),
 
-    update: (alarmId: string, alarmData: { time: string; timezone: string; text: string }) =>
+    update: (alarmId: string, alarmData: { date: string; time: string; timezone: string; text: string }) =>
       this.request<any>(`/api/alarm/${alarmId}`, {
         method: 'PUT',
         body: JSON.stringify(alarmData),
