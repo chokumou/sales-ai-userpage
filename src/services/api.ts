@@ -500,13 +500,35 @@ class APIService {
 
   // Message API
   message = {
-    send: (toUserId: string, audioFile: File) =>
-      this.uploadFile<any>('/api/message/send', audioFile, {
+    // 友達とのメッセージ一覧を取得（最新5件まで）
+    getList: (friendId: string) => {
+      if (!friendId || friendId === 'undefined') {
+        throw new Error('友達IDが指定されていません');
+      }
+      return this.request<{ messages: any[]; total_count: number }>(`/api/message/list?friend_id=${friendId}`);
+    },
+
+    // 音声メッセージを送信
+    send: (toUserId: string, audioFile: File) => {
+      if (!toUserId || toUserId === 'undefined') {
+        throw new Error('送信先の友達IDが指定されていません');
+      }
+      return this.uploadFile<any>('/api/message/send', audioFile, {
         to_user_id: toUserId,
+      });
+    },
+
+    // メッセージを削除
+    delete: (messageId: string) =>
+      this.request<any>(`/api/message/${messageId}`, {
+        method: 'DELETE',
       }),
 
-    pull: (userId: string) =>
-      this.request<any[]>(`/api/message/pull?user_id=${userId}`),
+    // メッセージを既読にする
+    markAsRead: (messageId: string) =>
+      this.request<any>(`/api/message/read/${messageId}`, {
+        method: 'POST',
+      }),
   };
 
   // Friend API
