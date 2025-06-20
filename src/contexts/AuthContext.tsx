@@ -6,9 +6,11 @@ interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
   refreshToken: () => Promise<void>;
+  detectBackendPort: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,9 +28,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // バックエンドポートを検出する関数
+  const detectBackendPort = async () => {
+    try {
+      console.log('Detecting backend port...');
+      await api.updateBaseURL();
+      console.log('Backend port detection completed');
+    } catch (error) {
+      console.error('Error detecting backend port:', error);
+    }
+  };
+
   useEffect(() => {
-    const loadUser = async () => {
+    const initializeApp = async () => {
       try {
+        // まずバックエンドポートを検出
+        await detectBackendPort();
+
         const storedUser = localStorage.getItem('nekota_user');
         const token = localStorage.getItem('nekota_token');
 
@@ -45,13 +61,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           api.setToken(token);
         }
       } catch (error) {
-        console.error('Error loading user:', error);
+        console.error('Error initializing app:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadUser();
+    initializeApp();
   }, []);
 
   const login = (token: string, userData: User) => {
@@ -95,9 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         setUser,
         isAuthenticated,
+        isLoading,
         login,
         logout,
         refreshToken,
+        detectBackendPort,
       }}
     >
       {children}

@@ -19,10 +19,15 @@ interface FriendRequest {
   id: string;
   from_user_id: string;
   to_user_id: string;
-  from_user_name: string;
+  from_user?: {
+    id: string;
+    name: string;
+    introduction: string;
+  };
   message?: string;
   timestamp: string;
   status: 'pending' | 'accepted' | 'declined';
+  request_type?: 'received' | 'sent';
 }
 
 const Friends: React.FC = () => {
@@ -46,24 +51,28 @@ const Friends: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const friendsData = await friendAPI.list(user.id);
-      setFriends(friendsData || []);
       
-      // Mock friend requests for demo
-      setFriendRequests([
-        {
-          id: '1',
-          from_user_id: 'demo_user_2',
-          to_user_id: user.id,
-          from_user_name: 'Jane Smith',
-          message: 'Hello! I\'d like to connect with you.',
-          timestamp: new Date().toISOString(),
-          status: 'pending'
-        }
-      ]);
+      // フレンド一覧を取得
+      const friendsData = await friendAPI.list(user.id);
+      console.log('Friends data received:', friendsData);
+      setFriends(Array.isArray(friendsData.friends) ? friendsData.friends : []);
+      
+      // フレンド申請一覧を取得
+      const requestsData = await friendAPI.requests();
+      console.log('Friend requests data received:', requestsData);
+      
+      if (requestsData && requestsData.requests) {
+        // すべての申請（送信・受信）を表示
+        setFriendRequests(requestsData.requests);
+      } else {
+        setFriendRequests([]);
+      }
     } catch (error) {
       console.error('Error loading friends:', error);
       setFriends([]);
+      setFriendRequests([]);
+      // エラーメッセージを表示
+      alert('Failed to load friends. Please try refreshing the page.');
     } finally {
       setIsLoading(false);
     }
@@ -77,6 +86,8 @@ const Friends: React.FC = () => {
       setNewFriendId('');
       setShowAddFriend(false);
       alert('Friend request sent successfully!');
+      // フレンド申請一覧を再読み込み
+      await loadFriends();
     } catch (error) {
       console.error('Error sending friend request:', error);
       alert('Failed to send friend request. Please try again.');
@@ -88,16 +99,25 @@ const Friends: React.FC = () => {
 
     try {
       await friendAPI.accept(fromUserId, user.id);
+      // フレンド一覧と申請一覧を再読み込み
       await loadFriends();
-      setFriendRequests(prev => prev.filter(req => req.from_user_id !== fromUserId));
     } catch (error) {
       console.error('Error accepting friend request:', error);
       alert('Failed to accept friend request. Please try again.');
     }
   };
 
-  const handleRejectFriendRequest = (fromUserId: string) => {
-    setFriendRequests(prev => prev.filter(req => req.from_user_id !== fromUserId));
+  const handleRejectFriendRequest = async (fromUserId: string) => {
+    if (!user) return;
+
+    try {
+      // 拒否処理（APIが実装されていない場合は、フロントエンドで一時的に削除）
+      setFriendRequests(prev => prev.filter(req => req.from_user_id !== fromUserId));
+      // TODO: 拒否APIが実装されたら、ここでAPIを呼び出す
+    } catch (error) {
+      console.error('Error rejecting friend request:', error);
+      alert('Failed to reject friend request. Please try again.');
+    }
   };
 
   const handleStartConversation = (friend: Friend) => {
@@ -105,10 +125,10 @@ const Friends: React.FC = () => {
     setShowMessaging(true);
   };
 
-  const filteredFriends = friends.filter(friend =>
+  const filteredFriends = Array.isArray(friends) ? friends.filter(friend =>
     friend.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     friend.introduction.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) : [];
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -152,7 +172,7 @@ const Friends: React.FC = () => {
         </div>
         <div className="mt-4 sm:mt-0 flex items-center space-x-4">
           <span className="text-sm text-gray-500">
-            {friends.length} friends
+            {Array.isArray(friends) ? friends.length : 0} friends
           </span>
           <button
             onClick={() => setShowAddFriend(true)}
@@ -170,38 +190,62 @@ const Friends: React.FC = () => {
           {/* Friend Requests */}
           {friendRequests.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Friend Requests ({friendRequests.length})
-              </h2>
-              <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Friend Requests</h3>
+              <div className="space-y-3">
                 {friendRequests.map((request) => (
                   <div key={request.id} className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                         <span className="text-white font-medium text-sm">
-                          {getInitials(request.from_user_name)}
+                          {getInitials(request.from_user?.name || 'Unknown User')}
                         </span>
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900">{request.from_user_name}</h3>
-                        <p className="text-sm text-gray-600">{request.message}</p>
+                        <h3 className="font-medium text-gray-900">{request.from_user?.name || 'Unknown User'}</h3>
+                        <p className="text-sm text-gray-600">{request.from_user?.introduction || 'No introduction'}</p>
+                        <p className="text-xs text-gray-500">
+                          {request.request_type === 'sent' ? 'Sent by you' : 'Received from'}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleAcceptFriendRequest(request.from_user_id)}
-                        className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                        title="Accept"
-                      >
-                        <UserCheck className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleRejectFriendRequest(request.from_user_id)}
-                        className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                        title="Decline"
-                      >
-                        <UserX className="w-4 h-4" />
-                      </button>
+                      {request.request_type === 'received' ? (
+                        <>
+                          <button
+                            onClick={() => handleAcceptFriendRequest(request.from_user?.id || '')}
+                            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            title="Accept"
+                          >
+                            <UserCheck className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleRejectFriendRequest(request.from_user?.id || '')}
+                            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            title="Decline"
+                          >
+                            <UserX className="w-4 h-4" />
+                          </button>
+                        </>
+                      ) : request.request_type === 'sent' ? (
+                        <>
+                          <button
+                            onClick={() => handleAcceptFriendRequest(request.from_user?.id || '')}
+                            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            title="Accept"
+                          >
+                            <UserCheck className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleRejectFriendRequest(request.from_user?.id || '')}
+                            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            title="Decline"
+                          >
+                            <UserX className="w-4 h-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-sm text-gray-500">Pending...</span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -229,15 +273,15 @@ const Friends: React.FC = () => {
               <div className="text-center py-16">
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {friends.length === 0 ? 'No friends yet' : 'No friends match your search'}
+                  {!Array.isArray(friends) || friends.length === 0 ? 'No friends yet' : 'No friends match your search'}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  {friends.length === 0 
+                  {!Array.isArray(friends) || friends.length === 0 
                     ? 'Start building your network by adding friends to share AI conversations.'
                     : 'Try adjusting your search terms.'
                   }
                 </p>
-                {friends.length === 0 && (
+                {(!Array.isArray(friends) || friends.length === 0) && (
                   <button
                     onClick={() => setShowAddFriend(true)}
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"

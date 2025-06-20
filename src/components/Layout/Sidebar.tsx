@@ -12,7 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Globe,
-  User
+  User,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -33,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     { to: '/voice', icon: Mic, label: t('nav.voice') },
     { to: '/memory', icon: Brain, label: t('nav.memory') },
     { to: '/friends', icon: Users, label: t('nav.friends') },
+    { to: '/alarm', icon: Clock, label: t('nav.alarm') || 'Alarms' },
     { to: '/upgrade', icon: CreditCard, label: t('nav.upgrade') },
     { to: '/payments', icon: Receipt, label: t('nav.payments') },
   ];

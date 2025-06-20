@@ -1,11 +1,55 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nekota-server-production.up.railway.app';
+// 動的にバックエンドポートを検出する関数
+async function detectBackendPort(): Promise<string> {
+  const possiblePorts = [8090, 8081, 8000, 8080, 3001, 3000];
+  const baseHost = 'http://localhost';
+  
+  for (const port of possiblePorts) {
+    try {
+      const response = await fetch(`${baseHost}:${port}/docs`, {
+        method: 'HEAD',
+        mode: 'no-cors',
+        cache: 'no-cache'
+      });
+      
+      // レスポンスが取得できた場合、そのポートが利用可能
+      console.log(`Backend detected at port ${port}`);
+      return `${baseHost}:${port}`;
+    } catch (error) {
+      console.log(`Port ${port} not available:`, error);
+      continue;
+    }
+  }
+  
+  // デフォルトポートを返す
+  console.log('No backend detected, using default port 8090');
+  return 'http://localhost:8090';
+}
+
+// 動的にAPI_BASE_URLを設定（デフォルトは8090番ポート）
+let API_BASE_URL = 'http://localhost:8090';
+
+// 環境変数が設定されている場合はそれを使用
+if (import.meta.env.VITE_API_BASE_URL) {
+  API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  console.log('Using VITE_API_BASE_URL:', API_BASE_URL);
+} else {
+  console.log('Using default API_BASE_URL:', API_BASE_URL);
+}
 
 class APIService {
   private baseURL: string;
   private token: string | null = null;
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
+  constructor(baseURL?: string) {
+    this.baseURL = baseURL || API_BASE_URL;
+    console.log('APIService initialized with baseURL:', this.baseURL);
+  }
+
+  // ポートを動的に更新するメソッド
+  async updateBaseURL(): Promise<void> {
+    const newBaseURL = await detectBackendPort();
+    this.baseURL = newBaseURL;
+    console.log('Updated API_BASE_URL to:', this.baseURL);
   }
 
   setToken(token: string | null) {
@@ -27,9 +71,9 @@ class APIService {
 
     // Real API call
     const url = `${this.baseURL}${endpoint}`;
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (this.token) {
@@ -74,6 +118,32 @@ class APIService {
       return data;
     } catch (error) {
       console.error('API Request Failed:', error);
+      
+      // 接続エラーの場合、ポートを再検出してリトライ
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        console.log('Connection failed, trying to detect backend port...');
+        await this.updateBaseURL();
+        
+        // 新しいポートでリトライ
+        const retryUrl = `${this.baseURL}${endpoint}`;
+        console.log(`Retrying with new URL: ${retryUrl}`);
+        
+        const retryResponse = await fetch(retryUrl, {
+          ...options,
+          headers,
+        });
+        
+        if (!retryResponse.ok) {
+          const errorText = await retryResponse.text();
+          console.error('API Error Response (retry):', errorText);
+          throw new Error(`API Error: ${retryResponse.status} ${retryResponse.statusText}`);
+        }
+        
+        const data = await retryResponse.json();
+        console.log('API Response Data (retry):', data);
+        return data;
+      }
+      
       throw error;
     }
   }
@@ -389,19 +459,19 @@ class APIService {
   // Auth API
   auth = {
     login: (userId: string, password?: string) =>
-      this.request<{ access_token: string; user: any }>('/auth/user/token', {
+      this.request<{ token: string; expires_at: string }>('/api/auth/user/token', {
         method: 'POST',
-        body: JSON.stringify({ user_id: userId, password }),
+        body: JSON.stringify({ user_id: userId }),
       }),
 
     register: (userData: { user_id: string; introduction?: string; language?: string }) =>
-      this.request<{ token: string; expires_at: string }>('/auth/user/register', {
+      this.request<{ token: string; expires_at: string }>('/api/auth/user/register', {
         method: 'POST',
         body: JSON.stringify(userData),
       }),
 
     refreshToken: (userId: string) =>
-      this.request<{ access_token: string }>('/auth/user/token', {
+      this.request<{ token: string; expires_at: string }>('/api/auth/user/token', {
         method: 'POST',
         body: JSON.stringify({ user_id: userId }),
       }),
@@ -454,7 +524,10 @@ class APIService {
       }),
 
     list: (userId: string) =>
-      this.request<any[]>(`/api/friend/list?user_id=${userId}`),
+      this.request<{ friends: any[] }>(`/api/friend/list?user_id=${userId}`),
+
+    requests: () =>
+      this.request<{ requests: any[] }>('/api/friend/requests'),
   };
 
   // Memory API
@@ -493,17 +566,17 @@ class APIService {
   // Alarm API
   alarm = {
     create: (alarmData: { user_id: string; time: string; timezone: string; text: string }) =>
-      this.request<any>('/api/alarm/', {
+      this.request<any>('/api/alarm', {
         method: 'POST',
         body: JSON.stringify(alarmData),
       }),
 
     list: (userId: string) =>
-      this.request<any[]>(`/api/alarm/?user_id=${userId}`),
+      this.request<{ alarms: any[] }>(`/api/alarm/?user_id=${userId}`),
 
-    update: (alarmId: string, alarmData: any) =>
+    update: (alarmId: string, alarmData: { time: string; timezone: string; text: string }) =>
       this.request<any>(`/api/alarm/${alarmId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify(alarmData),
       }),
 
