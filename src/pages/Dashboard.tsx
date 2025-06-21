@@ -119,7 +119,8 @@ const Dashboard: React.FC = () => {
         profile: profileData,
         memories: memoriesData,
         friends: friendsData,
-        model: modelData
+        model: modelData,
+        user: user
       });
 
       setStats({

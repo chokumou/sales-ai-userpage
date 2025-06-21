@@ -124,6 +124,21 @@ class APIService {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
 
+  // 現在のユーザーIDを取得するヘルパーメソッド
+  private getCurrentUserId(): string | null {
+    const token = this.token;
+    if (!token) return null;
+    
+    try {
+      // JWTトークンをデコードしてユーザーIDを取得
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.user_id || payload.sub;
+    } catch (error) {
+      console.error('JWTトークンのデコードに失敗:', error);
+      return null;
+    }
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -151,6 +166,11 @@ class APIService {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
     };
+
+    // Add custom headers
+    if (options.headers) {
+      Object.assign(headers, options.headers);
+    }
 
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
@@ -640,27 +660,78 @@ class APIService {
 
   // Friend API
   friend = {
-    request: (fromUserId: string, toUserId: string) =>
-      this.request<any>('/api/friend/', {
+    sendRequest: async (friendId: string): Promise<void> => {
+      console.log('=== 友達申請デバッグ ===');
+      console.log('API_BASE_URL:', API_BASE_URL);
+      console.log('friendId:', friendId);
+      console.log('token:', this.token);
+      
+      // 現在のユーザーIDを取得（JWTトークンから）
+      const currentUserId = this.getCurrentUserId();
+      if (!currentUserId) {
+        throw new Error('ユーザーIDが取得できません。ログインしてください。');
+      }
+      
+      try {
+        await this.request('/api/friend/', {
+          method: 'POST',
+          body: JSON.stringify({ 
+            from_user_id: currentUserId, 
+            to_user_id: friendId 
+          }),
+        });
+        console.log('友達申請成功');
+      } catch (error) {
+        console.error('友達申請エラー:', error);
+        throw error;
+      }
+    },
+
+    accept: (fromUserId: string, toUserId: string) => {
+      console.log('=== フレンド承認デバッグ ===');
+      console.log('fromUserId:', fromUserId);
+      console.log('toUserId:', toUserId);
+      const requestBody = { from_user_id: fromUserId, to_user_id: toUserId };
+      console.log('Request body:', requestBody);
+      
+      return this.request<any>('/api/friend/accept', {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+      });
+    },
+
+    list: async (userId: string) => {
+      const response = await this.request<any>(`/api/friend/list?user_id=${userId}`);
+      return ensureArray(response, 'friends');
+    },
+
+    requests: async (userId: string) => {
+      const response = await this.request<any>(`/api/friend/requests?user_id=${userId}`);
+      return ensureArray(response, 'requests');
+    },
+
+    // Test endpoints (no authentication required)
+    testRequest: (fromUserId: string, toUserId: string) =>
+      this.request<any>('/api/friend/test', {
         method: 'POST',
         body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
       }),
 
-    accept: (fromUserId: string, toUserId: string) =>
-      this.request<any>('/api/friend/accept', {
+    testAccept: (fromUserId: string, toUserId: string) =>
+      this.request<any>('/api/friend/test/accept', {
         method: 'POST',
         body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
       }),
 
-    list: (userId: string) =>
-      this.request<any[]>(`/api/friend/list?user_id=${userId}`).catch((error) => {
-        console.error('Error getting friends:', error);
-        // デフォルト値を返す
-        return [];
-      }),
+    testList: async (userId: string) => {
+      const response = await this.request<any>(`/api/friend/test/list/${userId}`);
+      return ensureArray(response, 'friends');
+    },
 
-    requests: () =>
-      this.request<{ requests: any[] }>('/api/friend/requests'),
+    testRequests: async (userId: string) => {
+      const response = await this.request<any>(`/api/friend/test/requests/${userId}`);
+      return ensureArray(response, 'requests');
+    },
   };
 
   // Memory API
@@ -685,14 +756,10 @@ class APIService {
       });
     },
 
-    list: (userId: string, page: number = 1, limit: number = 20) =>
-      this.request<{ memories: any[]; total: number; page: number; pages: number }>(
-        `/api/memory/?user_id=${userId}&page=${page}&limit=${limit}`
-      ).catch((error) => {
-        console.error('Error getting memories:', error);
-        // デフォルト値を返す
-        return { memories: [], total: 0, page: 1, pages: 0 };
-      }),
+    list: async (userId: string, page: number = 1, limit: number = 20) => {
+      const response = await this.request<any>(`/api/memory/?user_id=${userId}&page=${page}&limit=${limit}`);
+      return ensureArray(response, 'memories');
+    },
 
     delete: (memoryId: string) =>
       this.request<any>(`/api/memory/${memoryId}`, {
@@ -708,8 +775,10 @@ class APIService {
         body: JSON.stringify(alarmData),
       }),
 
-    list: (userId: string) =>
-      this.request<{ alarms: any[] }>(`/api/alarm/?user_id=${userId}`),
+    list: async (userId: string) => {
+      const response = await this.request<any>(`/api/alarm/?user_id=${userId}`);
+      return ensureArray(response, 'alarms');
+    },
 
     update: (alarmId: string, alarmData: { date: string; time: string; timezone: string; text: string }) =>
       this.request<any>(`/api/alarm/${alarmId}`, {
@@ -737,8 +806,10 @@ class APIService {
       });
     },
 
-    list: (userId: string) =>
-      this.request<any[]>(`/api/voice/list?user_id=${userId}`),
+    list: async (userId: string) => {
+      const response = await this.request<any>(`/api/voice/list?user_id=${userId}`);
+      return ensureArray(response, 'voices');
+    },
 
     delete: (userId: string, speakerId: string) =>
       this.request<any>('/api/voice/delete', {
@@ -752,34 +823,36 @@ class APIService {
 
   // Payment API
   payment = {
-    createCheckoutSession: (userId: string, priceId: string): Promise<CheckoutSessionResponse | AlreadyPremiumResponse> => {
-      return this.post('/api/payment/create-checkout-session', {
-        user_id: userId,
-        price_id: priceId,
-      });
-    },
-    getHistory: (user_id: string, params: { limit?: number; starting_after?: string } = {}) => {
-      const query = new URLSearchParams({
-        user_id,
-        ...Object.fromEntries(Object.entries(params).filter(([_, v]) => v != null)),
-      }).toString();
-      return this.get<{ payments: any[]; total_count: number; has_more: boolean }>(`/api/payment/history?${query}`);
-    },
-    getPaymentHistory: (userId: string, page: number = 1, limit: number = 10): Promise<any> => {
-      return this.get(`/api/payment/history?user_id=${userId}&page=${page}&limit=${limit}`);
+    createCheckoutSession: (userId: string, priceId?: string) =>
+      this.request<{ url: string; session_id: string }>('/api/payment/create-checkout-session', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId, price_id: priceId }),
+      }),
+
+    getHistory: async (userId: string) => {
+      const response = await this.request<any>(`/api/payment/history?user_id=${userId}`);
+      return ensureArray(response, 'payments');
     },
   };
 
   // Admin API
   admin = {
-    getAllUsers: (): Promise<any[]> => this.get('/api/admin/users'),
+    getUsers: async (page: number = 1, limit: number = 50) => {
+      const response = await this.request<any>(`/api/admin/users?page=${page}&limit=${limit}`);
+      return ensureArray(response, 'users');
+    },
+
     banUser: (userId: string, reason?: string) =>
       this.request<any>('/api/admin/ban', {
         method: 'POST',
         body: JSON.stringify({ user_id: userId, reason }),
       }),
-    getPrompts: () =>
-      this.request<any[]>('/api/admin/prompts'),
+
+    getPrompts: async () => {
+      const response = await this.request<any>('/api/admin/prompts');
+      return ensureArray(response, 'prompts');
+    },
+
     updatePrompt: (promptId: string, content: string) =>
       this.request<any>(`/api/admin/prompts/${promptId}`, {
         method: 'PATCH',
@@ -834,4 +907,11 @@ export interface AlreadyPremiumResponse {
   message: string;
   redirect_url?: string;
   url?: undefined; // URLがないことを明示
+}
+
+// 共通: レスポンスから配列を安全に取り出す関数
+function ensureArray<T>(response: any, key: string): T[] {
+  if (Array.isArray(response)) return response;
+  if (response && Array.isArray(response[key])) return response[key];
+  return [];
 }

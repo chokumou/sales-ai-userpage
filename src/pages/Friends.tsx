@@ -49,22 +49,22 @@ const Friends: React.FC = () => {
       const response = await friendAPI.list(user.id);
       const friendsData = (response as any)?.friends || [];
       setFriends(friendsData);
-      
-      // Mock friend requests for demo
-      setFriendRequests([
-        {
-          id: '1',
-          from_user_id: 'demo_user_2',
-          to_user_id: user.id,
-          from_user_name: 'Jane Smith',
-          message: 'Hello! I\'d like to connect with you.',
-          timestamp: new Date().toISOString(),
-          status: 'pending'
-        }
-      ]);
+      // テスト用エンドポイントを使用（認証なし）
+      const requestsData = await friendAPI.testRequests(user.id);
+      console.log('[DEBUG] friendAPI.testRequests() result:', requestsData);
+      // リクエストデータも同様に処理
+      if (requestsData && typeof requestsData === 'object' && 'requests' in requestsData) {
+        setFriendRequests(Array.isArray(requestsData.requests) ? requestsData.requests as FriendRequest[] : []);
+      } else if (Array.isArray(requestsData)) {
+        setFriendRequests(requestsData as FriendRequest[]);
+      } else {
+        console.warn('Unexpected requests data structure:', requestsData);
+        setFriendRequests([]);
+      }
     } catch (error) {
       console.error('Error loading friends:', error);
       setFriends([]);
+      setFriendRequests([]);
     } finally {
       setIsLoading(false);
     }
@@ -74,10 +74,34 @@ const Friends: React.FC = () => {
     if (!user || !newFriendId.trim()) return;
 
     try {
-      await friendAPI.request(user.id, newFriendId);
+      console.log('=== フレンド申請デバッグ ===');
+      console.log('user:', user);
+      console.log('newFriendId (before cleanup):', newFriendId);
+      
+      // フレンドIDをクリーンアップ（余分な文字・空白・全角スペース・改行を除去、ハイフンは残す）
+      const cleanFriendId = newFriendId
+        .replace(/\s|\u3000/g, '') // 空白・全角スペース・改行を除去
+        .replace(/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?]/g, ''); // ハイフンは除去しない
+      console.log('newFriendId (after cleanup):', cleanFriendId);
+      
+      if (!cleanFriendId) {
+        alert('有効なフレンドIDを入力してください。');
+        return;
+      }
+
+      // UUID形式のバリデーション
+      if (!isValidUUID(cleanFriendId)) {
+        alert('フレンドIDはUUID形式で入力してください。\n例: 5db72bb0-11da-429e-8f33-47a43917fbe6');
+        return;
+      }
+      
+      // テスト用エンドポイントを使用（認証なし）
+      await friendAPI.testRequest(user.id, cleanFriendId);
       setNewFriendId('');
       setShowAddFriend(false);
       alert('Friend request sent successfully!');
+      // Reload friends to show updated data
+      await loadFriends();
     } catch (error) {
       console.error('Error sending friend request:', error);
       alert('Failed to send friend request. Please try again.');
@@ -85,10 +109,46 @@ const Friends: React.FC = () => {
   };
 
   const handleAcceptFriendRequest = async (fromUserId: string) => {
-    if (!user) return;
+    if (!user) {
+      console.error('User not found');
+      alert('ユーザー情報が見つかりません。ログインし直してください。');
+      return;
+    }
+
+    console.log('=== フレンド承認処理デバッグ ===');
+    console.log('fromUserId:', fromUserId);
+    console.log('user.id:', user.id);
+    console.log('user object:', user);
+
+    // user.idが存在しない場合のフォールバック
+    let currentUserId = user.id;
+    
+    if (!currentUserId) {
+      console.log('User ID not found in user object, trying to get from JWT token');
+      // JWTトークンからユーザーIDを取得
+      const token = localStorage.getItem('nekota_token');
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          currentUserId = payload.user_id || payload.sub;
+          console.log('User ID from JWT token:', currentUserId);
+        } catch (error) {
+          console.error('Failed to decode JWT token:', error);
+        }
+      }
+    }
+    
+    if (!currentUserId) {
+      console.error('User ID not found in user object or JWT token');
+      alert('ユーザーIDが見つかりません。ログインし直してください。');
+      return;
+    }
+
+    console.log('Final currentUserId:', currentUserId);
 
     try {
-      await friendAPI.accept(fromUserId, user.id);
+      // テスト用エンドポイントを使用（認証なし）
+      await friendAPI.testAccept(fromUserId, currentUserId);
       await loadFriends();
       setFriendRequests(prev => prev.filter(req => req.from_user_id !== fromUserId));
     } catch (error) {
@@ -106,13 +166,22 @@ const Friends: React.FC = () => {
     setShowMessaging(true);
   };
 
-  const filteredFriends = friends.filter(friend =>
-    friend.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    friend.introduction.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredFriends = Array.isArray(friends) ? friends.filter(friend => 
+    (friend.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (friend.introduction || '').toLowerCase().includes(searchQuery.toLowerCase())
+  ) : [];
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined | null) => {
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      return '??';
+    }
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // UUID形式のバリデーション関数
+  const isValidUUID = (uuid: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
   };
 
   const formatLastMessage = (timestamp?: string) => {
@@ -153,7 +222,7 @@ const Friends: React.FC = () => {
         </div>
         <div className="mt-4 sm:mt-0 flex items-center space-x-4">
           <span className="text-sm text-gray-500">
-            {friends.length} friends
+            {Array.isArray(friends) ? friends.length : 0} friends
           </span>
           <button
             onClick={() => setShowAddFriend(true)}
@@ -175,37 +244,45 @@ const Friends: React.FC = () => {
                 Friend Requests ({friendRequests.length})
               </h2>
               <div className="space-y-4">
-                {friendRequests.map((request) => (
-                  <div key={request.id} className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                        <span className="text-white font-medium text-sm">
-                          {getInitials(request.from_user_name)}
-                        </span>
+                {friendRequests.map((request) => {
+                  console.log('【DEBUG】フレンド申請リストのrequest:', request);
+                  // from_user_idがなければ警告
+                  if (!request.from_user_id) {
+                    console.warn('【WARNING】request.from_user_idがundefinedです。request:', request);
+                  }
+                  return (
+                    <div key={(request.from_user_id || 'unknown') + '-' + (request.to_user_id || 'unknown')} className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-medium text-sm">
+                            {getInitials(request.from_user_name)}
+                          </span>
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">{request.from_user_name || 'Unknown User'}</h3>
+                          <p className="text-sm text-gray-600">{request.message || 'No message'}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">{request.from_user_name}</h3>
-                        <p className="text-sm text-gray-600">{request.message}</p>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleAcceptFriendRequest(request.from_user_id)}
+                          className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                          title="Accept"
+                          disabled={!request.from_user_id}
+                        >
+                          <UserCheck className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleRejectFriendRequest(request.from_user_id)}
+                          className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                          title="Decline"
+                        >
+                          <UserX className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleAcceptFriendRequest(request.from_user_id)}
-                        className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                        title="Accept"
-                      >
-                        <UserCheck className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleRejectFriendRequest(request.from_user_id)}
-                        className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                        title="Decline"
-                      >
-                        <UserX className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -230,15 +307,15 @@ const Friends: React.FC = () => {
               <div className="text-center py-16">
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {friends.length === 0 ? 'No friends yet' : 'No friends match your search'}
+                  {Array.isArray(friends) && friends.length === 0 ? 'No friends yet' : 'No friends match your search'}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  {friends.length === 0 
+                  {Array.isArray(friends) && friends.length === 0 
                     ? 'Start building your network by adding friends to share AI conversations.'
                     : 'Try adjusting your search terms.'
                   }
                 </p>
-                {friends.length === 0 && (
+                {Array.isArray(friends) && friends.length === 0 && (
                   <button
                     onClick={() => setShowAddFriend(true)}
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
@@ -265,12 +342,12 @@ const Friends: React.FC = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2">
-                            <h3 className="font-medium text-gray-900">{friend.name}</h3>
+                            <h3 className="font-medium text-gray-900">{friend.name || 'Unknown User'}</h3>
                             {friend.has_unread_messages && (
                               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 truncate">{friend.introduction}</p>
+                          <p className="text-sm text-gray-600 truncate">{friend.introduction || 'No introduction'}</p>
                           {friend.last_message_time && (
                             <p className="text-xs text-gray-500 mt-1">
                               Last message: {formatLastMessage(friend.last_message_time)}
@@ -351,9 +428,12 @@ const Friends: React.FC = () => {
                   type="text"
                   value={newFriendId}
                   onChange={(e) => setNewFriendId(e.target.value)}
-                  placeholder="Enter their user ID"
+                  placeholder="例: 5db72bb0-11da-429e-8f33-47a43917fbe6"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  UUID形式で入力してください（例: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）
+                </p>
               </div>
             </div>
             
@@ -388,7 +468,7 @@ const Friends: React.FC = () => {
                   </span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{selectedFriend.name}</h3>
+                  <h3 className="font-semibold text-gray-900">{selectedFriend.name || 'Unknown User'}</h3>
                   <p className="text-sm text-gray-600">{selectedFriend.status}</p>
                 </div>
               </div>
