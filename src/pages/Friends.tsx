@@ -46,8 +46,9 @@ const Friends: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const friendsData = await friendAPI.list(user.id);
-      setFriends(friendsData || []);
+      const response = await friendAPI.list(user.id);
+      const friendsData = (response as any)?.friends || [];
+      setFriends(friendsData);
       
       // Mock friend requests for demo
       setFriendRequests([

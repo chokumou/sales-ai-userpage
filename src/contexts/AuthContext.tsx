@@ -1,123 +1,134 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { getAPIService } from '../services/api';
 import { User } from '../types';
-import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
-  setUser: (user: User | null) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string, user: User) => void;
+  login: (token: string, userData: User) => void;
   logout: () => void;
-  refreshToken: () => Promise<void>;
-  detectBackendPort: () => Promise<void>;
+  updatePremiumStatus: (isPremium: boolean, premiumUntil?: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // バックエンドポートを検出する関数
-  const detectBackendPort = async () => {
-    try {
-      console.log('Detecting backend port...');
-      await api.updateBaseURL();
-      console.log('Backend port detection completed');
-    } catch (error) {
-      console.error('Error detecting backend port:', error);
-    }
+  const login = (token: string, userData: User) => {
+    localStorage.setItem('nekota_token', token);
+    localStorage.setItem('nekota_user', JSON.stringify(userData));
+    setUser(userData);
+    setIsAuthenticated(true);
+    
+    // APIサービスにトークンを設定
+    const api = getAPIService();
+    api.setToken(token);
   };
 
-  useEffect(() => {
-    const initializeApp = async () => {
-      try {
-        // まずバックエンドポートを検出
-        await detectBackendPort();
+  const logout = () => {
+    localStorage.removeItem('nekota_token');
+    localStorage.removeItem('nekota_user');
+    setUser(null);
+    setIsAuthenticated(false);
+    
+    // APIサービスからトークンを削除
+    const api = getAPIService();
+    api.setToken(null);
+  };
 
+  const updatePremiumStatus = useCallback((isPremium: boolean, premiumUntil: string | null = null) => {
+    if (user) {
+      const updatedUser: User = { 
+        ...user, 
+        premium_until: isPremium ? premiumUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null
+      };
+      setUser(updatedUser);
+      localStorage.setItem('nekota_user', JSON.stringify(updatedUser));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        console.log('AuthContext: Starting initialization...');
+        setIsLoading(true);
+        
+        // バックエンドポートを検出
+        console.log('AuthContext: Detecting backend port...');
+        const api = getAPIService();
+        await api.detectBackendPort();
+        console.log('AuthContext: Backend port detection completed');
+
+        // ローカルストレージからユーザー情報を読み込み
         const storedUser = localStorage.getItem('nekota_user');
         const token = localStorage.getItem('nekota_token');
-
-        console.log('Loading user from storage:', {
-          storedUser,
-          token
+        
+        console.log('AuthContext: Loading user from storage:', { 
+          hasStoredUser: !!storedUser, 
+          hasToken: !!token 
         });
-
+        
         if (storedUser && token) {
-          const parsedUser = JSON.parse(storedUser);
-          console.log('Parsed user data:', parsedUser);
-          setUser(parsedUser);
-          setIsAuthenticated(true);
-          api.setToken(token);
+          try {
+            const userData = JSON.parse(storedUser);
+            console.log('AuthContext: Parsed user data:', userData);
+            
+            // APIサービスにトークンを設定
+            console.log('AuthContext: Setting token in API service...');
+            api.setToken(token);
+            console.log('AuthContext: Token set successfully');
+            
+            setUser(userData);
+            setIsAuthenticated(true);
+            console.log('AuthContext: User authenticated successfully');
+          } catch (error) {
+            console.error('AuthContext: Error parsing stored user data:', error);
+            // エラーが発生した場合はローカルストレージをクリア
+            localStorage.removeItem('nekota_user');
+            localStorage.removeItem('nekota_token');
+          }
+        } else {
+          console.log('AuthContext: No stored user data found');
         }
       } catch (error) {
-        console.error('Error initializing app:', error);
+        console.error('AuthContext: Error during auth initialization:', error);
       } finally {
+        // 必ずisLoadingをfalseに設定
+        console.log('AuthContext: Initialization completed, setting isLoading to false');
         setIsLoading(false);
       }
     };
 
-    initializeApp();
+    initializeAuth();
   }, []);
 
-  const login = (token: string, userData: User) => {
-    try {
-      console.log('Logging in user:', {
-        userData,
-        token
-      });
-
-      localStorage.setItem('nekota_user', JSON.stringify(userData));
-      localStorage.setItem('nekota_token', token);
-      setUser(userData);
-      setIsAuthenticated(true);
-      api.setToken(token);
-
-      console.log('User logged in successfully');
-    } catch (error) {
-      console.error('Error during login:', error);
-      throw error;
-    }
-  };
-
-  const logout = () => {
-    console.log('Logging out user');
-    localStorage.removeItem('nekota_user');
-    localStorage.removeItem('nekota_token');
-    setUser(null);
-    setIsAuthenticated(false);
-    api.setToken(null);
-    console.log('User logged out successfully');
-  };
-
-  const refreshToken = async () => {
-    // TODO: トークンのリフレッシュ処理を実装
-    console.log('Token refresh not implemented yet');
+  const value: AuthContextType = {
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+    updatePremiumStatus,
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        setUser,
-        isAuthenticated,
-        isLoading,
-        login,
-        logout,
-        refreshToken,
-        detectBackendPort,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

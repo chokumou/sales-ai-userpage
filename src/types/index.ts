@@ -1,21 +1,10 @@
 export interface User {
   id: string;
-  device_id: string;
-  role: string;
-  is_active: boolean;
+  username?: string | null;
+  email?: string | null;
+  premium_until?: string | null;
+  stripe_customer_id?: string | null;
   created_at: string;
-  updated_at: string;
-  last_login: string | null;
-  email?: string;
-  profile?: {
-    introduction: string;
-    language: string;
-    avatar?: string;
-  };
-  subscription?: {
-    plan: 'free' | 'premium' | 'enterprise';
-    model: 'deepseek' | 'chatgpt' | 'claude';
-  };
 }
 
 export interface Message {
@@ -40,13 +29,11 @@ export interface Friend {
 }
 
 export interface FriendRequest {
-  id: string;
+  id: number;
   from_user_id: string;
   to_user_id: string;
-  from_user_name: string;
-  message?: string;
-  timestamp: string;
-  status: 'pending' | 'accepted' | 'declined';
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
 }
 
 export interface Memory {

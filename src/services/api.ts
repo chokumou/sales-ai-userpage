@@ -1,11 +1,20 @@
+import { User } from '../types';
 // 動的にバックエンドポートを検出する関数
+let cachedBaseURL: string | null = null;
+
 async function detectBackendPort(): Promise<string> {
+  // キャッシュされたURLがある場合はそれを返す
+  if (cachedBaseURL) {
+    console.log('Using cached backend URL:', cachedBaseURL);
+    return cachedBaseURL;
+  }
+
   const possiblePorts = [8090, 8081, 8000, 8080, 3001, 3000];
   const baseHost = 'http://localhost';
   
   for (const port of possiblePorts) {
     try {
-      const response = await fetch(`${baseHost}:${port}/docs`, {
+      const response = await fetch(`${baseHost}:${port}/api/docs`, {
         method: 'HEAD',
         mode: 'no-cors',
         cache: 'no-cache'
@@ -13,7 +22,8 @@ async function detectBackendPort(): Promise<string> {
       
       // レスポンスが取得できた場合、そのポートが利用可能
       console.log(`Backend detected at port ${port}`);
-      return `${baseHost}:${port}`;
+      cachedBaseURL = `${baseHost}:${port}`;
+      return cachedBaseURL;
     } catch (error) {
       console.log(`Port ${port} not available:`, error);
       continue;
@@ -22,45 +32,111 @@ async function detectBackendPort(): Promise<string> {
   
   // デフォルトポートを返す
   console.log('No backend detected, using default port 8090');
-  return 'http://localhost:8090';
+  cachedBaseURL = 'http://localhost:8090';
+  return cachedBaseURL;
 }
 
-// 動的にAPI_BASE_URLを設定（デフォルトは8090番ポート）
-let API_BASE_URL = 'http://localhost:8090';
-
-// 環境変数が設定されている場合はそれを使用
-if (import.meta.env.VITE_API_BASE_URL) {
-  API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  console.log('Using VITE_API_BASE_URL:', API_BASE_URL);
-} else {
-  console.log('Using default API_BASE_URL:', API_BASE_URL);
-}
+// 定数としてAPIのベースURLを定義（環境変数から取得、デフォルトは空文字列）
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 class APIService {
   private baseURL: string;
   private token: string | null = null;
+  private isInitialized: boolean = false;
+  private initializationPromise: Promise<void> | null = null;
 
   constructor(baseURL?: string) {
     this.baseURL = baseURL || API_BASE_URL;
     console.log('APIService initialized with baseURL:', this.baseURL);
+    
+    // 初期化時にポート検出を実行
+    this.initializationPromise = this.initializeBaseURL();
+  }
+
+  // 初期化時にベースURLを設定
+  private async initializeBaseURL(): Promise<void> {
+    if (!this.baseURL) {
+      await this.updateBaseURL();
+    }
+    this.isInitialized = true;
+    console.log('APIService initialization completed');
+  }
+
+  // 初期化完了を待つメソッド
+  private async waitForInitialization(): Promise<void> {
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+    }
   }
 
   // ポートを動的に更新するメソッド
   async updateBaseURL(): Promise<void> {
     const newBaseURL = await detectBackendPort();
-    this.baseURL = newBaseURL;
-    console.log('Updated API_BASE_URL to:', this.baseURL);
+    if (this.baseURL !== newBaseURL) {
+      this.baseURL = newBaseURL;
+      console.log('Updated API_BASE_URL to:', this.baseURL);
+    } else {
+      console.log('API_BASE_URL unchanged:', this.baseURL);
+    }
   }
 
+  // トークン設定
   setToken(token: string | null) {
     this.token = token;
     console.log('API Token set:', token ? 'Token present' : 'No token');
+    if (token) {
+      console.log('Token details:', {
+        length: token.length,
+        startsWith: token.substring(0, 10),
+        endsWith: token.substring(token.length - 10)
+      });
+    }
+  }
+
+  // トークン取得
+  getToken(): string | null {
+    return this.token;
+  }
+
+  // 汎用的なGETリクエスト
+  async get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' });
+  }
+
+  // 汎用的なPOSTリクエスト
+  async post<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  // 汎用的なPUTリクエスト
+  async put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  // 汎用的なDELETEリクエスト
+  async delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' });
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    // 初期化が完了するまで待機
+    await this.waitForInitialization();
+
+    // ベースURLが空の場合はポート検出を実行
+    if (!this.baseURL) {
+      console.log('BaseURL is empty, detecting backend port...');
+      await this.updateBaseURL();
+    }
+
     // Check if we're in demo mode (mock token)
     const isDemoMode = this.token?.startsWith('mock_jwt_token_');
     
@@ -78,12 +154,20 @@ class APIService {
 
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
-      console.log('Authorization header added:', `Bearer ${this.token.substring(0, 20)}...`);
+      console.log('🔐 Authorization header added:', `Bearer ${this.token.substring(0, 20)}...`);
+      console.log('🔐 Full token (for debugging):', this.token);
+      console.log('🔐 Token length:', this.token.length);
+      console.log('🔐 Token starts with:', this.token.substring(0, 10));
+      console.log('🔐 Token ends with:', this.token.substring(this.token.length - 10));
+    } else {
+      console.log('⚠️ No token available for request');
     }
 
-    console.log(`API Request: ${options.method || 'GET'} ${url}`, {
-      headers,
-      body: options.body
+    console.log(`🌐 API Request: ${options.method || 'GET'} ${url}`, {
+      headers: Object.keys(headers),
+      body: options.body,
+      token: this.token ? 'Present' : 'Missing',
+      tokenLength: this.token?.length || 0
     });
 
     try {
@@ -92,15 +176,24 @@ class APIService {
         headers,
       });
 
-      console.log(`API Response: ${response.status} ${response.statusText}`);
+      console.log(`📡 API Response: ${response.status} ${response.statusText}`);
+      console.log(`📡 Response headers:`, Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error Response:', errorText);
+        console.error('❌ API Error Response:', errorText);
+        console.error('❌ Response status:', response.status);
+        console.error('❌ Response headers:', Object.fromEntries(response.headers.entries()));
+        console.error('❌ Request URL:', url);
+        console.error('❌ Request headers:', headers);
+        console.error('❌ Token used:', this.token ? `${this.token.substring(0, 20)}...` : 'None');
         
         // Handle specific error codes
         switch (response.status) {
           case 401:
+            console.error('🔐 401 Unauthorized - Token may be invalid or missing');
+            console.error('🔐 Current token:', this.token);
+            console.error('🔐 Token validation failed - check if token is valid and not expired');
             throw new Error('認証が必要です。ログインし直してください。');
           case 403:
             throw new Error('この操作を実行する権限がありません。');
@@ -114,19 +207,19 @@ class APIService {
       }
 
       const data = await response.json();
-      console.log('API Response Data:', data);
+      console.log('✅ API Response Data:', data);
       return data;
     } catch (error) {
-      console.error('API Request Failed:', error);
+      console.error('❌ API Request Failed:', error);
       
       // 接続エラーの場合、ポートを再検出してリトライ
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        console.log('Connection failed, trying to detect backend port...');
+        console.log('🔄 Connection failed, trying to detect backend port...');
         await this.updateBaseURL();
         
         // 新しいポートでリトライ
         const retryUrl = `${this.baseURL}${endpoint}`;
-        console.log(`Retrying with new URL: ${retryUrl}`);
+        console.log(`🔄 Retrying with new URL: ${retryUrl}`);
         
         const retryResponse = await fetch(retryUrl, {
           ...options,
@@ -135,12 +228,12 @@ class APIService {
         
         if (!retryResponse.ok) {
           const errorText = await retryResponse.text();
-          console.error('API Error Response (retry):', errorText);
+          console.error('❌ API Error Response (retry):', errorText);
           throw new Error(`API Error: ${retryResponse.status} ${retryResponse.statusText}`);
         }
         
         const data = await retryResponse.json();
-        console.log('API Response Data (retry):', data);
+        console.log('✅ API Response Data (retry):', data);
         return data;
       }
       
@@ -458,43 +551,57 @@ class APIService {
 
   // Auth API
   auth = {
-    login: (userId: string, password?: string) =>
-      this.request<{ token: string; expires_at: string }>('/api/auth/user/token', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: userId }),
-      }),
-
-    register: (userData: { user_id: string; introduction?: string; language?: string }) =>
-      this.request<{ token: string; expires_at: string }>('/api/auth/user/register', {
-        method: 'POST',
-        body: JSON.stringify(userData),
-      }),
-
-    refreshToken: (userId: string) =>
-      this.request<{ token: string; expires_at: string }>('/api/auth/user/token', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: userId }),
-      }),
+    // ログインAPI：ユーザーIDとトークンを受け取り、トークンとユーザー情報を返す
+    login: async (userId: string, token?: string): Promise<{ token: string; user: User }> => {
+      const response = await this.post<{ token: string; user: User }>(
+        '/api/auth/login', 
+        { user_id: userId, token: token }
+      );
+      return response;
+    },
+    
+    // トークン検証API：現在のトークンでユーザー情報を取得
+    verify: (): Promise<User> => {
+      return this.get<User>('/api/auth/verify');
+    },
+    
+    // 他の認証関連APIメソッド
+    // ...
   };
 
   // User API
   user = {
     getProfile: (userId: string) =>
-      this.request<any>(`/api/user/profile?user_id=${userId}`),
+      this.request<any>(`/api/profile?user_id=${userId}`).catch((error) => {
+        console.error('Error getting profile:', error);
+        // デフォルト値を返す
+        return { message_count: 0 };
+      }),
 
     updateProfile: (userData: any) =>
-      this.request<any>('/api/user/profile', {
+      this.request<any>('/api/profile', {
         method: 'PATCH',
         body: JSON.stringify(userData),
       }),
 
     getModel: (userId: string) =>
-      this.request<{ model: string }>(`/api/user/model?user_id=${userId}`),
+      this.request<{ model: string; model_name: string; model_version: string }>(`/api/user/model?user_id=${userId}`).catch((error) => {
+        console.error('Error getting model:', error);
+        // デフォルト値を返す
+        return { model: 'deepseek', model_name: 'deepseek', model_version: 'latest' };
+      }),
 
     updateModel: (userId: string, model: string) =>
       this.request<any>('/api/user/model', {
-        method: 'PATCH',
-        body: JSON.stringify({ user_id: userId, model }),
+        method: 'PUT',
+        body: JSON.stringify({ model_name: model }),
+      }),
+
+    getPremiumStatus: (userId: string) =>
+      this.request<{ user_id: string; is_premium: boolean }>(`/api/users/${userId}/premium-status`).catch((error) => {
+        console.error('Error getting premium status:', error);
+        // デフォルト値を返す
+        return { user_id: userId, is_premium: false };
       }),
   };
 
@@ -546,7 +653,11 @@ class APIService {
       }),
 
     list: (userId: string) =>
-      this.request<{ friends: any[] }>(`/api/friend/list?user_id=${userId}`),
+      this.request<any[]>(`/api/friend/list?user_id=${userId}`).catch((error) => {
+        console.error('Error getting friends:', error);
+        // デフォルト値を返す
+        return [];
+      }),
 
     requests: () =>
       this.request<{ requests: any[] }>('/api/friend/requests'),
@@ -577,7 +688,11 @@ class APIService {
     list: (userId: string, page: number = 1, limit: number = 20) =>
       this.request<{ memories: any[]; total: number; page: number; pages: number }>(
         `/api/memory/?user_id=${userId}&page=${page}&limit=${limit}`
-      ),
+      ).catch((error) => {
+        console.error('Error getting memories:', error);
+        // デフォルト値を返す
+        return { memories: [], total: 0, page: 1, pages: 0 };
+      }),
 
     delete: (memoryId: string) =>
       this.request<any>(`/api/memory/${memoryId}`, {
@@ -637,39 +752,64 @@ class APIService {
 
   // Payment API
   payment = {
-    createCheckoutSession: (userId: string, priceId?: string) =>
-      this.request<{ url: string; session_id: string }>('/api/payment/create-checkout-session', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: userId, price_id: priceId }),
-      }),
-
-    getHistory: (userId: string) =>
-      this.request<any[]>(`/api/payment/history?user_id=${userId}`),
+    createCheckoutSession: (userId: string, priceId: string): Promise<CheckoutSessionResponse | AlreadyPremiumResponse> => {
+      return this.post('/api/payment/create-checkout-session', {
+        user_id: userId,
+        price_id: priceId,
+      });
+    },
+    getHistory: (user_id: string, params: { limit?: number; starting_after?: string } = {}) => {
+      const query = new URLSearchParams({
+        user_id,
+        ...Object.fromEntries(Object.entries(params).filter(([_, v]) => v != null)),
+      }).toString();
+      return this.get<{ payments: any[]; total_count: number; has_more: boolean }>(`/api/payment/history?${query}`);
+    },
+    getPaymentHistory: (userId: string, page: number = 1, limit: number = 10): Promise<any> => {
+      return this.get(`/api/payment/history?user_id=${userId}&page=${page}&limit=${limit}`);
+    },
   };
 
   // Admin API
   admin = {
-    getUsers: (page: number = 1, limit: number = 50) =>
-      this.request<any>(`/api/admin/users?page=${page}&limit=${limit}`),
-
+    getAllUsers: (): Promise<any[]> => this.get('/api/admin/users'),
     banUser: (userId: string, reason?: string) =>
       this.request<any>('/api/admin/ban', {
         method: 'POST',
         body: JSON.stringify({ user_id: userId, reason }),
       }),
-
     getPrompts: () =>
       this.request<any[]>('/api/admin/prompts'),
-
     updatePrompt: (promptId: string, content: string) =>
       this.request<any>(`/api/admin/prompts/${promptId}`, {
         method: 'PATCH',
         body: JSON.stringify({ content }),
       }),
   };
+
+  // バックエンドポート検出
+  async detectBackendPort(): Promise<void> {
+    await this.updateBaseURL();
+  }
 }
 
-export const api = new APIService(API_BASE_URL);
+// シングルトンインスタンス
+let apiInstance: APIService | null = null;
+
+// シングルトンインスタンスを取得する関数
+export function getAPIService(): APIService {
+  if (!apiInstance) {
+    console.log('Creating new APIService instance');
+    apiInstance = new APIService();
+  } else {
+    console.log('Using existing APIService instance');
+  }
+  return apiInstance;
+}
+
+// 既存のapiエクスポートを更新
+export const api = getAPIService();
+
 export const authAPI = api.auth;
 export const userAPI = api.user;
 export const messageAPI = api.message;
@@ -681,3 +821,17 @@ export const paymentAPI = api.payment;
 export const adminAPI = api.admin;
 
 export default api;
+
+// 型定義
+export interface CheckoutSessionResponse {
+  sessionId: string;
+  url: string;
+  error?: undefined; // エラーがないことを明示
+}
+
+export interface AlreadyPremiumResponse {
+  error: 'already_premium';
+  message: string;
+  redirect_url?: string;
+  url?: undefined; // URLがないことを明示
+}

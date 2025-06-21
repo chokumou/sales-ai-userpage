@@ -4,6 +4,7 @@ import { Mic, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { api } from '../../services/api';
+import { User } from '../../types';
 
 const LoginForm: React.FC = () => {
   const [userId, setUserId] = useState('');
@@ -31,21 +32,9 @@ const LoginForm: React.FC = () => {
       // APIを呼び出してログイン
       const response = await api.auth.login(userId.trim(), token || undefined);
       
-      // レスポンスからユーザー情報を取得
-      const userData = {
-        id: userId.trim(),
-        device_id: '',
-        role: 'user' as const,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        last_login: new Date().toISOString(),
-        profile: { introduction: '', language: 'ja' },
-        subscription: { plan: 'free' as const, model: 'deepseek' as const }
-      };
-      
       // AuthContextのlogin関数を呼び出し
-      await login(response.token, userData);
+      // サーバーから返されたユーザー情報をそのまま渡す
+      await login(response.token, response.user);
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'ログインに失敗しました');
@@ -60,19 +49,15 @@ const LoginForm: React.FC = () => {
 
     try {
       // デモユーザーの場合はAPIを呼び出さずに直接ログイン
-      const demoUser = {
+      const isPremium = demoUserId === 'admin' || demoUserId === 'demo_user';
+      
+      const demoUser: User = {
         id: demoUserId,
-        device_id: '',
-        role: demoUserId === 'admin' ? 'admin' as const : 'user' as const,
-        is_active: true,
+        username: demoUserId,
+        email: `${demoUserId}@nekota.app`,
+        premium_until: isPremium ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null,
+        stripe_customer_id: isPremium ? `cus_demo_${demoUserId}` : null,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        last_login: new Date().toISOString(),
-        profile: { introduction: 'Demo user', language: 'ja' },
-        subscription: { 
-          plan: demoUserId === 'admin' ? 'enterprise' as const : 'premium' as const, 
-          model: 'chatgpt' as const 
-        }
       };
       
       await login(`mock_jwt_token_${demoUserId}`, demoUser);

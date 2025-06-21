@@ -6,16 +6,16 @@ import AudioRecorder from '../components/Audio/AudioRecorder';
 
 interface VoiceMessage {
   id: string;
-  sender_id: string;
-  receiver_id: string;
-  audio_url: string;
-  duration_seconds?: number;
-  is_read: boolean;
+  from_user_id: string;
+  to_user_id: string;
+  file_url: string;
+  status?: string;
+  transcribed_text?: string;
   created_at: string;
 }
 
 interface Friend {
-  id: string;
+  user_id: string;
   name: string;
   introduction?: string;
 }
@@ -41,6 +41,21 @@ const Messages: React.FC = () => {
         // APIサービスを使用して友達リストを取得
         const response = await friendAPI.list(user.id);
         console.log('友達リスト取得結果:', response);
+        console.log('友達データの詳細:', response.friends);
+        
+        // 各友達のデータ構造を確認
+        if (response.friends) {
+          response.friends.forEach((friend, index) => {
+            console.log(`友達${index + 1}:`, {
+              user_id: friend.user_id,
+              name: friend.name,
+              introduction: friend.introduction,
+              hasUserId: !!friend.user_id,
+              hasName: !!friend.name
+            });
+          });
+        }
+        
         setFriends(response.friends || []);
       } catch (error) {
         console.error('友達リストの取得に失敗:', error);
@@ -60,7 +75,7 @@ const Messages: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const response = await messageAPI.getList(selectedFriend.id);
+      const response = await messageAPI.getList(selectedFriend.user_id);
       setMessages(response.messages || []);
     } catch (error) {
       console.error('メッセージの取得に失敗:', error);
@@ -75,7 +90,7 @@ const Messages: React.FC = () => {
     console.log('useEffect - selectedFriend:', selectedFriend);
     console.log('useEffect - user:', user);
     loadMessages();
-  }, [selectedFriend?.id, user?.id]);
+  }, [selectedFriend?.user_id, user?.id]);
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -129,9 +144,9 @@ const Messages: React.FC = () => {
         return;
       }
 
-      console.log('メッセージ送信開始 - 友達ID:', selectedFriend.id);
+      console.log('メッセージ送信開始 - 友達ID:', selectedFriend.user_id);
       const file = new File([audioBlob], 'message.wav', { type: 'audio/wav' });
-      await messageAPI.send(selectedFriend.id, file);
+      await messageAPI.send(selectedFriend.user_id, file);
       
       // メッセージリストを更新
       loadMessages();
@@ -160,7 +175,7 @@ const Messages: React.FC = () => {
         return;
       }
 
-      await messageAPI.send(selectedFriend.id, file);
+      await messageAPI.send(selectedFriend.user_id, file);
       
       // メッセージリストを更新
       loadMessages();
@@ -175,8 +190,8 @@ const Messages: React.FC = () => {
 
   const playMessage = async (message: VoiceMessage) => {
     try {
-      // 既読にする
-      if (!message.is_read) {
+      // 既読にする（statusが"sent"の場合のみ）
+      if (message.status === "sent") {
         await messageAPI.markAsRead(message.id);
         // メッセージリストを更新して既読状態を反映
         loadMessages();
@@ -187,7 +202,7 @@ const Messages: React.FC = () => {
         audioRef.current.pause();
       }
 
-      const audio = new Audio(message.audio_url);
+      const audio = new Audio(message.file_url);
       audioRef.current = audio;
       
       audio.onplay = () => setPlayingAudio(message.id);
@@ -227,6 +242,9 @@ const Messages: React.FC = () => {
   // 友達を選択
   const handleFriendSelect = (friend: Friend) => {
     console.log('友達選択:', friend);
+    console.log('友達選択 - id:', friend.user_id);
+    console.log('友達選択 - name:', friend.name);
+    console.log('友達選択 - 全体データ:', JSON.stringify(friend, null, 2));
     setSelectedFriend(friend);
   };
 
@@ -246,7 +264,7 @@ const Messages: React.FC = () => {
       <div className="mb-4 p-2 bg-yellow-100 rounded text-sm">
         <p>デバッグ情報:</p>
         <p>友達数: {friends.length}</p>
-        <p>選択された友達: {selectedFriend ? `${selectedFriend.name} (${selectedFriend.id})` : 'なし'}</p>
+        <p>選択された友達: {selectedFriend ? `${selectedFriend.name} (${selectedFriend.user_id})` : 'なし'}</p>
         <p>録音エリア表示条件: {selectedFriend ? 'true' : 'false'}</p>
       </div>
       
@@ -256,10 +274,10 @@ const Messages: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {friends.map((friend) => (
             <button
-              key={friend.id}
+              key={friend.user_id}
               onClick={() => handleFriendSelect(friend)}
               className={`p-3 rounded-lg border text-left transition-colors ${
-                selectedFriend?.id === friend.id
+                selectedFriend?.user_id === friend.user_id
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
@@ -298,7 +316,7 @@ const Messages: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         {/* Read/Unread Status Circle */}
-                        {message.is_read ? (
+                        {message.status === "read" ? (
                           <div className="w-3 h-3 rounded-full bg-green-500 flex-shrink-0" title="既読"></div>
                         ) : (
                           <div className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0" title="未読"></div>

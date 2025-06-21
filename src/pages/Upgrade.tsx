@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, Star, Zap, Crown, Sparkles, CreditCard, Shield, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { paymentAPI } from '../services/api';
+import { paymentAPI, userAPI } from '../services/api';
 
 interface PricingPlan {
   id: string;
@@ -18,10 +18,40 @@ interface PricingPlan {
 }
 
 const Upgrade: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, updatePremiumStatus } = useAuth();
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [currentPlan, setCurrentPlan] = useState<string>('free');
+
+  // ユーザーのプレミアムステータスを最新の状態に更新
+  useEffect(() => {
+    const updateUserPremiumStatus = async () => {
+      if (user && isAuthenticated) {
+        try {
+          console.log('Upgrade: Updating user premium status...');
+          const response = await userAPI.getPremiumStatus(user.id);
+          console.log('Upgrade: Premium status response:', response);
+          
+          if (response.is_premium) {
+            setCurrentPlan('premium');
+            console.log('Upgrade: User is premium, updated status');
+          } else {
+            setCurrentPlan('free');
+            console.log('Upgrade: User is free, updated status');
+          }
+        } catch (error) {
+          console.error('Upgrade: Error updating premium status:', error);
+          // エラーの場合は現在のユーザー情報を使用
+          setCurrentPlan('free');
+        }
+      }
+    };
+
+    if (!authLoading && isAuthenticated && user) {
+      updateUserPremiumStatus();
+    }
+  }, [user, isAuthenticated, authLoading]);
 
   const plans: PricingPlan[] = [
     {
@@ -29,80 +59,103 @@ const Upgrade: React.FC = () => {
       name: 'Free',
       price: 0,
       period: 'forever',
-      description: 'Perfect for getting started with AI conversations',
+      description: 'Perfect for getting started',
       features: [
-        'DeepSeek AI model access',
-        'Basic voice registration',
-        'Up to 10 memories',
-        '5 friends maximum',
-        'Standard support',
-        'Basic conversation history'
+        'DeepSeek AI model',
+        '10 memories',
+        '5 friend connections',
+        'Basic voice features',
+        'Community support'
       ],
-      icon: Star,
+      icon: Zap,
       color: 'gray'
     },
     {
       id: 'premium',
       name: 'Premium',
-      price: billingPeriod === 'monthly' ? 19.99 : 199.99,
+      price: billingPeriod === 'monthly' ? 9.99 : 99.99,
       period: billingPeriod === 'monthly' ? '/month' : '/year',
-      description: 'Enhanced AI capabilities and unlimited features',
+      description: 'Most popular choice for power users',
       features: [
-        'All Free features',
-        'ChatGPT AI model access',
-        'Advanced voice profiles',
+        'DeepSeek + ChatGPT models',
         'Unlimited memories',
         'Unlimited friends',
+        'Advanced voice features',
         'Priority support',
-        'Advanced conversation analytics',
-        'Custom AI personalities',
-        'Voice message transcription'
+        'Custom AI personalities'
       ],
-      icon: Zap,
+      icon: Star,
       color: 'blue',
       popular: true,
-      priceId: billingPeriod === 'monthly' ? 'price_premium_monthly' : 'price_premium_yearly'
+      priceId: billingPeriod === 'monthly' ? 'price_1RcGFmFNJJd1bDQJvBWFPxpL' : 'price_1RcGFmFNJJd1bDQJfTlirDZ8' // TODO: Stripeダッシュボードで取得した実際のPrice IDに置き換えてください
     },
     {
       id: 'enterprise',
       name: 'Enterprise',
-      price: billingPeriod === 'monthly' ? 49.99 : 499.99,
+      price: billingPeriod === 'monthly' ? 29.99 : 299.99,
       period: billingPeriod === 'monthly' ? '/month' : '/year',
-      description: 'Full access to all AI models and premium features',
+      description: 'For teams and organizations',
       features: [
-        'All Premium features',
-        'Claude AI model access',
-        'Team collaboration tools',
-        'Advanced analytics dashboard',
-        'Custom integrations',
-        'Dedicated support',
-        'Data export capabilities',
+        'All AI models (DeepSeek, ChatGPT, Claude)',
+        'Unlimited everything',
+        'Team management',
         'Advanced security features',
         'Multi-language support',
         'API access'
       ],
       icon: Crown,
       color: 'purple',
-      priceId: billingPeriod === 'monthly' ? 'price_enterprise_monthly' : 'price_enterprise_yearly'
+      priceId: billingPeriod === 'monthly' ? 'price_1RcGFmFNJJd1bDQJnsT9OBWS' : 'price_1RcGFnFNJJd1bDQJy9Qy59Zo' // TODO: Stripeダッシュボードで取得した実際のPrice IDに置き換えてください
     }
   ];
 
   const handleUpgrade = async (plan: PricingPlan) => {
-    if (!user || !plan.priceId) return;
+    if (!user) return;
+    
+    if (!plan.priceId) {
+      alert('このプランは現在利用できません');
+      return;
+    }
+
+    // プレミアム会員の場合は処理をスキップ
+    if (currentPlan === 'premium' || currentPlan === 'enterprise') {
+      alert('既にプレミアム会員です。ダッシュボードに戻ります。');
+      window.location.href = '/dashboard';
+      return;
+    }
 
     setIsLoading(plan.id);
     try {
-      const response = await paymentAPI.createCheckoutSession(user.id, plan.priceId);
-      window.location.href = response.url;
-    } catch (error) {
+      // priceIdの存在チェック済みなので型アサーションを使用
+      const response = await paymentAPI.createCheckoutSession(user.id, plan.priceId as string);
+      
+      // レスポンスの型をチェック
+      if (response && 'url' in response) {
+        // 通常の支払いフロー
+        window.location.href = response.url;
+      } else if (response && 'error' in response) {
+        // 既にプレミアム会員の場合の処理
+        alert(response.message || '既にプレミアム会員です');
+        if (response.redirect_url) {
+          window.location.href = response.redirect_url;
+        }
+      } else {
+        // 予期しないレスポンス形式
+        throw new Error('Invalid response from server');
+      }
+    } catch (error: any) {
       console.error('Error creating checkout session:', error);
-      alert('Failed to start upgrade process. Please try again.');
+      
+      // エラーメッセージを表示
+      if (error.message) {
+        alert(error.message);
+      } else {
+        alert('Failed to start upgrade process. Please try again.');
+      }
     } finally {
       setIsLoading(null);
     }
   };
-
-  const currentPlan = user?.subscription?.plan || 'free';
 
   return (
     <div className="max-w-7xl mx-auto space-y-12">
@@ -130,18 +183,86 @@ const Upgrade: React.FC = () => {
               <p className="text-blue-700 text-sm">
                 {currentPlan === 'free' 
                   ? 'Upgrade to unlock premium features' 
+                  : currentPlan === 'premium' || currentPlan === 'enterprise'
+                  ? 'You already have premium access!'
                   : 'Thank you for being a premium subscriber!'
                 }
               </p>
             </div>
           </div>
-          {currentPlan !== 'free' && (
-            <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium">
+          {(currentPlan === 'premium' || currentPlan === 'enterprise') && (
+            <span className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium">
               Active
+            </span>
+          )}
+          {currentPlan === 'free' && (
+            <span className="bg-gray-600 text-white px-4 py-2 rounded-full text-sm font-medium">
+              Free
             </span>
           )}
         </div>
       </div>
+
+      {/* Premium User Message */}
+      {(currentPlan === 'premium' || currentPlan === 'enterprise') && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+              <Check className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-green-900">
+                Premium Access Active
+              </h3>
+              <p className="text-green-700 text-sm mt-1">
+                You already have access to all premium features. Enjoy your enhanced AI experience!
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 flex space-x-3">
+            <button
+              onClick={() => window.location.href = '/dashboard'}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+            >
+              Go to Dashboard
+            </button>
+            <button
+              onClick={() => window.location.href = '/memory'}
+              className="bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
+            >
+              Try Premium Features
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* User Information */}
+      {user && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+              <Users className="w-5 h-5 text-gray-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-700">Logged in as</p>
+              <p className="text-sm text-gray-500">{user.id || 'Unknown'}</p>
+            </div>
+          </div>
+          
+          {/* Payment Information */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center space-x-3">
+              <CreditCard className="w-5 h-5 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium text-gray-700">Payment Information</p>
+                <p className="text-xs text-gray-500">
+                  Your email address will be collected securely during the payment process with Stripe.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Billing Toggle */}
       <div className="flex items-center justify-center">
@@ -224,10 +345,12 @@ const Upgrade: React.FC = () => {
                 isLoading === plan.id || 
                 currentPlan === plan.id || 
                 (currentPlan === 'enterprise' && plan.id !== 'enterprise') ||
-                plan.id === 'free'
+                plan.id === 'free' ||
+                currentPlan === 'premium' ||
+                currentPlan === 'enterprise'
               }
               className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
-                currentPlan === plan.id
+                currentPlan === plan.id || currentPlan === 'premium' || currentPlan === 'enterprise'
                   ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                   : plan.popular
                   ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
@@ -245,6 +368,8 @@ const Upgrade: React.FC = () => {
                 <span>Current Plan</span>
               ) : plan.id === 'free' ? (
                 <span>Current Plan</span>
+              ) : currentPlan === 'premium' || currentPlan === 'enterprise' ? (
+                <span>Already Premium</span>
               ) : (
                 <>
                   <CreditCard className="w-5 h-5" />

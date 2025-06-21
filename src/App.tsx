@@ -14,6 +14,8 @@ import Upgrade from './pages/Upgrade';
 import PaymentHistory from './pages/PaymentHistory';
 import Admin from './pages/Admin';
 import DeviceRegistration from './pages/DeviceRegistration';
+import Success from './pages/Success';
+import Cancel from './pages/Cancel';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -36,8 +38,11 @@ const AppRoutes: React.FC = () => {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" /> : <LoginForm />} />
       <Route path="/RegisterDevice" element={<DeviceRegistration />} />
+      <Route path="/success" element={<Success />} />
+      <Route path="/cancel" element={<Cancel />} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="voice" element={<VoiceRegistration />} />
         <Route path="messages" element={<Messages />} />
         <Route path="memory" element={<Memory />} />

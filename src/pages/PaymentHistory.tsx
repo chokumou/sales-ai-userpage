@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Receipt, Download, Calendar, CreditCard, Filter, Search, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Receipt, Download, Calendar, CreditCard, Filter, Search, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { paymentAPI } from '../services/api';
@@ -24,18 +24,30 @@ const PaymentHistory: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [dateFilter, setDateFilter] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [pageTokens, setPageTokens] = useState<Record<number, string | undefined>>({ 1: undefined });
 
   useEffect(() => {
-    loadPaymentHistory();
-  }, [user]);
+    loadPaymentHistory(currentPage);
+  }, [user, currentPage]);
 
-  const loadPaymentHistory = async () => {
+  const loadPaymentHistory = async (page: number) => {
     if (!user) return;
 
     try {
       setIsLoading(true);
-      const paymentData = await paymentAPI.getHistory(user.id);
-      setPayments(paymentData || []);
+      const starting_after = pageTokens[page];
+      const response = await paymentAPI.getHistory(user.id, { limit: 10, starting_after });
+      
+      setPayments(response?.payments || []);
+      setHasMore(response?.has_more || false);
+
+      if (response?.has_more && response?.payments.length > 0) {
+        const lastPaymentId = response.payments[response.payments.length - 1].id;
+        setPageTokens(prev => ({ ...prev, [page + 1]: lastPaymentId }));
+      }
+
     } catch (error) {
       console.error('Error loading payment history:', error);
       // Demo data for development
@@ -64,6 +76,16 @@ const PaymentHistory: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleNextPage = () => {
+    if (hasMore) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
   };
 
   const filteredPayments = payments.filter(payment => {
@@ -209,7 +231,7 @@ const PaymentHistory: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Current Plan</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                {user?.subscription?.plan?.charAt(0).toUpperCase() + user?.subscription?.plan?.slice(1) || 'Free'}
+                {user?.subscription?.plan ? user.subscription.plan.charAt(0).toUpperCase() + user.subscription.plan.slice(1) : 'Free'}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-purple-50">
@@ -220,25 +242,24 @@ const PaymentHistory: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search payments..."
+              placeholder="Search by description or ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="pl-10 pr-4 py-2 w-full border rounded-lg focus:ring-2 focus:ring-indigo-500"
             />
           </div>
-          
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              className="pl-10 pr-4 py-2 w-full md:w-48 border rounded-lg appearance-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">All Statuses</option>
               <option value="succeeded">Succeeded</option>
@@ -247,128 +268,101 @@ const PaymentHistory: React.FC = () => {
               <option value="refunded">Refunded</option>
             </select>
           </div>
-          
           <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              className="pl-10 pr-4 py-2 w-full md:w-48 border rounded-lg appearance-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">All Time</option>
               <option value="last7days">Last 7 days</option>
               <option value="last30days">Last 30 days</option>
               <option value="last3months">Last 3 months</option>
-              <option value="lastyear">Last year</option>
+              <option value="lastyear">Last 1 year</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Payment List */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        {filteredPayments.length === 0 ? (
-          <div className="text-center py-16">
-            <Receipt className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {payments.length === 0 ? 'No payments yet' : 'No payments match your filters'}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {payments.length === 0 
-                ? 'Your payment history will appear here once you make your first payment.'
-                : 'Try adjusting your search criteria or filters.'
-              }
-            </p>
-            {payments.length === 0 && (
-              <button
-                onClick={() => window.location.href = '/upgrade'}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Upgrade Your Plan
-              </button>
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Table Header */}
-            <div className="p-6 border-b border-gray-200">
-              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500">
-                <div className="col-span-3">Payment</div>
-                <div className="col-span-2">Amount</div>
-                <div className="col-span-2">Status</div>
-                <div className="col-span-2">Date</div>
-                <div className="col-span-2">Plan</div>
-                <div className="col-span-1">Actions</div>
-              </div>
-            </div>
-
-            {/* Payment Rows */}
-            <div className="divide-y divide-gray-200">
-              {filteredPayments.map((payment) => (
-                <div key={payment.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="grid grid-cols-12 gap-4 items-center">
-                    <div className="col-span-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Receipt className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900 truncate">
-                            {payment.description}
-                          </p>
-                          <p className="text-sm text-gray-500 truncate">
-                            ID: {payment.id}
-                          </p>
-                        </div>
+      {/* Payment List Table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Payment
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Plan
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredPayments.map(payment => (
+                <tr key={payment.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="p-3 rounded-full bg-indigo-50">
+                        <Receipt className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{payment.description}</div>
+                        <div className="text-sm text-gray-500">ID: {payment.id}</div>
                       </div>
                     </div>
-                    
-                    <div className="col-span-2">
-                      <p className="font-medium text-gray-900">
-                        {formatAmount(payment.amount, payment.currency)}
-                      </p>
-                    </div>
-                    
-                    <div className="col-span-2">
-                      <div className="flex items-center space-x-2">
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{formatAmount(payment.amount, payment.currency)}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.status)}`}>
+                      <div className="flex items-center gap-1">
                         {getStatusIcon(payment.status)}
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}>
-                          {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                        </span>
+                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
                       </div>
-                    </div>
-                    
-                    <div className="col-span-2">
-                      <p className="text-sm text-gray-900">
-                        {formatDate(payment.created_at)}
-                      </p>
-                    </div>
-                    
-                    <div className="col-span-2">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {payment.plan || 'N/A'}
-                        </p>
-                        {payment.period && (
-                          <p className="text-xs text-gray-500">{payment.period}</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="col-span-1">
-                      <button
-                        onClick={() => downloadInvoice(payment)}
-                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Download Invoice"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{formatDate(payment.created_at)}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{payment.plan}</div>
+                    <div className="text-sm text-gray-500">{payment.period}</div>
+                  </td>
+                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button 
+                      onClick={() => downloadInvoice(payment)}
+                      className="text-indigo-600 hover:text-indigo-900 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1"
+                      disabled={!payment.invoice_url}
+                      title={payment.invoice_url ? "Download Invoice" : "Invoice not available"}
+                    >
+                      <Download className="w-4 h-4" />
+                      Invoice
+                    </button>
+                  </td>
+                </tr>
               ))}
-            </div>
-          </>
+            </tbody>
+          </table>
+        </div>
+        {filteredPayments.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No payment history found.</p>
+          </div>
         )}
       </div>
 
@@ -415,6 +409,33 @@ const PaymentHistory: React.FC = () => {
               Automatic payment
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between mt-4 px-6 pb-4">
+        <div>
+          <p className="text-sm text-gray-700">
+            Page <span className="font-medium">{currentPage}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Previous
+          </button>
+          <button
+            onClick={handleNextPage}
+            disabled={!hasMore}
+            className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+          >
+            Next
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>

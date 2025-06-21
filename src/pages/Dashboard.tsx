@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, MessageCircle, Users, Zap, TrendingUp, Clock, Star, Settings } from 'lucide-react';
+import { Brain, MessageCircle, Users, Zap, TrendingUp, Clock, Star, Settings, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { userAPI, memoryAPI, friendAPI } from '../services/api';
@@ -13,7 +13,7 @@ interface DashboardStats {
 }
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, updatePremiumStatus } = useAuth();
   const { t } = useLanguage();
   const [stats, setStats] = useState<DashboardStats>({
     totalMessages: 0,
@@ -23,54 +23,99 @@ const Dashboard: React.FC = () => {
     subscriptionPlan: 'free'
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState('deepseek');
 
   // デバッグ: コンポーネントマウント時の状態確認
   useEffect(() => {
     console.log('Dashboard mounted:', {
       user,
+      isAuthenticated,
+      authLoading,
       localStorage: {
         token: localStorage.getItem('nekota_token'),
         user: localStorage.getItem('nekota_user')
       }
     });
-  }, []);
+  }, [user, isAuthenticated, authLoading]);
+
+  // 認証状態の強制更新
+  const forceRefreshAuth = () => {
+    console.log('Dashboard: Force refreshing authentication...');
+    const token = localStorage.getItem('nekota_token');
+    const storedUser = localStorage.getItem('nekota_user');
+    
+    if (token && storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        console.log('Dashboard: Refreshing with user data:', userData);
+        // ページをリロードして認証状態を再初期化
+        window.location.reload();
+      } catch (error) {
+        console.error('Dashboard: Error parsing user data:', error);
+      }
+    } else {
+      console.log('Dashboard: No stored auth data found');
+      window.location.href = '/login';
+    }
+  };
 
   useEffect(() => {
-    loadDashboardData();
-  }, [user]);
+    if (!authLoading && isAuthenticated && user) {
+      loadDashboardData();
+    } else if (!authLoading && !isAuthenticated) {
+      console.log('Dashboard: User not authenticated, redirecting to login');
+      window.location.href = '/login';
+    }
+  }, [user, isAuthenticated, authLoading]);
 
   const loadDashboardData = async () => {
     if (!user) {
-      console.error('No user data available');
+      console.error('Dashboard: No user data available');
+      setError('ユーザー情報が取得できませんでした');
+      setIsLoading(false);
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log('Loading dashboard data for user:', user);
+      setError(null);
+      console.log('Dashboard: Loading dashboard data for user:', user);
       
-      // Load user profile and stats
-      const [profileData, memoriesData, friendsData, modelData] = await Promise.all([
-        userAPI.getProfile(user.id).catch((error) => {
-          console.error('Error loading profile:', error);
-          return {};
-        }),
-        memoryAPI.list(user.id, 1, 1).catch((error) => {
-          console.error('Error loading memories:', error);
-          return { total: 0 };
-        }),
-        friendAPI.list(user.id).catch((error) => {
-          console.error('Error loading friends:', error);
-          return [];
-        }),
-        userAPI.getModel(user.id).catch((error) => {
-          console.error('Error loading model:', error);
-          return { model: 'deepseek' };
-        })
-      ]);
+      // プレミアムステータスを最新の状態に更新
+      // try {
+      //   const userStatus = await userAPI.getUserStatus(user.id);
+      //   console.log('Dashboard: User status:', userStatus);
+      //   if (userStatus.is_premium && user.subscription?.plan !== 'premium') {
+      //     console.log('Dashboard: Updating premium status to true');
+      //     updatePremiumStatus(true);
+      //   }
+      // } catch (error) {
+      //   console.error('Dashboard: Error checking user status:', error);
+      // }
+      
+      // Load user profile and stats with better error handling
+      const profileData = await userAPI.getProfile(user.id).catch((error) => {
+        console.error('Dashboard: Error loading profile:', error);
+        return { message_count: 0 };
+      });
 
-      console.log('Loaded dashboard data:', {
+      const memoriesData = await memoryAPI.list(user.id, 1, 1).catch((error) => {
+        console.error('Dashboard: Error loading memories:', error);
+        return { total: 0 };
+      });
+
+      const friendsData = await friendAPI.list(user.id).catch((error) => {
+        console.error('Dashboard: Error loading friends:', error);
+        return [];
+      });
+
+      const modelData = await userAPI.getModel(user.id).catch((error) => {
+        console.error('Dashboard: Error loading model:', error);
+        return { model: 'deepseek' };
+      });
+
+      console.log('Dashboard: Loaded dashboard data:', {
         profile: profileData,
         memories: memoriesData,
         friends: friendsData,
@@ -79,7 +124,7 @@ const Dashboard: React.FC = () => {
 
       setStats({
         totalMessages: profileData?.message_count || 0,
-        totalFriends: friendsData?.length || 0,
+        totalFriends: Array.isArray(friendsData) ? friendsData.length : 0,
         totalMemories: memoriesData?.total || 0,
         currentModel: modelData?.model || 'deepseek',
         subscriptionPlan: user?.subscription?.plan || 'free'
@@ -87,7 +132,8 @@ const Dashboard: React.FC = () => {
 
       setSelectedModel(modelData?.model || 'deepseek');
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      console.error('Dashboard: Error loading dashboard data:', error);
+      setError('データの読み込みに失敗しました');
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +147,8 @@ const Dashboard: React.FC = () => {
       setSelectedModel(model);
       setStats(prev => ({ ...prev, currentModel: model }));
     } catch (error) {
-      console.error('Error updating model:', error);
+      console.error('Dashboard: Error updating model:', error);
+      setError('モデルの更新に失敗しました');
     }
   };
 
@@ -160,6 +207,53 @@ const Dashboard: React.FC = () => {
     }
   ];
 
+  // 認証中またはローディング中の場合
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">認証情報を読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 認証されていない場合
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">認証が必要です</p>
+          <button 
+            onClick={() => window.location.href = '/login'}
+            className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700"
+          >
+            ログイン
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // エラーが発生した場合
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={loadDashboardData}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700"
+          >
+            再試行
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ローディング中の場合
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -180,7 +274,7 @@ const Dashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {user?.profile?.introduction || user?.id || 'User'}!
+            Welcome back, {user?.name || user?.introduction || user?.id || 'User'}!
           </h1>
           <p className="text-gray-600 mt-1">
             Here's what's happening with your AI conversations today.
