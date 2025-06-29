@@ -679,8 +679,8 @@ class APIService {
     },
 
     testRequests: async (userId: string) => {
-      const response = await this.request<any>(`/api/friend/test/requests/${userId}`);
-      return ensureArray(response, 'requests');
+      // /api/friend/test/requests/{user_id} のレスポンスは {received_requests, sent_requests}
+      return this.request<any>(`/api/friend/test/requests/${userId}`);
     },
   };
 

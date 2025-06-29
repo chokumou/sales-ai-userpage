@@ -15,21 +15,38 @@ interface Friend {
   last_message_time?: string;
 }
 
-interface FriendRequest {
+interface FriendRequestReceived {
   id: string;
-  from_user_id: string;
-  to_user_id: string;
-  from_user_name: string;
-  message?: string;
-  timestamp: string;
+  user_id_a: string;
+  user_id_b: string;
   status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+  from_user: {
+    id: string;
+    name: string;
+    introduction: string;
+  };
+}
+
+interface FriendRequestSent {
+  id: string;
+  user_id_a: string;
+  user_id_b: string;
+  status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+  to_user: {
+    id: string;
+    name: string;
+    introduction: string;
+  };
 }
 
 const Friends: React.FC = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [receivedRequests, setReceivedRequests] = useState<FriendRequestReceived[]>([]);
+  const [sentRequests, setSentRequests] = useState<FriendRequestSent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [newFriendId, setNewFriendId] = useState('');
@@ -41,6 +58,11 @@ const Friends: React.FC = () => {
     loadFriends();
   }, [user]);
 
+  type FriendRequestsResponse = {
+    received_requests: FriendRequestReceived[];
+    sent_requests: FriendRequestSent[];
+  };
+
   const loadFriends = async () => {
     if (!user) return;
 
@@ -49,29 +71,16 @@ const Friends: React.FC = () => {
       const response = await friendAPI.list(user.id);
       const friendsData = Array.isArray((response as any)?.friends) ? ((response as any).friends as Friend[]) : [];
       setFriends(friendsData);
-      // テスト用エンドポイントを使用（認証なし）
-      const requestsData = await friendAPI.testRequests(user.id);
+      // 新APIレスポンス対応
+      const requestsData = await friendAPI.testRequests(user.id) as FriendRequestsResponse;
       console.log('[DEBUG] friendAPI.testRequests() result:', requestsData);
-      if (requestsData && typeof requestsData === 'object' && 'requests' in requestsData) {
-        if (Array.isArray(requestsData.requests)) {
-          requestsData.requests.forEach((req, idx) => {
-            console.log(`[DEBUG] request[${idx}]:`, req);
-          });
-        }
-        setFriendRequests(Array.isArray(requestsData.requests) ? requestsData.requests as FriendRequest[] : []);
-      } else if (Array.isArray(requestsData)) {
-        requestsData.forEach((req, idx) => {
-          console.log(`[DEBUG] request[${idx}]:`, req);
-        });
-        setFriendRequests(requestsData as FriendRequest[]);
-      } else {
-        console.warn('Unexpected requests data structure:', requestsData);
-        setFriendRequests([]);
-      }
+      setReceivedRequests(Array.isArray(requestsData.received_requests) ? requestsData.received_requests : []);
+      setSentRequests(Array.isArray(requestsData.sent_requests) ? requestsData.sent_requests : []);
     } catch (error) {
       console.error('Error loading friends:', error);
       setFriends([]);
-      setFriendRequests([]);
+      setReceivedRequests([]);
+      setSentRequests([]);
     } finally {
       setIsLoading(false);
     }
@@ -157,7 +166,7 @@ const Friends: React.FC = () => {
       // テスト用エンドポイントを使用（認証なし）
       await friendAPI.testAccept(fromUserId, currentUserId);
       await loadFriends();
-      setFriendRequests(prev => prev.filter(req => req.from_user_id !== fromUserId));
+      setReceivedRequests(prev => prev.filter(req => req.user_id_a !== fromUserId));
     } catch (error) {
       console.error('Error accepting friend request:', error);
       alert('Failed to accept friend request. Please try again.');
@@ -165,7 +174,7 @@ const Friends: React.FC = () => {
   };
 
   const handleRejectFriendRequest = (fromUserId: string) => {
-    setFriendRequests(prev => prev.filter(req => req.from_user_id !== fromUserId));
+    setReceivedRequests(prev => prev.filter(req => req.user_id_a !== fromUserId));
   };
 
   const handleStartConversation = (friend: Friend) => {
@@ -245,42 +254,42 @@ const Friends: React.FC = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Friend Requests */}
-          {friendRequests.length > 0 && (
+          {receivedRequests.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Friend Requests ({friendRequests.length})
+                Friend Requests ({receivedRequests.length})
               </h2>
               <div className="space-y-4">
-                {friendRequests.map((request) => {
+                {receivedRequests.map((request) => {
                   console.log('【DEBUG】フレンド申請リストのrequest:', request);
                   // from_user_idがなければ警告
-                  if (!request.from_user_id) {
-                    console.warn('【WARNING】request.from_user_idがundefinedです。request:', request);
+                  if (!request.user_id_a) {
+                    console.warn('【WARNING】request.user_id_aがundefinedです。request:', request);
                   }
                   return (
-                    <div key={(request.from_user_id || 'unknown') + '-' + (request.to_user_id || 'unknown')} className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div key={(request.user_id_a || 'unknown') + '-' + (request.user_id_b || 'unknown')} className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                           <span className="text-white font-medium text-sm">
-                            {getInitials(request.from_user_name)}
+                            {getInitials(request.from_user.name)}
                           </span>
                         </div>
                         <div>
-                          <h3 className="font-medium text-gray-900">{request.from_user_name || 'Unknown User'}</h3>
-                          <p className="text-sm text-gray-600">{request.message || 'No message'}</p>
+                          <h3 className="font-medium text-gray-900">{request.from_user.name || 'Unknown User'}</h3>
+                          <p className="text-sm text-gray-600">{request.from_user.introduction || 'No introduction'}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => handleAcceptFriendRequest(request.from_user_id)}
+                          onClick={() => handleAcceptFriendRequest(request.user_id_a)}
                           className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                           title="Accept"
-                          disabled={!request.from_user_id}
+                          disabled={!request.user_id_a}
                         >
                           <UserCheck className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleRejectFriendRequest(request.from_user_id)}
+                          onClick={() => handleRejectFriendRequest(request.user_id_a)}
                           className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                           title="Decline"
                         >

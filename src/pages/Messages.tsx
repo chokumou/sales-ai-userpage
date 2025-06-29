@@ -56,7 +56,7 @@ const Messages: React.FC = () => {
           });
         }
         
-        setFriends(response.friends || []);
+        setFriends(Array.isArray(response.friends) ? (response.friends as Friend[]) : []);
       } catch (error) {
         console.error('友達リストの取得に失敗:', error);
         setFriends([]);

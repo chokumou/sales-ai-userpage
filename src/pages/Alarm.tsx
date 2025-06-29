@@ -41,8 +41,7 @@ const Alarm: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await alarmAPI.list(user.id);
-      const alarmsData = response.alarms || [];
-      setAlarms(alarmsData);
+      setAlarms(Array.isArray(response) ? (response as Alarm[]) : []);
     } catch (error) {
       console.error('Error loading alarms:', error);
       alert('Failed to load alarms. Please try again.');

@@ -32,7 +32,7 @@ const VoiceRegistration: React.FC = () => {
     try {
       setIsLoading(true);
       const voiceData = await voiceAPI.list(user.id);
-      setVoices(voiceData || []);
+      setVoices(Array.isArray(voiceData) ? (voiceData as VoiceRecord[]) : []);
     } catch (error) {
       console.error('Error loading voices:', error);
     } finally {
