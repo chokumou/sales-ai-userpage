@@ -107,7 +107,8 @@ const Memory: React.FC = () => {
       
       console.log('[DEBUG] Memory created successfully');
       
-      // Reload memories to show the new one
+      // 追加後にページを1にリセットしてから再取得
+      setCurrentPage(1);
       await loadMemories();
       
       // Reset form
