@@ -810,6 +810,16 @@ class APIService {
       }),
   };
 
+  // Device API
+  device = {
+    exists: async (deviceNumber: string): Promise<{ token: string; user: any }> => {
+      return this.post<{ token: string; user: any }>(
+        '/api/device/exists',
+        { device_number: deviceNumber }
+      );
+    },
+  };
+
   // バックエンドポート検出
   // async detectBackendPort(): Promise<void> { ... }
 }
@@ -840,6 +850,7 @@ export const alarmAPI = api.alarm;
 export const voiceAPI = api.voice;
 export const paymentAPI = api.payment;
 export const adminAPI = api.admin;
+export const deviceAPI = api.device;
 
 export default api;
 

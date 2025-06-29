@@ -21,48 +21,32 @@ const DeviceRegistration: React.FC = () => {
     try {
       console.log('Sending device registration request for device:', deviceNumber);
 
-      // 直接fetchを使用してローカルAPIにリクエスト
-      const response = await fetch('http://localhost:8080/api/device/exists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ device_number: deviceNumber }),
-      });
-
-      console.log('Response status:', response.status);
-      const data = await response.json();
+      // api.tsのAPIService経由でリクエスト
+      const data = await api.device.exists(deviceNumber);
       console.log('Response data:', data);
       console.log('Token type:', typeof data.token);
       console.log('Token value:', data.token);
 
-      if (response.ok) {
-        if (data.token && data.user) {
-          try {
-            // デバッグ: 保存前のデータ確認
-            console.log('Saving auth data:', {
-              token: data.token,
-              tokenType: typeof data.token,
-              user: data.user
-            });
+      if (data && data.token && data.user) {
+        try {
+          // デバッグ: 保存前のデータ確認
+          console.log('Saving auth data:', {
+            token: data.token,
+            tokenType: typeof data.token,
+            user: data.user
+          });
 
-            // 認証情報を保存してダッシュボードにリダイレクト
-            await login(data.token, data.user, () => {
-              console.log('Device registration successful, redirecting to dashboard');
-              navigate('/');
-            });
-            
-          } catch (storageError) {
-            console.error('Error saving auth data:', storageError);
-            setError('認証情報の保存に失敗しました');
-          }
-        } else {
-          console.error('Missing token or user data:', data);
-          setError('サーバーからの応答が不正です');
+          // 認証情報を保存してダッシュボードにリダイレクト
+          await login(data.token, data.user);
+          navigate('/');
+          
+        } catch (storageError) {
+          console.error('Error saving auth data:', storageError);
+          setError('認証情報の保存に失敗しました');
         }
       } else {
-        console.error('API error:', data);
-        setError(data.detail || 'デバイス登録に失敗しました');
+        console.error('Missing token or user data:', data);
+        setError('サーバーからの応答が不正です');
       }
     } catch (err: any) {
       console.error('Device registration error:', err);
