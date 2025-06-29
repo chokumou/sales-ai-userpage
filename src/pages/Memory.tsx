@@ -69,12 +69,13 @@ const Memory: React.FC = () => {
       console.log('Memories loaded:', response);
       
       setMemories(response.memories || []);
+      console.log('[DEBUG] setMemories:', response.memories);
       setTotalPages(response.pages || 1);
       setTotalMemories(response.total || 0);
     } catch (error) {
       console.error('Error loading memories:', error);
       setError('メモリの読み込みに失敗しました。');
-      setMemories([]);
+      // setMemories([]); // ←一時的にコメントアウト
     } finally {
       setIsLoading(false);
     }
@@ -441,4 +442,5 @@ const Memory: React.FC = () => {
 };
 
 export default Memory; // dummy comment for push
+
 
