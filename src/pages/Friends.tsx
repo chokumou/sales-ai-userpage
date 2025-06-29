@@ -69,7 +69,10 @@ const Friends: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await friendAPI.list(user.id);
-      const friendsData = Array.isArray((response as any)?.friends) ? ((response as any).friends as Friend[]) : [];
+      // APIレスポンスのuser_idをidにコピーして型ズレを吸収
+      const friendsData = Array.isArray((response as any)?.friends)
+        ? ((response as any).friends as Friend[]).map(f => ({ ...f, id: f.user_id }))
+        : [];
       setFriends(friendsData);
       // 新APIレスポンス対応
       const requestsData = await friendAPI.testRequests(user.id) as FriendRequestsResponse;
@@ -210,6 +213,19 @@ const Friends: React.FC = () => {
     });
   };
 
+  // 送信申請の削除（withdraw）
+  const handleWithdrawRequest = async (req: FriendRequestSent) => {
+    if (!user) return;
+    if (!window.confirm('この申請を削除しますか？')) return;
+    try {
+      await friendAPI.testWithdraw(user.id, req.to_user.id);
+      setSentRequests((prev) => prev.filter((r) => r.id !== req.id));
+      alert('申請を削除しました');
+    } catch (error) {
+      alert('申請の削除に失敗しました');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto space-y-6 animate-pulse">
@@ -343,7 +359,7 @@ const Friends: React.FC = () => {
             ) : (
               <div className="divide-y divide-gray-200">
                 {filteredFriends.map((friend) => (
-                  <div key={friend.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div key={friend.user_id} className="p-6 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className="relative">
@@ -385,6 +401,24 @@ const Friends: React.FC = () => {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* 送信申請リスト（自分が送った申請） */}
+          <div style={{ marginTop: 32 }}>
+            <h3>自分が送ったフレンド申請</h3>
+            {sentRequests.length === 0 ? (
+              <p>送信した申請はありません。</p>
+            ) : (
+              <ul>
+                {sentRequests.map((req) => (
+                  <li key={req.id} style={{ marginBottom: 8 }}>
+                    <span>宛先: {req.to_user?.name || req.user_id_b}</span>
+                    <span style={{ marginLeft: 16 }}>申請日時: {new Date(req.created_at).toLocaleString()}</span>
+                    <button style={{ marginLeft: 16 }} onClick={() => handleWithdrawRequest(req)}>削除</button>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </div>

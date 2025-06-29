@@ -682,6 +682,13 @@ class APIService {
       // /api/friend/test/requests/{user_id} のレスポンスは {received_requests, sent_requests}
       return this.request<any>(`/api/friend/test/requests/${userId}`);
     },
+
+    // 送信申請の削除（withdraw）
+    testWithdraw: (fromUserId: string, toUserId: string) =>
+      this.request<any>('/api/friend/test/withdraw', {
+        method: 'DELETE',
+        body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
+      }),
   };
 
   // Memory API
