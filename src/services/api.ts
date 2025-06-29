@@ -36,8 +36,8 @@ async function detectBackendPort(): Promise<string> {
   return cachedBaseURL;
 }
 
-// 定数としてAPIのベースURLを定義（環境変数から取得、デフォルトは空文字列）
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+// 定数としてAPIのベースURLを定義（環境変数から取得、デフォルトはRailwayプロキシURL）
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://switchback.proxy.rlwy.net:12806';
 
 class APIService {
   private baseURL: string;
