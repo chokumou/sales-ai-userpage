@@ -64,18 +64,15 @@ const Memory: React.FC = () => {
       
       console.log('Loading memories for user:', user.id, 'page:', currentPage);
       
-      const response: MemoryResponse = await memoryAPI.list(user.id, currentPage, itemsPerPage);
-      
+      const response = await memoryAPI.list(user.id, currentPage, itemsPerPage);
       console.log('Memories loaded:', response);
-      
-      setMemories(response.memories || []);
-      console.log('[DEBUG] setMemories:', response.memories);
-      setTotalPages(response.pages || 1);
-      setTotalMemories(response.total || 0);
+      setMemories(response as Memory[]);
+      setTotalPages(1); // ページネーション不要なら1固定
+      setTotalMemories((response as Memory[]).length);
     } catch (error) {
       console.error('Error loading memories:', error);
       setError('メモリの読み込みに失敗しました。');
-      // setMemories([]); // ←一時的にコメントアウト
+      setMemories([]);
     } finally {
       setIsLoading(false);
     }
