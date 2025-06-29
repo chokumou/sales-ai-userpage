@@ -69,12 +69,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('AuthContext: Starting initialization...');
         setIsLoading(true);
         
-        // バックエンドポートを検出
-        console.log('AuthContext: Detecting backend port...');
-        const api = getAPIService();
-        await api.detectBackendPort();
-        console.log('AuthContext: Backend port detection completed');
-
         // ローカルストレージからユーザー情報を読み込み
         const storedUser = localStorage.getItem('nekota_user');
         const token = localStorage.getItem('nekota_token');
@@ -91,6 +85,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             
             // APIサービスにトークンを設定
             console.log('AuthContext: Setting token in API service...');
+            const api = getAPIService();
             api.setToken(token);
             console.log('AuthContext: Token set successfully');
             
