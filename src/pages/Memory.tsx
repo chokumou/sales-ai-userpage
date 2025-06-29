@@ -81,6 +81,7 @@ const Memory: React.FC = () => {
   };
 
   const handleCreateMemory = async () => {
+    console.log('[DEBUG] handleCreateMemory called', { user, newMemoryText, newMemoryCategory });
     if (!user || !newMemoryText.trim()) {
       setError('メモリの内容を入力してください。');
       return;
@@ -96,7 +97,7 @@ const Memory: React.FC = () => {
     setSuccess('');
 
     try {
-      console.log('Creating memory:', {
+      console.log('[DEBUG] Creating memory:', {
         user_id: user.id,
         text: newMemoryText.trim(),
         category: newMemoryCategory || undefined
@@ -104,7 +105,7 @@ const Memory: React.FC = () => {
 
       await memoryAPI.create(user.id, newMemoryText.trim(), newMemoryCategory || undefined);
       
-      console.log('Memory created successfully');
+      console.log('[DEBUG] Memory created successfully');
       
       // Reload memories to show the new one
       await loadMemories();
@@ -116,7 +117,7 @@ const Memory: React.FC = () => {
       setSuccess('メモリが正常に追加されました。');
       
     } catch (error) {
-      console.error('Error creating memory:', error);
+      console.error('[DEBUG] Error creating memory:', error);
       setError(error instanceof Error ? error.message : 'メモリの作成に失敗しました。');
     } finally {
       setIsSubmitting(false);
