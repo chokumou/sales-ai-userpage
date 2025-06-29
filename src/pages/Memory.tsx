@@ -176,6 +176,10 @@ const Memory: React.FC = () => {
     return newMemoryText.length > 1000;
   };
 
+  // メモリリスト描画直前にデバッグログ
+  console.log('[DEBUG] memories to render:', memories);
+  console.log('[DEBUG] filteredMemories to render:', filteredMemories);
+
   if (isLoading && currentPage === 1) {
     return (
       <div className="max-w-6xl mx-auto space-y-6 animate-pulse">
@@ -290,7 +294,7 @@ const Memory: React.FC = () => {
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {filteredMemories.map((memory) => (
+            {filteredMemories.map((memory, idx) => (
               <div key={memory.id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
@@ -310,7 +314,6 @@ const Memory: React.FC = () => {
                     </div>
                     <p className="text-gray-900 leading-relaxed">{memory.text}</p>
                   </div>
-                  
                   <div className="flex items-center space-x-2 ml-4">
                     <button
                       onClick={() => setEditingMemory(memory)}
@@ -417,58 +420,17 @@ const Memory: React.FC = () => {
                   <div className="text-xs text-gray-500">
                     AIが会話で参照できる重要な情報を入力してください
                   </div>
-                  <div className={`text-xs ${
-                    isCharacterLimitExceeded() ? 'text-red-500' : 'text-gray-500'
-                  }`}>
-                    {getCharacterCount()} / 1000文字
+                  <div className="text-xs text-gray-500">
+                    {getCharacterCount()} / 1000
                   </div>
                 </div>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  カテゴリ（任意）
-                </label>
-                <select
-                  value={newMemoryCategory}
-                  onChange={(e) => setNewMemoryCategory(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={isSubmitting}
-                >
-                  <option value="">カテゴリを選択</option>
-                  {categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setNewMemoryText('');
-                  setNewMemoryCategory('');
-                  setError('');
-                }}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isSubmitting}
-              >
-                キャンセル
-              </button>
               <button
                 onClick={handleCreateMemory}
-                disabled={isSubmitting || !newMemoryText.trim() || isCharacterLimitExceeded()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={isSubmitting}
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>追加中...</span>
-                  </>
-                ) : (
-                  <span>メモリを追加</span>
-                )}
+                {isSubmitting ? '作成中...' : 'メモリを作成'}
               </button>
             </div>
           </div>
@@ -478,4 +440,5 @@ const Memory: React.FC = () => {
   );
 };
 
+export default Memory;
 export default Memory;
