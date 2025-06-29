@@ -1,43 +1,11 @@
 import { User } from '../types';
 // 動的にバックエンドポートを検出する関数
-let cachedBaseURL: string | null = null;
+// let cachedBaseURL: string | null = null;
 
-async function detectBackendPort(): Promise<string> {
-  // キャッシュされたURLがある場合はそれを返す
-  if (cachedBaseURL) {
-    console.log('Using cached backend URL:', cachedBaseURL);
-    return cachedBaseURL;
-  }
-
-  const possiblePorts = [8090, 8081, 8000, 8080, 3001, 3000];
-  const baseHost = 'http://localhost';
-  
-  for (const port of possiblePorts) {
-    try {
-      const response = await fetch(`${baseHost}:${port}/api/docs`, {
-        method: 'HEAD',
-        mode: 'no-cors',
-        cache: 'no-cache'
-      });
-      
-      // レスポンスが取得できた場合、そのポートが利用可能
-      console.log(`Backend detected at port ${port}`);
-      cachedBaseURL = `${baseHost}:${port}`;
-      return cachedBaseURL;
-    } catch (error) {
-      console.log(`Port ${port} not available:`, error);
-      continue;
-    }
-  }
-  
-  // デフォルトポートを返す
-  console.log('No backend detected, using default port 8090');
-  cachedBaseURL = 'http://localhost:8090';
-  return cachedBaseURL;
-}
+// async function detectBackendPort(): Promise<string> { ... }
 
 // 定数としてAPIのベースURLを定義（環境変数から取得、デフォルトはRailwayプロキシURL）
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://switchback.proxy.rlwy.net:12806';
+const API_BASE_URL = "http://localhost:8091";
 
 class APIService {
   private baseURL: string;
@@ -50,35 +18,17 @@ class APIService {
     console.log('APIService initialized with baseURL:', this.baseURL);
     
     // 初期化時にポート検出を実行
-    this.initializationPromise = this.initializeBaseURL();
+    // this.initializationPromise = this.initializeBaseURL();
   }
 
   // 初期化時にベースURLを設定
-  private async initializeBaseURL(): Promise<void> {
-    if (!this.baseURL) {
-      await this.updateBaseURL();
-    }
-    this.isInitialized = true;
-    console.log('APIService initialization completed');
-  }
+  // private async initializeBaseURL(): Promise<void> { ... }
 
   // 初期化完了を待つメソッド
-  private async waitForInitialization(): Promise<void> {
-    if (this.initializationPromise) {
-      await this.initializationPromise;
-    }
-  }
+  // private async waitForInitialization(): Promise<void> { ... }
 
   // ポートを動的に更新するメソッド
-  async updateBaseURL(): Promise<void> {
-    const newBaseURL = await detectBackendPort();
-    if (this.baseURL !== newBaseURL) {
-      this.baseURL = newBaseURL;
-      console.log('Updated API_BASE_URL to:', this.baseURL);
-    } else {
-      console.log('API_BASE_URL unchanged:', this.baseURL);
-    }
-  }
+  // async updateBaseURL(): Promise<void> { ... }
 
   // トークン設定
   setToken(token: string | null) {
@@ -144,13 +94,13 @@ class APIService {
     options: RequestInit = {}
   ): Promise<T> {
     // 初期化が完了するまで待機
-    await this.waitForInitialization();
+    // await this.waitForInitialization();
 
     // ベースURLが空の場合はポート検出を実行
-    if (!this.baseURL) {
-      console.log('BaseURL is empty, detecting backend port...');
-      await this.updateBaseURL();
-    }
+    // if (!this.baseURL) {
+    //   console.log('BaseURL is empty, detecting backend port...');
+    //   await this.updateBaseURL();
+    // }
 
     // Check if we're in demo mode (mock token)
     const isDemoMode = this.token?.startsWith('mock_jwt_token_');
@@ -235,26 +185,26 @@ class APIService {
       // 接続エラーの場合、ポートを再検出してリトライ
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         console.log('🔄 Connection failed, trying to detect backend port...');
-        await this.updateBaseURL();
+        // await this.updateBaseURL();
         
         // 新しいポートでリトライ
-        const retryUrl = `${this.baseURL}${endpoint}`;
-        console.log(`🔄 Retrying with new URL: ${retryUrl}`);
+        // const retryUrl = `${this.baseURL}${endpoint}`;
+        // console.log(`🔄 Retrying with new URL: ${retryUrl}`);
         
-        const retryResponse = await fetch(retryUrl, {
-          ...options,
-          headers,
-        });
+        // const retryResponse = await fetch(retryUrl, {
+        //   ...options,
+        //   headers,
+        // });
         
-        if (!retryResponse.ok) {
-          const errorText = await retryResponse.text();
-          console.error('❌ API Error Response (retry):', errorText);
-          throw new Error(`API Error: ${retryResponse.status} ${retryResponse.statusText}`);
-        }
+        // if (!retryResponse.ok) {
+        //   const errorText = await retryResponse.text();
+        //   console.error('❌ API Error Response (retry):', errorText);
+        //   throw new Error(`API Error: ${retryResponse.status} ${retryResponse.statusText}`);
+        // }
         
-        const data = await retryResponse.json();
-        console.log('✅ API Response Data (retry):', data);
-        return data;
+        // const data = await retryResponse.json();
+        // console.log('✅ API Response Data (retry):', data);
+        // return data;
       }
       
       throw error;
@@ -861,9 +811,7 @@ class APIService {
   };
 
   // バックエンドポート検出
-  async detectBackendPort(): Promise<void> {
-    await this.updateBaseURL();
-  }
+  // async detectBackendPort(): Promise<void> { ... }
 }
 
 // シングルトンインスタンス
