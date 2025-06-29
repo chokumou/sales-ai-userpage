@@ -47,15 +47,22 @@ const Friends: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await friendAPI.list(user.id);
-      const friendsData = (response as any)?.friends || [];
+      const friendsData = Array.isArray((response as any)?.friends) ? ((response as any).friends as Friend[]) : [];
       setFriends(friendsData);
       // テスト用エンドポイントを使用（認証なし）
       const requestsData = await friendAPI.testRequests(user.id);
       console.log('[DEBUG] friendAPI.testRequests() result:', requestsData);
-      // リクエストデータも同様に処理
       if (requestsData && typeof requestsData === 'object' && 'requests' in requestsData) {
+        if (Array.isArray(requestsData.requests)) {
+          requestsData.requests.forEach((req, idx) => {
+            console.log(`[DEBUG] request[${idx}]:`, req);
+          });
+        }
         setFriendRequests(Array.isArray(requestsData.requests) ? requestsData.requests as FriendRequest[] : []);
       } else if (Array.isArray(requestsData)) {
+        requestsData.forEach((req, idx) => {
+          console.log(`[DEBUG] request[${idx}]:`, req);
+        });
         setFriendRequests(requestsData as FriendRequest[]);
       } else {
         console.warn('Unexpected requests data structure:', requestsData);
