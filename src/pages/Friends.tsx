@@ -87,23 +87,11 @@ const Friends: React.FC = () => {
 
   const loadFriends = async () => {
     if (!user) return;
-
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const response = await friendAPI.list(user.id);
-      if (Array.isArray((response as any)?.friends)) {
-      }
       const friendsData = Array.isArray((response as any)?.friends)
-        ? ((response as any).friends as any[]).map(f => ({
-            ...f,
-            name: f.name || f.to_user?.name || f.from_user?.name || '',
-            introduction: f.introduction || f.to_user?.introduction || f.from_user?.introduction || '',
-            id: f.user_id,
-            status: 'offline' as const,
-            has_unread_messages: false,
-            avatar: '',
-            last_message_time: '',
-          }))
+        ? (response as any).friends
         : [];
       setFriends(friendsData);
       const requestsData = await friendAPI.requests(user.id);
@@ -113,11 +101,8 @@ const Friends: React.FC = () => {
       setSentRequests(Array.isArray(requestsData)
         ? (requestsData.filter((req: any) => req.request_type === 'sent') as FriendRequestSent[])
         : []);
-    } catch (error) {
-      console.error('Error loading friends:', error);
-      setFriends([]);
-      setReceivedRequests([]);
-      setSentRequests([]);
+    } catch (e) {
+      console.error('friendAPI.list() error:', e);
     } finally {
       setIsLoading(false);
     }
