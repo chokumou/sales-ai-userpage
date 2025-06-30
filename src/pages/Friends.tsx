@@ -370,6 +370,22 @@ const Friends: React.FC = () => {
 
           {/* Friends List */}
           <div className="bg-white rounded-xl border border-gray-200">
+            {/* filteredFriendsの内容を必ず表示するシンプルなリストも追加 */}
+            <div style={{ padding: '1em', borderBottom: '1px solid #eee' }}>
+              <h4>デバッグ: filteredFriendsの中身</h4>
+              {filteredFriends.length === 0 ? (
+                <div>フレンドがいません</div>
+              ) : (
+                <ul>
+                  {filteredFriends.map(friend => (
+                    <li key={friend.user_id} style={{ marginBottom: 8 }}>
+                      <strong>{friend.name || 'Unknown User'}</strong> - {friend.introduction || 'No introduction'}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {/* 既存のリッチなUI部分も残す */}
             {filteredFriends.length === 0 ? (
               <div className="text-center py-16">
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -422,7 +438,6 @@ const Friends: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleStartConversation(friend)}
