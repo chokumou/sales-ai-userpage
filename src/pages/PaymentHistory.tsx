@@ -38,7 +38,7 @@ const PaymentHistory: React.FC = () => {
     try {
       setIsLoading(true);
       const starting_after = pageTokens[page];
-      const response = await paymentAPI.getHistory(user.id, { limit: 10, starting_after });
+      const response = (await paymentAPI.getHistory(user.id, { limit: 10, starting_after })) as any;
       
       setPayments(response?.payments || []);
       setHasMore(response?.has_more || false);
@@ -50,29 +50,6 @@ const PaymentHistory: React.FC = () => {
 
     } catch (error) {
       console.error('Error loading payment history:', error);
-      // Demo data for development
-      setPayments([
-        {
-          id: 'pi_1234567890',
-          amount: 19.99,
-          currency: 'USD',
-          status: 'succeeded',
-          description: 'Premium Plan Subscription',
-          created_at: new Date().toISOString(),
-          plan: 'Premium',
-          period: 'Monthly'
-        },
-        {
-          id: 'pi_0987654321',
-          amount: 199.99,
-          currency: 'USD',
-          status: 'succeeded',
-          description: 'Premium Plan Subscription (Annual)',
-          created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          plan: 'Premium',
-          period: 'Yearly'
-        }
-      ]);
     } finally {
       setIsLoading(false);
     }
@@ -231,7 +208,7 @@ const PaymentHistory: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Current Plan</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                {user?.subscription?.plan ? user.subscription.plan.charAt(0).toUpperCase() + user.subscription.plan.slice(1) : 'Free'}
+                {user && user.premium_until ? 'Premium' : 'Free'}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-purple-50">
@@ -379,14 +356,10 @@ const PaymentHistory: React.FC = () => {
           <div>
             <h3 className="font-medium text-gray-900 mb-2">Current Subscription</h3>
             <p className="text-gray-600">
-              {user?.subscription?.plan ? (
-                `${user.subscription.plan.charAt(0).toUpperCase() + user.subscription.plan.slice(1)} Plan`
-              ) : (
-                'Free Plan'
-              )}
+              {user && user.premium_until ? 'Premium Plan' : 'Free Plan'}
             </p>
             <p className="text-sm text-gray-500 mt-1">
-              {user?.subscription?.plan && user.subscription.plan !== 'free' 
+              {user && user.premium_until
                 ? 'Automatically renews monthly'
                 : 'No active subscription'
               }
@@ -396,10 +369,10 @@ const PaymentHistory: React.FC = () => {
           <div>
             <h3 className="font-medium text-gray-900 mb-2">Next Billing Date</h3>
             <p className="text-gray-600">
-              {user?.subscription?.plan && user.subscription.plan !== 'free' 
-                ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
+              {user && user.premium_until
+                ? new Date(user.premium_until).toLocaleDateString('en-US', {
                     year: 'numeric',
-                    month: 'long',
+                    month: 'short',
                     day: 'numeric'
                   })
                 : 'N/A'

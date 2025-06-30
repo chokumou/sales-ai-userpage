@@ -19,6 +19,7 @@ interface AdminUser {
   is_banned: boolean;
   payment_status: string;
   message_count: number;
+  premium_until?: string;
 }
 
 interface Prompt {
@@ -56,66 +57,14 @@ const Admin: React.FC = () => {
       
       if (activeTab === 'users') {
         const usersData = await adminAPI.getUsers(currentPage, itemsPerPage);
-        setUsers(usersData.users || []);
-        setTotalPages(usersData.pages || 1);
+        setUsers(((usersData as any).users || []) as AdminUser[]);
+        setTotalPages((usersData as any).pages || 1);
       } else {
         const promptsData = await adminAPI.getPrompts();
-        setPrompts(promptsData || []);
+        setPrompts((promptsData as any || []) as Prompt[]);
       }
     } catch (error) {
       console.error('Error loading admin data:', error);
-      // Demo data for development
-      if (activeTab === 'users') {
-        setUsers([
-          {
-            id: 'demo_user',
-            email: 'demo@example.com',
-            profile: {
-              introduction: 'Demo user account',
-              language: 'en'
-            },
-            subscription: {
-              plan: 'premium',
-              model: 'chatgpt'
-            },
-            created_at: new Date().toISOString(),
-            is_banned: false,
-            payment_status: 'active',
-            message_count: 150
-          },
-          {
-            id: 'test_user',
-            email: 'test@example.com',
-            profile: {
-              introduction: 'Test user account',
-              language: 'ja'
-            },
-            subscription: {
-              plan: 'free',
-              model: 'deepseek'
-            },
-            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            is_banned: false,
-            payment_status: 'none',
-            message_count: 25
-          }
-        ]);
-      } else {
-        setPrompts([
-          {
-            id: '1',
-            character: 'Default Assistant',
-            content: 'You are a helpful AI assistant. Be friendly, informative, and concise in your responses.',
-            updated_at: new Date().toISOString()
-          },
-          {
-            id: '2',
-            character: 'Creative Helper',
-            content: 'You are a creative AI that helps with writing, brainstorming, and artistic projects. Be imaginative and inspiring.',
-            updated_at: new Date().toISOString()
-          }
-        ]);
-      }
     } finally {
       setIsLoading(false);
     }
@@ -150,13 +99,13 @@ const Admin: React.FC = () => {
     const matchesSearch = searchQuery === '' || 
       user.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.profile?.introduction.toLowerCase().includes(searchQuery.toLowerCase());
+      (user.profile?.introduction || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === '' || 
       (statusFilter === 'banned' && user.is_banned) ||
       (statusFilter === 'active' && !user.is_banned);
     
-    const matchesPlan = planFilter === '' || user.subscription?.plan === planFilter;
+    const matchesPlan = planFilter === '' || user.premium_until ? 'Premium' : 'Free' === planFilter;
 
     return matchesSearch && matchesStatus && matchesPlan;
   });
@@ -324,7 +273,7 @@ const Admin: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {user.subscription?.plan?.charAt(0).toUpperCase() + user.subscription?.plan?.slice(1)}
+                          {user.premium_until ? 'Premium' : 'Free'}
                         </div>
                         <div className="text-sm text-gray-500">{user.subscription?.model}</div>
                       </td>

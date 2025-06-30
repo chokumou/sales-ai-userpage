@@ -103,12 +103,12 @@ class APIService {
     // }
 
     // Check if we're in demo mode (mock token)
-    const isDemoMode = this.token?.startsWith('mock_jwt_token_');
+    // const isDemoMode = this.token?.startsWith('mock_jwt_token_');
     
-    if (isDemoMode) {
-      console.log(`[DEMO MODE] API Request: ${options.method || 'GET'} ${endpoint}`);
-      return this.getMockData<T>(endpoint, options);
-    }
+    // if (isDemoMode) {
+    //   console.log(`[DEMO MODE] API Request: ${options.method || 'GET'} ${endpoint}`);
+    //   return this.getMockData<T>(endpoint, options);
+    // }
 
     // Real API call
     const url = `${this.baseURL}${endpoint}`;
@@ -211,248 +211,249 @@ class APIService {
     }
   }
 
-  private async getMockData<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 700));
-
-    console.log(`[MOCK] ${options.method || 'GET'} ${endpoint}`, options.body);
-
-    // Mock responses based on endpoint
-    if (endpoint.includes('/auth/user/token')) {
-      return {
-        access_token: `mock_token_${Date.now()}`,
-        user: {
-          id: 'demo_user',
-          profile: { introduction: 'Demo user', language: 'en' },
-          subscription: { plan: 'premium', model: 'chatgpt' }
-        }
-      } as T;
-    }
-
-    if (endpoint.includes('/api/user/profile')) {
-      return {
-        id: 'demo_user',
-        message_count: 150,
-        profile: { introduction: 'Demo user', language: 'en' },
-        subscription: { plan: 'premium', model: 'chatgpt' }
-      } as T;
-    }
-
-    if (endpoint.includes('/api/user/model')) {
-      if (options.method === 'PATCH') {
-        return { success: true, model: JSON.parse(options.body as string).model } as T;
-      }
-      return { model: 'deepseek' } as T;
-    }
-
-    if (endpoint.includes('/api/memory/')) {
-      if (options.method === 'POST') {
-        const requestBody = JSON.parse(options.body as string);
-        console.log('[MOCK] Creating memory:', requestBody);
-        
-        // Validate input
-        if (!requestBody.text || requestBody.text.trim().length === 0) {
-          throw new Error('メモリの内容を入力してください。');
-        }
-        
-        if (requestBody.text.length > 1000) {
-          throw new Error('メモリの内容は1000文字以内で入力してください。');
-        }
-
-        // Simulate successful creation
-        return { 
-          id: `memory_${Date.now()}`, 
-          user_id: requestBody.user_id,
-          text: requestBody.text,
-          timestamp: new Date().toISOString(),
-          category: requestBody.category || null
-        } as T;
-      }
-      
-      if (options.method === 'DELETE') {
-        console.log('[MOCK] Deleting memory:', endpoint);
-        return { success: true } as T;
-      }
-
-      // GET request - return paginated memories
-      const url = new URL(`http://localhost${endpoint}`);
-      const page = parseInt(url.searchParams.get('page') || '1');
-      const limit = parseInt(url.searchParams.get('limit') || '20');
-      
-      const allMemories = [
-        {
-          id: '1',
-          user_id: 'demo_user',
-          text: '朝のミーティングを好む',
-          timestamp: new Date().toISOString(),
-          category: 'Work'
-        },
-        {
-          id: '2',
-          user_id: 'demo_user',
-          text: '好きなコーヒーはカプチーノ',
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          category: 'Personal'
-        },
-        {
-          id: '3',
-          user_id: 'demo_user',
-          text: 'プログラミング言語はTypeScriptが得意',
-          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          category: 'Work'
-        },
-        {
-          id: '4',
-          user_id: 'demo_user',
-          text: '週末は読書をして過ごすことが多い',
-          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-          category: 'Personal'
-        },
-        {
-          id: '5',
-          user_id: 'demo_user',
-          text: 'AIと機械学習に興味がある',
-          timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          category: 'Ideas'
-        }
-      ];
-
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedMemories = allMemories.slice(startIndex, endIndex);
-      
-      return {
-        memories: paginatedMemories,
-        total: allMemories.length,
-        page: page,
-        pages: Math.ceil(allMemories.length / limit)
-      } as T;
-    }
-
-    if (endpoint.includes('/api/friend/list')) {
-      return [
-        {
-          id: '1',
-          user_id: 'friend1',
-          name: 'Alice Johnson',
-          introduction: 'AI enthusiast and developer',
-          status: 'online',
-          has_unread_messages: true,
-          last_message_time: new Date().toISOString()
-        },
-        {
-          id: '2',
-          user_id: 'friend2',
-          name: 'Bob Smith',
-          introduction: 'Voice technology researcher',
-          status: 'offline',
-          has_unread_messages: false,
-          last_message_time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-        }
-      ] as T;
-    }
-
-    if (endpoint.includes('/api/friend/request')) {
-      console.log('[MOCK] Friend request sent');
-      return { success: true } as T;
-    }
-
-    if (endpoint.includes('/api/friend/accept')) {
-      console.log('[MOCK] Friend request accepted');
-      return { success: true } as T;
-    }
-
-    if (endpoint.includes('/api/voice/list')) {
-      return [
-        {
-          id: '1',
-          name: 'My Voice Sample 1',
-          file_url: 'https://example.com/voice1.wav',
-          created_at: new Date().toISOString(),
-          is_verified: true
-        },
-        {
-          id: '2',
-          name: 'Professional Voice',
-          file_url: 'https://example.com/voice2.wav',
-          created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          is_verified: false
-        }
-      ] as T;
-    }
-
-    if (endpoint.includes('/api/payment/history')) {
-      return [
-        {
-          id: 'pi_1234567890',
-          amount: 19.99,
-          currency: 'USD',
-          status: 'succeeded',
-          description: 'Premium Plan Subscription',
-          created_at: new Date().toISOString(),
-          plan: 'Premium',
-          period: 'Monthly'
-        }
-      ] as T;
-    }
-
-    if (endpoint.includes('/api/payment/create-checkout-session')) {
-      return {
-        url: 'https://checkout.stripe.com/pay/demo_session',
-        session_id: 'cs_demo_session'
-      } as T;
-    }
-
-    if (endpoint.includes('/api/admin/users')) {
-      return {
-        users: [
-          {
-            id: 'demo_user',
-            email: 'demo@example.com',
-            profile: { introduction: 'Demo user', language: 'en' },
-            subscription: { plan: 'premium', model: 'chatgpt' },
-            created_at: new Date().toISOString(),
-            is_banned: false,
-            payment_status: 'active',
-            message_count: 150
-          }
-        ],
-        pages: 1
-      } as T;
-    }
-
-    if (endpoint.includes('/api/admin/prompts')) {
-      return [
-        {
-          id: '1',
-          character: 'Default Assistant',
-          content: 'You are a helpful AI assistant.',
-          updated_at: new Date().toISOString()
-        }
-      ] as T;
-    }
-
-    if (endpoint.includes('/api/admin/ban')) {
-      console.log('[MOCK] User banned');
-      return { success: true } as T;
-    }
-
-    // Default empty response
-    console.log('[MOCK] No specific handler for endpoint:', endpoint);
-    return {} as T;
-  }
+  //  private async getMockData<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  //     // Simulate API delay
+  //     await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 700));
+  //
+  //     console.log(`[MOCK] ${options.method || 'GET'} ${endpoint}`, options.body);
+  //
+  //     // Mock responses based on endpoint
+  //     if (endpoint.includes('/auth/user/token')) {
+  //       return {
+  //         access_token: `mock_token_${Date.now()}`,
+  //         user: {
+  //           id: 'demo_user',
+  //           profile: { introduction: 'Demo user', language: 'en' },
+  //           subscription: { plan: 'premium', model: 'chatgpt' }
+  //         }
+  //       } as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/user/profile')) {
+  //       return {
+  //         id: 'demo_user',
+  //         message_count: 150,
+  //         profile: { introduction: 'Demo user', language: 'en' },
+  //         subscription: { plan: 'premium', model: 'chatgpt' }
+  //       } as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/user/model')) {
+  //       if (options.method === 'PATCH') {
+  //         return { success: true, model: JSON.parse(options.body as string).model } as T;
+  //       }
+  //       return { model: 'deepseek' } as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/memory/')) {
+  //       if (options.method === 'POST') {
+  //         const requestBody = JSON.parse(options.body as string);
+  //         console.log('[MOCK] Creating memory:', requestBody);
+  //         
+  //         // Validate input
+  //         if (!requestBody.text || requestBody.text.trim().length === 0) {
+  //           throw new Error('メモリの内容を入力してください。');
+  //         }
+  //         
+  //         if (requestBody.text.length > 1000) {
+  //           throw new Error('メモリの内容は1000文字以内で入力してください。');
+  //         }
+  //
+  //         // Simulate successful creation
+  //         return { 
+  //           id: `memory_${Date.now()}`, 
+  //           user_id: requestBody.user_id,
+  //           text: requestBody.text,
+  //           timestamp: new Date().toISOString(),
+  //           category: requestBody.category || null
+  //         } as T;
+  //       }
+  //       
+  //       if (options.method === 'DELETE') {
+  //         console.log('[MOCK] Deleting memory:', endpoint);
+  //         return { success: true } as T;
+  //       }
+  //
+  //       // GET request - return paginated memories
+  //       const url = new URL(`http://localhost${endpoint}`);
+  //       const page = parseInt(url.searchParams.get('page') || '1');
+  //       const limit = parseInt(url.searchParams.get('limit') || '20');
+  //       
+  //       const allMemories = [
+  //         {
+  //           id: '1',
+  //           user_id: 'demo_user',
+  //           text: '朝のミーティングを好む',
+  //           timestamp: new Date().toISOString(),
+  //           category: 'Work'
+  //         },
+  //         {
+  //           id: '2',
+  //           user_id: 'demo_user',
+  //           text: '好きなコーヒーはカプチーノ',
+  //           timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  //           category: 'Personal'
+  //         },
+  //         {
+  //           id: '3',
+  //           user_id: 'demo_user',
+  //           text: 'プログラミング言語はTypeScriptが得意',
+  //           timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  //           category: 'Work'
+  //         },
+  //         {
+  //           id: '4',
+  //           user_id: 'demo_user',
+  //           text: '週末は読書をして過ごすことが多い',
+  //           timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  //           category: 'Personal'
+  //         },
+  //         {
+  //           id: '5',
+  //           user_id: 'demo_user',
+  //           text: 'AIと機械学習に興味がある',
+  //           timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+  //           category: 'Ideas'
+  //         }
+  //       ];
+  //
+  //       const startIndex = (page - 1) * limit;
+  //       const endIndex = startIndex + limit;
+  //       const paginatedMemories = allMemories.slice(startIndex, endIndex);
+  //       
+  //       return {
+  //         memories: paginatedMemories,
+  //         total: allMemories.length,
+  //         page: page,
+  //         pages: Math.ceil(allMemories.length / limit)
+  //       } as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/friend/list')) {
+  //       return [
+  //         {
+  //           id: '1',
+  //           user_id: 'friend1',
+  //           name: 'Alice Johnson',
+  //           introduction: 'AI enthusiast and developer',
+  //           status: 'online',
+  //           has_unread_messages: true,
+  //           last_message_time: new Date().toISOString()
+  //         },
+  //         {
+  //           id: '2',
+  //           user_id: 'friend2',
+  //           name: 'Bob Smith',
+  //           introduction: 'Voice technology researcher',
+  //           status: 'offline',
+  //           has_unread_messages: false,
+  //           last_message_time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+  //         }
+  //       ] as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/friend/request')) {
+  //       console.log('[MOCK] Friend request sent');
+  //       return { success: true } as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/friend/accept')) {
+  //       console.log('[MOCK] Friend request accepted');
+  //       return { success: true } as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/voice/list')) {
+  //       return [
+  //         {
+  //           id: '1',
+  //           name: 'My Voice Sample 1',
+  //           file_url: 'https://example.com/voice1.wav',
+  //           created_at: new Date().toISOString(),
+  //           is_verified: true
+  //         },
+  //         {
+  //           id: '2',
+  //           name: 'Professional Voice',
+  //           file_url: 'https://example.com/voice2.wav',
+  //           created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+  //           is_verified: false
+  //         }
+  //       ] as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/payment/history')) {
+  //       return [
+  //         {
+  //           id: 'pi_1234567890',
+  //           amount: 19.99,
+  //           currency: 'USD',
+  //           status: 'succeeded',
+  //           description: 'Premium Plan Subscription',
+  //           created_at: new Date().toISOString(),
+  //           plan: 'Premium',
+  //           period: 'Monthly'
+  //         }
+  //       ] as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/payment/create-checkout-session')) {
+  //       return {
+  //         url: 'https://checkout.stripe.com/pay/demo_session',
+  //         session_id: 'cs_demo_session'
+  //       } as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/admin/users')) {
+  //       return {
+  //         users: [
+  //           {
+  //             id: 'demo_user',
+  //             email: 'demo@example.com',
+  //             profile: { introduction: 'Demo user', language: 'en' },
+  //             subscription: { plan: 'premium', model: 'chatgpt' },
+  //             created_at: new Date().toISOString(),
+  //             is_banned: false,
+  //             payment_status: 'active',
+  //             message_count: 150
+  //           }
+  //         ],
+  //         pages: 1
+  //       } as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/admin/prompts')) {
+  //       return [
+  //         {
+  //           id: '1',
+  //           character: 'Default Assistant',
+  //           content: 'You are a helpful AI assistant.',
+  //           updated_at: new Date().toISOString()
+  //         }
+  //       ] as T;
+  //     }
+  //
+  //     if (endpoint.includes('/api/admin/ban')) {
+  //       console.log('[MOCK] User banned');
+  //       return { success: true } as T;
+  //     }
+  //
+  //     // Default empty response
+  //     console.log('[MOCK] No specific handler for endpoint:', endpoint);
+  //     return {} as T;
+  //   }
 
   private async uploadFile<T>(
     endpoint: string,
     file: File,
     additionalData?: Record<string, string>
   ): Promise<T> {
-    const isDemoMode = this.token?.startsWith('mock_jwt_token_');
+    // Check if we're in demo mode (mock token)
+    // const isDemoMode = this.token?.startsWith('mock_jwt_token_');
     
-    if (isDemoMode) {
-      console.log(`[DEMO MODE] File Upload: ${endpoint}`, { fileName: file.name, fileSize: file.size });
-      return this.getMockFileUpload<T>(endpoint, file, additionalData);
-    }
+    // if (isDemoMode) {
+    //   console.log(`[DEMO MODE] File Upload: ${endpoint}`, { fileName: file.name, fileSize: file.size });
+    //   return this.getMockFileUpload<T>(endpoint, file, additionalData);
+    // }
 
     const url = `${this.baseURL}${endpoint}`;
     const formData = new FormData();
@@ -489,34 +490,6 @@ class APIService {
       console.error('File Upload Failed:', error);
       throw error;
     }
-  }
-
-  private async getMockFileUpload<T>(
-    endpoint: string,
-    file: File,
-    additionalData?: Record<string, string>
-  ): Promise<T> {
-    // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-    
-    if (endpoint.includes('/api/voice/register')) {
-      return {
-        id: `voice_${Date.now()}`,
-        name: additionalData?.name || 'New Voice',
-        file_url: URL.createObjectURL(file),
-        created_at: new Date().toISOString(),
-        is_verified: false
-      } as T;
-    }
-
-    if (endpoint.includes('/api/message/send')) {
-      return {
-        id: `message_${Date.now()}`,
-        success: true
-      } as T;
-    }
-
-    return { success: true } as T;
   }
 
   // Auth API
@@ -684,9 +657,9 @@ class APIService {
     },
 
     // 送信申請の削除（withdraw）
-    testWithdraw: (fromUserId: string, toUserId: string) =>
-      this.request<any>('/api/friend/test/withdraw', {
-        method: 'DELETE',
+    withdraw: (fromUserId: string, toUserId: string) =>
+      this.request<any>('/api/friend/withdraw', {
+        method: 'POST',
         body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
       }),
   };

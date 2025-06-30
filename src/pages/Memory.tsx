@@ -71,7 +71,7 @@ const Memory: React.FC = () => {
       setTotalMemories((response as Memory[]).length);
     } catch (error) {
       console.error('Error loading memories:', error);
-      setError('メモリの読み込みに失敗しました。');
+      setError('\u30e1\u30e2\u30ea\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002');
       setMemories([]);
     } finally {
       setIsLoading(false);
