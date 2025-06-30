@@ -200,10 +200,10 @@ const Friends: React.FC = () => {
 
   const filteredFriends = Array.isArray(friends)
     ? friends.filter(friend => {
-        if (!searchQuery) return true; // 検索ワードが空なら全件表示
+        if (!searchQuery.trim()) return true; // 空白や不可視文字も空扱い
         return (
-          (friend.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (friend.introduction || '').toLowerCase().includes(searchQuery.toLowerCase())
+          (friend.name || '').toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
+          (friend.introduction || '').toLowerCase().includes(searchQuery.trim().toLowerCase())
         );
       })
     : [];
