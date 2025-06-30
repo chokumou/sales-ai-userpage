@@ -58,39 +58,38 @@ const Friends: React.FC = () => {
   console.log('[DEBUG] Friendsコンポーネント: user', user);
 
   useEffect(() => {
-    // 初回読み込みは loadFriends で行う
-    loadFriends();
+    if (user) loadFriends();
   }, [user]);
-
-  type FriendRequestsResponse = {
-    received_requests: FriendRequestReceived[];
-    sent_requests: FriendRequestSent[];
-  };
 
   const loadFriends = async () => {
     if (!user) return;
-
     try {
-      // デバッグ: user.idを表示
-      console.log('[DEBUG] loadFriends: user.id', user?.id);
       setIsLoading(true);
       const response = await friendAPI.list(user.id);
-      console.log('[DEBUG] friendAPI.list() response:', response);
-      if (Array.isArray((response as any)?.friends)) {
-        console.log('[DEBUG] friends全体:', JSON.stringify((response as any).friends, null, 2));
-      }
-      // APIレスポンスのuser_idをidにコピーして型ズレを吸収
-      const friendsData = Array.isArray((response as any)?.friends)
-        ? ((response as any).friends as Friend[]).map(f => ({ ...f, id: f.user_id }))
+      // レスポンス形式に柔軟対応
+      const rawFriends = Array.isArray(response)
+        ? response
+        : (response as any).friends ?? [];
+      // idプロパティ補完
+      const friendsData = Array.isArray(rawFriends)
+        ? rawFriends.map((f: any) => ({
+            ...f,
+            id: f.user_id,
+            status: f.status || 'offline',
+            has_unread_messages: f.has_unread_messages ?? false,
+            avatar: f.avatar || '',
+            last_message_time: f.last_message_time || '',
+          }))
         : [];
       setFriends(friendsData);
-      // 新APIレスポンス対応
-      const requestsData = await friendAPI.testRequests(user.id) as FriendRequestsResponse;
-      console.log('[DEBUG] friendAPI.testRequests() result:', requestsData);
-      setReceivedRequests(Array.isArray(requestsData.received_requests) ? requestsData.received_requests : []);
-      setSentRequests(Array.isArray(requestsData.sent_requests) ? requestsData.sent_requests : []);
+      // フレンド申請一覧
+      const requestsData = await friendAPI.testRequests(user.id) as {
+        received_requests: FriendRequestReceived[];
+        sent_requests: FriendRequestSent[];
+      };
+      setReceivedRequests(requestsData.received_requests || []);
+      setSentRequests(requestsData.sent_requests || []);
     } catch (error) {
-      console.error('Error loading friends:', error);
       setFriends([]);
       setReceivedRequests([]);
       setSentRequests([]);
