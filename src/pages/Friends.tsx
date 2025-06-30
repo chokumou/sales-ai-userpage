@@ -192,10 +192,15 @@ const Friends: React.FC = () => {
     setShowMessaging(true);
   };
 
-  const filteredFriends = Array.isArray(friends) ? friends.filter(friend => 
-    (friend.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (friend.introduction || '').toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  const filteredFriends = Array.isArray(friends)
+    ? friends.filter(friend => {
+        if (!searchQuery) return true; // 検索ワードが空なら全件表示
+        return (
+          (friend.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (friend.introduction || '').toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      })
+    : [];
   // デバッグ: filteredFriendsの中身を表示
   console.log('[DEBUG] filteredFriends:', filteredFriends);
 
