@@ -54,11 +54,18 @@ const Friends: React.FC = () => {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [showMessaging, setShowMessaging] = useState(false);
 
+  // デバッグ: user情報を表示
+  console.log('[DEBUG] Friendsコンポーネント: user', user);
+
   useEffect(() => {
+    console.log('[DEBUG] useEffect発火: user', user);
     if (!user) return;
     const fetchFriends = async () => {
+      console.log('[DEBUG] loadFriends呼び出し: user.id', user.id);
       try {
         const response = await friendAPI.list(user.id);
+        console.log('[DEBUG] friendAPI.list() response:', response);
+        // ここでsetFriends
         setFriends(
           Array.isArray(response)
             ? (response as Friend[]).map(f => ({
@@ -73,8 +80,9 @@ const Friends: React.FC = () => {
               }))
             : []
         );
+        console.log('[DEBUG] setFriends後: friends', response);
       } catch (e) {
-        console.error('friendAPI.list() error:', e);
+        console.error('[DEBUG] friendAPI.list() error:', e);
       }
     };
     fetchFriends();
@@ -87,22 +95,46 @@ const Friends: React.FC = () => {
 
   const loadFriends = async () => {
     if (!user) return;
-    setIsLoading(true);
+
     try {
+      // デバッグ: user.idを表示
+      console.log('[DEBUG] loadFriends: user.id', user?.id);
+      setIsLoading(true);
       const response = await friendAPI.list(user.id);
+      console.log('[DEBUG] friendAPI.list() response:', response);
+      if (Array.isArray((response as any)?.friends)) {
+        console.log('[DEBUG] friends全体:', JSON.stringify((response as any).friends, null, 2));
+      }
+      // APIレスポンスのuser_idをidにコピーし、不足フィールドにデフォルト値を補完
       const friendsData = Array.isArray((response as any)?.friends)
-        ? (response as any).friends
+        ? ((response as any).friends as any[]).map(f => ({
+            ...f,
+            // name/introductionがなければto_user/from_userから補完
+            name: f.name || f.to_user?.name || f.from_user?.name || '',
+            introduction: f.introduction || f.to_user?.introduction || f.from_user?.introduction || '',
+            id: f.user_id,
+            status: 'offline' as const, // 型エラー回避
+            has_unread_messages: false,
+            avatar: '',
+            last_message_time: '',
+          }))
         : [];
       setFriends(friendsData);
+      // 本番APIの申請一覧取得
       const requestsData = await friendAPI.requests(user.id);
+      console.log('[DEBUG] friendAPI.requests() result:', requestsData);
+      // 受信申請・送信申請を分離
       setReceivedRequests(Array.isArray(requestsData)
         ? (requestsData.filter((req: any) => req.request_type === 'received') as FriendRequestReceived[])
         : []);
       setSentRequests(Array.isArray(requestsData)
         ? (requestsData.filter((req: any) => req.request_type === 'sent') as FriendRequestSent[])
         : []);
-    } catch (e) {
-      console.error('friendAPI.list() error:', e);
+    } catch (error) {
+      console.error('Error loading friends:', error);
+      setFriends([]);
+      setReceivedRequests([]);
+      setSentRequests([]);
     } finally {
       setIsLoading(false);
     }
@@ -112,24 +144,33 @@ const Friends: React.FC = () => {
     if (!user || !newFriendId.trim()) return;
 
     try {
+      console.log('=== フレンド申請デバッグ ===');
+      console.log('user:', user);
+      console.log('newFriendId (before cleanup):', newFriendId);
+      
+      // フレンドIDをクリーンアップ（余分な文字・空白・全角スペース・改行を除去、ハイフンは残す）
       const cleanFriendId = newFriendId
-        .replace(/\s|\u3000/g, '')
-        .replace(/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?]/g, '');
+        .replace(/\s|\u3000/g, '') // 空白・全角スペース・改行を除去
+        .replace(/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?]/g, ''); // ハイフンは除去しない
+      console.log('newFriendId (after cleanup):', cleanFriendId);
       
       if (!cleanFriendId) {
         alert('有効なフレンドIDを入力してください。');
         return;
       }
 
+      // UUID形式のバリデーション
       if (!isValidUUID(cleanFriendId)) {
         alert('フレンドIDはUUID形式で入力してください。\n例: 5db72bb0-11da-429e-8f33-47a43917fbe6');
         return;
       }
       
+      // 本番APIで申請送信
       await friendAPI.sendRequest(cleanFriendId);
       setNewFriendId('');
       setShowAddFriend(false);
       alert('Friend request sent successfully!');
+      // Reload friends to show updated data
       await loadFriends();
     } catch (error) {
       console.error('Error sending friend request:', error);
@@ -143,6 +184,11 @@ const Friends: React.FC = () => {
       alert('ユーザー情報が見つかりません。ログインし直してください。');
       return;
     }
+
+    console.log('=== フレンド承認処理デバッグ ===');
+    console.log('fromUserId:', fromUserId);
+    console.log('user.id:', user.id);
+    console.log('user object:', user);
 
     let currentUserId = user.id;
     if (!currentUserId) {
@@ -163,6 +209,7 @@ const Friends: React.FC = () => {
     }
 
     try {
+      // 本番APIで申請承認
       await friendAPI.accept(fromUserId, currentUserId);
       await loadFriends();
       setReceivedRequests(prev => prev.filter(req => req.user_id_a !== fromUserId));
@@ -181,15 +228,18 @@ const Friends: React.FC = () => {
     setShowMessaging(true);
   };
 
+  // filteredFriends: フィルター条件を元に戻す
   const filteredFriends = Array.isArray(friends)
     ? friends.filter(friend => {
-        if (!searchQuery.trim()) return true;
+        if (!searchQuery.trim()) return true; // 空白や不可視文字も空扱い
         return (
           (friend.name || '').toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
           (friend.introduction || '').toLowerCase().includes(searchQuery.trim().toLowerCase())
         );
       })
     : [];
+  // デバッグ: filteredFriendsの中身を表示
+  console.log('[DEBUG] filteredFriends:', filteredFriends);
 
   const getInitials = (name: string | undefined | null) => {
     if (!name || typeof name !== 'string' || name.trim() === '') {
@@ -198,6 +248,7 @@ const Friends: React.FC = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  // UUID形式のバリデーション関数
   const isValidUUID = (uuid: string) => {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(uuid);
@@ -213,6 +264,7 @@ const Friends: React.FC = () => {
     });
   };
 
+  // 送信申請の削除（withdraw）
   const handleWithdrawRequest = async (req: FriendRequestSent) => {
     if (!user) return;
     if (!window.confirm('この申請を削除しますか？')) return;
@@ -224,6 +276,18 @@ const Friends: React.FC = () => {
       alert('申請の削除に失敗しました');
     }
   };
+
+  // デバッグ用: friends, filteredFriends, receivedRequests, sentRequestsをwindowに出力
+  if (typeof window !== 'undefined') {
+    (window as any).friendsDebug = {
+      friends,
+      filteredFriends,
+      receivedRequests,
+      sentRequests,
+      user,
+      searchQuery,
+    };
+  }
 
   if (isLoading) {
     return (
@@ -243,6 +307,7 @@ const Friends: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Friends</h1>
@@ -265,7 +330,9 @@ const Friends: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Friend Requests */}
           {receivedRequests.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -273,6 +340,8 @@ const Friends: React.FC = () => {
               </h2>
               <div className="space-y-4">
                 {receivedRequests.map((request) => {
+                  console.log('【DEBUG】フレンド申請リストのrequest:', request);
+                  // from_user_idがなければ警告
                   if (!request.user_id_a) {
                     console.warn('【WARNING】request.user_id_aがundefinedです。request:', request);
                   }
@@ -313,6 +382,7 @@ const Friends: React.FC = () => {
             </div>
           )}
 
+          {/* Search */}
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -326,103 +396,114 @@ const Friends: React.FC = () => {
             </div>
           </div>
 
+          {/* Friends List */}
           <div className="bg-white rounded-xl border border-gray-200">
-            {filteredFriends.length === 0 ? (
-              <div className="p-6 text-gray-500">フレンドがいません</div>
-            ) : (
-              <ul>
-                {filteredFriends.map((friend, idx) => {
-                  if (!friend) return null;
-                  const key = friend.user_id || friend.id || idx;
-                  const name = typeof friend.name === 'string' && friend.name.trim() ? friend.name : 'Unknown User';
-                  const intro = typeof friend.introduction === 'string' && friend.introduction.trim() ? friend.introduction : 'No introduction';
-                  return (
-                    <li key={key} className="flex items-center space-x-4 p-4 border-b last:border-b-0">
-                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                        <span className="text-white font-medium text-sm">
-                          {name.slice(0, 2)}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{name}</div>
-                        <div className="text-sm text-gray-600">{intro}</div>
-                      </div>
+            {/* filteredFriendsの内容を必ず表示するシンプルなリストも追加 */}
+            <div style={{ padding: '1em', borderBottom: '1px solid #eee' }}>
+              <h4>デバッグ: filteredFriendsの中身</h4>
+              {filteredFriends.length === 0 ? (
+                <div>フレンドがいません</div>
+              ) : (
+                <ul>
+                  {filteredFriends.map(friend => (
+                    <li key={friend.user_id} style={{ marginBottom: 8 }}>
+                      <strong>{friend.name || 'Unknown User'}</strong> - {friend.introduction || 'No introduction'}
                     </li>
-                  );
-                })}
-              </ul>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {/* 既存のリッチなUI部分も残す */}
+            {filteredFriends.length === 0 ? (
+              <div className="text-center py-16">
+                <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {Array.isArray(friends) && friends.length === 0 ? 'No friends yet' : 'No friends match your search'}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {Array.isArray(friends) && friends.length === 0 
+                    ? 'Start building your network by adding friends to share AI conversations.'
+                    : 'Try adjusting your search terms.'
+                  }
+                </p>
+                {Array.isArray(friends) && friends.length === 0 && (
+                  <button
+                    onClick={() => setShowAddFriend(true)}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Add Your First Friend
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {filteredFriends.map((friend) => (
+                  <div key={friend.user_id} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                            <span className="text-white font-medium">
+                              {getInitials(friend.name)}
+                            </span>
+                          </div>
+                          <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                            friend.status === 'online' ? 'bg-green-400' : 'bg-gray-400'
+                          }`}></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-medium text-gray-900">{friend.name || 'Unknown User'}</h3>
+                            {friend.has_unread_messages && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 truncate">{friend.introduction || 'No introduction'}</p>
+                          {friend.last_message_time && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Last message: {formatLastMessage(friend.last_message_time)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleStartConversation(friend)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Start conversation"
+                        >
+                          <MessageCircle className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
-          {filteredFriends.length === 0 ? (
-            <div className="text-center py-16">
-              <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {Array.isArray(friends) && friends.length === 0 ? 'No friends yet' : 'No friends match your search'}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {Array.isArray(friends) && friends.length === 0 
-                  ? 'Start building your network by adding friends to share AI conversations.'
-                  : 'Try adjusting your search terms.'
-                }
-              </p>
-              {Array.isArray(friends) && friends.length === 0 && (
-                <button
-                  onClick={() => setShowAddFriend(true)}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Add Your First Friend
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-200">
-              {filteredFriends.map((friend) => (
-                <div key={friend.user_id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="relative">
-                        <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                          <span className="text-white font-medium">
-                            {getInitials(friend.name)}
-                          </span>
-                        </div>
-                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                          friend.status === 'online' ? 'bg-green-400' : 'bg-gray-400'
-                        }`}></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-medium text-gray-900">{friend.name || 'Unknown User'}</h3>
-                          {friend.has_unread_messages && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 truncate">{friend.introduction || 'No introduction'}</p>
-                        {friend.last_message_time && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Last message: {formatLastMessage(friend.last_message_time)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleStartConversation(friend)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Start conversation"
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* 送信申請リスト（自分が送った申請） */}
+          <div style={{ marginTop: 32 }}>
+            <h3>自分が送ったフレンド申請</h3>
+            {sentRequests.length === 0 ? (
+              <p>送信した申請はありません。</p>
+            ) : (
+              <ul>
+                {sentRequests.map((req) => (
+                  <li key={req.id} style={{ marginBottom: 8 }}>
+                    <span>宛先: {req.to_user?.name || req.user_id_b}</span>
+                    <span style={{ marginLeft: 16 }}>申請日時: {new Date(req.created_at).toLocaleString()}</span>
+                    <button style={{ marginLeft: 16 }} onClick={() => handleWithdrawRequest(req)}>削除</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
+        {/* Sidebar */}
         <div className="space-y-6">
+          {/* Quick Stats */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h3 className="font-semibold text-gray-900 mb-4">Your Network</h3>
             <div className="space-y-3">
@@ -445,6 +526,7 @@ const Friends: React.FC = () => {
             </div>
           </div>
 
+          {/* Tips */}
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
             <h3 className="font-semibold text-blue-900 mb-3">Tips</h3>
             <ul className="text-sm text-blue-800 space-y-2">
@@ -457,6 +539,7 @@ const Friends: React.FC = () => {
         </div>
       </div>
 
+      {/* Add Friend Modal */}
       {showAddFriend && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full">
@@ -501,6 +584,7 @@ const Friends: React.FC = () => {
         </div>
       )}
 
+      {/* Quick Messaging Modal */}
       {showMessaging && selectedFriend && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
@@ -557,4 +641,4 @@ const Friends: React.FC = () => {
   );
 };
 
-export default Friends;
+export default Friends;// debug: rollback test
