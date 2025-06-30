@@ -398,107 +398,102 @@ const Friends: React.FC = () => {
 
           {/* Friends List */}
           <div className="bg-white rounded-xl border border-gray-200">
-            {/* filteredFriendsの内容を必ず表示するシンプルなリストも追加 */}
-            <div style={{ padding: '1em', borderBottom: '1px solid #eee' }}>
-              <h4>デバッグ: filteredFriendsの中身</h4>
-              {filteredFriends.length === 0 ? (
-                <div>フレンドがいません</div>
-              ) : (
-                <ul>
-                  {filteredFriends.map(friend => (
-                    <li key={friend.user_id} style={{ marginBottom: 8 }}>
-                      <strong>{friend.name || 'Unknown User'}</strong> - {friend.introduction || 'No introduction'}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            {/* 既存のリッチなUI部分も残す */}
             {filteredFriends.length === 0 ? (
-              <div className="text-center py-16">
-                <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {Array.isArray(friends) && friends.length === 0 ? 'No friends yet' : 'No friends match your search'}
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  {Array.isArray(friends) && friends.length === 0 
-                    ? 'Start building your network by adding friends to share AI conversations.'
-                    : 'Try adjusting your search terms.'
-                  }
-                </p>
-                {Array.isArray(friends) && friends.length === 0 && (
-                  <button
-                    onClick={() => setShowAddFriend(true)}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Add Your First Friend
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-200">
-                {filteredFriends.map((friend) => (
-                  <div key={friend.user_id} className="p-6 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="relative">
-                          <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                            <span className="text-white font-medium">
-                              {getInitials(friend.name)}
-                            </span>
-                          </div>
-                          <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                            friend.status === 'online' ? 'bg-green-400' : 'bg-gray-400'
-                          }`}></div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2">
-                            <h3 className="font-medium text-gray-900">{friend.name || 'Unknown User'}</h3>
-                            {friend.has_unread_messages && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600 truncate">{friend.introduction || 'No introduction'}</p>
-                          {friend.last_message_time && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Last message: {formatLastMessage(friend.last_message_time)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleStartConversation(friend)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Start conversation"
-                        >
-                          <MessageCircle className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 送信申請リスト（自分が送った申請） */}
-          <div style={{ marginTop: 32 }}>
-            <h3>自分が送ったフレンド申請</h3>
-            {sentRequests.length === 0 ? (
-              <p>送信した申請はありません。</p>
+              <div className="p-6 text-gray-500">フレンドがいません</div>
             ) : (
               <ul>
-                {sentRequests.map((req) => (
-                  <li key={req.id} style={{ marginBottom: 8 }}>
-                    <span>宛先: {req.to_user?.name || req.user_id_b}</span>
-                    <span style={{ marginLeft: 16 }}>申請日時: {new Date(req.created_at).toLocaleString()}</span>
-                    <button style={{ marginLeft: 16 }} onClick={() => handleWithdrawRequest(req)}>削除</button>
-                  </li>
-                ))}
+                {filteredFriends.map((friend, idx) => {
+                  // friendがnull/undefinedの場合はスキップ
+                  if (!friend) return null;
+                  // user_id, id, name, introductionの安全な取得
+                  const key = friend.user_id || friend.id || idx;
+                  const name = typeof friend.name === 'string' && friend.name.trim() ? friend.name : 'Unknown User';
+                  const intro = typeof friend.introduction === 'string' && friend.introduction.trim() ? friend.introduction : 'No introduction';
+                  return (
+                    <li key={key} className="flex items-center space-x-4 p-4 border-b last:border-b-0">
+                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white font-medium text-sm">
+                          {name.slice(0, 2)}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{name}</div>
+                        <div className="text-sm text-gray-600">{intro}</div>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
+
+          {/* 既存のリッチなUI部分も残す */}
+          {filteredFriends.length === 0 ? (
+            <div className="text-center py-16">
+              <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {Array.isArray(friends) && friends.length === 0 ? 'No friends yet' : 'No friends match your search'}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {Array.isArray(friends) && friends.length === 0 
+                  ? 'Start building your network by adding friends to share AI conversations.'
+                  : 'Try adjusting your search terms.'
+                }
+              </p>
+              {Array.isArray(friends) && friends.length === 0 && (
+                <button
+                  onClick={() => setShowAddFriend(true)}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Add Your First Friend
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {filteredFriends.map((friend) => (
+                <div key={friend.user_id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="relative">
+                        <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-medium">
+                            {getInitials(friend.name)}
+                          </span>
+                        </div>
+                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                          friend.status === 'online' ? 'bg-green-400' : 'bg-gray-400'
+                        }`}></div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-medium text-gray-900">{friend.name || 'Unknown User'}</h3>
+                          {friend.has_unread_messages && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 truncate">{friend.introduction || 'No introduction'}</p>
+                        {friend.last_message_time && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Last message: {formatLastMessage(friend.last_message_time)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleStartConversation(friend)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Start conversation"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
