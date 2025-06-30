@@ -54,6 +54,9 @@ const Friends: React.FC = () => {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [showMessaging, setShowMessaging] = useState(false);
 
+  // デバッグ: user情報を表示
+  console.log('[DEBUG] Friendsコンポーネント: user', user);
+
   useEffect(() => {
     loadFriends();
   }, [user]);
@@ -67,8 +70,12 @@ const Friends: React.FC = () => {
     if (!user) return;
 
     try {
+      // デバッグ: user.idを表示
+      console.log('[DEBUG] loadFriends: user.id', user?.id);
       setIsLoading(true);
       const response = await friendAPI.list(user.id);
+      // デバッグ: APIリクエストURLとレスポンス内容
+      console.log('[DEBUG] friendAPI.list() response:', response);
       // APIレスポンスのuser_idをidにコピーして型ズレを吸収
       const friendsData = Array.isArray((response as any)?.friends)
         ? ((response as any).friends as Friend[]).map(f => ({ ...f, id: f.user_id }))
