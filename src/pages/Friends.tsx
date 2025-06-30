@@ -80,8 +80,11 @@ const Friends: React.FC = () => {
       }
       // APIレスポンスのuser_idをidにコピーし、不足フィールドにデフォルト値を補完
       const friendsData = Array.isArray((response as any)?.friends)
-        ? ((response as any).friends as Friend[]).map(f => ({
+        ? ((response as any).friends as any[]).map(f => ({
             ...f,
+            // name/introductionがなければto_user/from_userから補完
+            name: f.name || f.to_user?.name || f.from_user?.name || '',
+            introduction: f.introduction || f.to_user?.introduction || f.from_user?.introduction || '',
             id: f.user_id,
             status: 'offline' as const, // 型エラー回避
             has_unread_messages: false,
@@ -245,6 +248,18 @@ const Friends: React.FC = () => {
       alert('申請の削除に失敗しました');
     }
   };
+
+  // デバッグ用: friends, filteredFriends, receivedRequests, sentRequestsをwindowに出力
+  if (typeof window !== 'undefined') {
+    (window as any).friendsDebug = {
+      friends,
+      filteredFriends,
+      receivedRequests,
+      sentRequests,
+      user,
+      searchQuery,
+    };
+  }
 
   if (isLoading) {
     return (
