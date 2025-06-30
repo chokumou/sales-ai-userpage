@@ -74,8 +74,13 @@ const Friends: React.FC = () => {
       console.log('[DEBUG] loadFriends: user.id', user?.id);
       setIsLoading(true);
       const response = await friendAPI.list(user.id);
-      // デバッグ: APIリクエストURLとレスポンス内容
       console.log('[DEBUG] friendAPI.list() response:', response);
+      // 追加: friends配列の中身を詳細に出力
+      if (Array.isArray((response as any)?.friends)) {
+        (response as any).friends.forEach((f: any, i: number) => {
+          console.log(`[DEBUG] friends[${i}]:`, f);
+        });
+      }
       // APIレスポンスのuser_idをidにコピーして型ズレを吸収
       const friendsData = Array.isArray((response as any)?.friends)
         ? ((response as any).friends as Friend[]).map(f => ({ ...f, id: f.user_id }))
