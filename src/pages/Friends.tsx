@@ -58,7 +58,34 @@ const Friends: React.FC = () => {
   console.log('[DEBUG] Friendsコンポーネント: user', user);
 
   useEffect(() => {
-    loadFriends();
+    console.log('[DEBUG] useEffect発火: user', user);
+    if (!user) return;
+    const fetchFriends = async () => {
+      console.log('[DEBUG] loadFriends呼び出し: user.id', user.id);
+      try {
+        const response = await friendAPI.list(user.id);
+        console.log('[DEBUG] friendAPI.list() response:', response);
+        // ここでsetFriends
+        setFriends(
+          Array.isArray(response)
+            ? (response as Friend[]).map(f => ({
+                ...f,
+                name: f.name || (f as any).to_user?.name || (f as any).from_user?.name || '',
+                introduction: f.introduction || (f as any).to_user?.introduction || (f as any).from_user?.introduction || '',
+                id: f.user_id,
+                status: 'offline',
+                has_unread_messages: false,
+                avatar: '',
+                last_message_time: '',
+              }))
+            : []
+        );
+        console.log('[DEBUG] setFriends後: friends', response);
+      } catch (e) {
+        console.error('[DEBUG] friendAPI.list() error:', e);
+      }
+    };
+    fetchFriends();
   }, [user]);
 
   type FriendRequestsResponse = {
@@ -201,8 +228,16 @@ const Friends: React.FC = () => {
     setShowMessaging(true);
   };
 
-  // デバッグ用: filter条件を外して全件表示
-  const filteredFriends = Array.isArray(friends) ? friends : [];
+  // filteredFriends: フィルター条件を元に戻す
+  const filteredFriends = Array.isArray(friends)
+    ? friends.filter(friend => {
+        if (!searchQuery.trim()) return true; // 空白や不可視文字も空扱い
+        return (
+          (friend.name || '').toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
+          (friend.introduction || '').toLowerCase().includes(searchQuery.trim().toLowerCase())
+        );
+      })
+    : [];
   // デバッグ: filteredFriendsの中身を表示
   console.log('[DEBUG] filteredFriends:', filteredFriends);
 
