@@ -196,6 +196,8 @@ const Friends: React.FC = () => {
     (friend.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (friend.introduction || '').toLowerCase().includes(searchQuery.toLowerCase())
   ) : [];
+  // デバッグ: filteredFriendsの中身を表示
+  console.log('[DEBUG] filteredFriends:', filteredFriends);
 
   const getInitials = (name: string | undefined | null) => {
     if (!name || typeof name !== 'string' || name.trim() === '') {
