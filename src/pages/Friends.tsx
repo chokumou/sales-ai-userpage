@@ -58,34 +58,8 @@ const Friends: React.FC = () => {
   console.log('[DEBUG] Friendsコンポーネント: user', user);
 
   useEffect(() => {
-    console.log('[DEBUG] useEffect発火: user', user);
-    if (!user) return;
-    const fetchFriends = async () => {
-      console.log('[DEBUG] loadFriends呼び出し: user.id', user.id);
-      try {
-        const response = await friendAPI.list(user.id);
-        console.log('[DEBUG] friendAPI.list() response:', response);
-        // ここでsetFriends
-        setFriends(
-          Array.isArray(response)
-            ? (response as Friend[]).map(f => ({
-                ...f,
-                name: f.name || (f as any).to_user?.name || (f as any).from_user?.name || '',
-                introduction: f.introduction || (f as any).to_user?.introduction || (f as any).from_user?.introduction || '',
-                id: f.user_id,
-                status: 'offline',
-                has_unread_messages: false,
-                avatar: '',
-                last_message_time: '',
-              }))
-            : []
-        );
-        console.log('[DEBUG] setFriends後: friends', response);
-      } catch (e) {
-        console.error('[DEBUG] friendAPI.list() error:', e);
-      }
-    };
-    fetchFriends();
+    // 初回読み込みは loadFriends で行う
+    loadFriends();
   }, [user]);
 
   type FriendRequestsResponse = {
@@ -105,31 +79,16 @@ const Friends: React.FC = () => {
       if (Array.isArray((response as any)?.friends)) {
         console.log('[DEBUG] friends全体:', JSON.stringify((response as any).friends, null, 2));
       }
-      // APIレスポンスのuser_idをidにコピーし、不足フィールドにデフォルト値を補完
+      // APIレスポンスのuser_idをidにコピーして型ズレを吸収
       const friendsData = Array.isArray((response as any)?.friends)
-        ? ((response as any).friends as any[]).map(f => ({
-            ...f,
-            // name/introductionがなければto_user/from_userから補完
-            name: f.name || f.to_user?.name || f.from_user?.name || '',
-            introduction: f.introduction || f.to_user?.introduction || f.from_user?.introduction || '',
-            id: f.user_id,
-            status: 'offline' as const, // 型エラー回避
-            has_unread_messages: false,
-            avatar: '',
-            last_message_time: '',
-          }))
+        ? ((response as any).friends as Friend[]).map(f => ({ ...f, id: f.user_id }))
         : [];
       setFriends(friendsData);
-      // 本番APIの申請一覧取得
-      const requestsData = await friendAPI.requests(user.id);
-      console.log('[DEBUG] friendAPI.requests() result:', requestsData);
-      // 受信申請・送信申請を分離
-      setReceivedRequests(Array.isArray(requestsData)
-        ? (requestsData.filter((req: any) => req.request_type === 'received') as FriendRequestReceived[])
-        : []);
-      setSentRequests(Array.isArray(requestsData)
-        ? (requestsData.filter((req: any) => req.request_type === 'sent') as FriendRequestSent[])
-        : []);
+      // 新APIレスポンス対応
+      const requestsData = await friendAPI.testRequests(user.id) as FriendRequestsResponse;
+      console.log('[DEBUG] friendAPI.testRequests() result:', requestsData);
+      setReceivedRequests(Array.isArray(requestsData.received_requests) ? requestsData.received_requests : []);
+      setSentRequests(Array.isArray(requestsData.sent_requests) ? requestsData.sent_requests : []);
     } catch (error) {
       console.error('Error loading friends:', error);
       setFriends([]);
@@ -165,8 +124,8 @@ const Friends: React.FC = () => {
         return;
       }
       
-      // 本番APIで申請送信
-      await friendAPI.sendRequest(cleanFriendId);
+      // テスト用エンドポイントを使用（認証なし）
+      await friendAPI.testRequest(user.id, cleanFriendId);
       setNewFriendId('');
       setShowAddFriend(false);
       alert('Friend request sent successfully!');
@@ -190,27 +149,35 @@ const Friends: React.FC = () => {
     console.log('user.id:', user.id);
     console.log('user object:', user);
 
+    // user.idが存在しない場合のフォールバック
     let currentUserId = user.id;
+    
     if (!currentUserId) {
+      console.log('User ID not found in user object, trying to get from JWT token');
+      // JWTトークンからユーザーIDを取得
       const token = localStorage.getItem('nekota_token');
       if (token) {
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
           currentUserId = payload.user_id || payload.sub;
+          console.log('User ID from JWT token:', currentUserId);
         } catch (error) {
           console.error('Failed to decode JWT token:', error);
         }
       }
     }
+    
     if (!currentUserId) {
       console.error('User ID not found in user object or JWT token');
       alert('ユーザーIDが見つかりません。ログインし直してください。');
       return;
     }
 
+    console.log('Final currentUserId:', currentUserId);
+
     try {
-      // 本番APIで申請承認
-      await friendAPI.accept(fromUserId, currentUserId);
+      // テスト用エンドポイントを使用（認証なし）
+      await friendAPI.testAccept(fromUserId, currentUserId);
       await loadFriends();
       setReceivedRequests(prev => prev.filter(req => req.user_id_a !== fromUserId));
     } catch (error) {
@@ -228,13 +195,12 @@ const Friends: React.FC = () => {
     setShowMessaging(true);
   };
 
-  // filteredFriends: フィルター条件を元に戻す
   const filteredFriends = Array.isArray(friends)
     ? friends.filter(friend => {
-        if (!searchQuery.trim()) return true; // 空白や不可視文字も空扱い
+        if (!searchQuery) return true; // 検索ワードが空なら全件表示
         return (
-          (friend.name || '').toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
-          (friend.introduction || '').toLowerCase().includes(searchQuery.trim().toLowerCase())
+          (friend.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (friend.introduction || '').toLowerCase().includes(searchQuery.toLowerCase())
         );
       })
     : [];
@@ -276,18 +242,6 @@ const Friends: React.FC = () => {
       alert('申請の削除に失敗しました');
     }
   };
-
-  // デバッグ用: friends, filteredFriends, receivedRequests, sentRequestsをwindowに出力
-  if (typeof window !== 'undefined') {
-    (window as any).friendsDebug = {
-      friends,
-      filteredFriends,
-      receivedRequests,
-      sentRequests,
-      user,
-      searchQuery,
-    };
-  }
 
   if (isLoading) {
     return (
@@ -398,22 +352,6 @@ const Friends: React.FC = () => {
 
           {/* Friends List */}
           <div className="bg-white rounded-xl border border-gray-200">
-            {/* filteredFriendsの内容を必ず表示するシンプルなリストも追加 */}
-            <div style={{ padding: '1em', borderBottom: '1px solid #eee' }}>
-              <h4>デバッグ: filteredFriendsの中身</h4>
-              {filteredFriends.length === 0 ? (
-                <div>フレンドがいません</div>
-              ) : (
-                <ul>
-                  {filteredFriends.map(friend => (
-                    <li key={friend.user_id} style={{ marginBottom: 8 }}>
-                      <strong>{friend.name || 'Unknown User'}</strong> - {friend.introduction || 'No introduction'}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            {/* 既存のリッチなUI部分も残す */}
             {filteredFriends.length === 0 ? (
               <div className="text-center py-16">
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -466,6 +404,7 @@ const Friends: React.FC = () => {
                           )}
                         </div>
                       </div>
+                      
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleStartConversation(friend)}
@@ -641,5 +580,4 @@ const Friends: React.FC = () => {
   );
 };
 
-export default Friends;// debug: rollback test
-// push test: nekota-userpage only 2024-07-01 18:00
+export default Friends;
