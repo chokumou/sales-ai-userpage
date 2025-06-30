@@ -17,7 +17,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8090',
+        target: 'https://nekota-server-production.up.railway.app',
         changeOrigin: true,
       },
     },
