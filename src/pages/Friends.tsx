@@ -201,15 +201,8 @@ const Friends: React.FC = () => {
     setShowMessaging(true);
   };
 
-  const filteredFriends = Array.isArray(friends)
-    ? friends.filter(friend => {
-        if (!searchQuery.trim()) return true; // 空白や不可視文字も空扱い
-        return (
-          (friend.name || '').toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
-          (friend.introduction || '').toLowerCase().includes(searchQuery.trim().toLowerCase())
-        );
-      })
-    : [];
+  // デバッグ用: filter条件を外して全件表示
+  const filteredFriends = Array.isArray(friends) ? friends : [];
   // デバッグ: filteredFriendsの中身を表示
   console.log('[DEBUG] filteredFriends:', filteredFriends);
 
