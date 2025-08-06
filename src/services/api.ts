@@ -4,8 +4,8 @@ import { User } from '../types';
 
 // async function detectBackendPort(): Promise<string> { ... }
 
-// 定数としてAPIのベースURLを定義（環境変数から取得、デフォルトはRailwayプロキシURL）
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://nekota-server-production.up.railway.app";
+// 定数としてAPIのベースURLを定義（環境変数から取得、デフォルトはローカルサーバーURL）
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8090";
 
 class APIService {
   private baseURL: string;
