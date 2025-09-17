@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (token: string, userData: User) => void;
   logout: () => void;
   updatePremiumStatus: (isPremium: boolean, premiumUntil?: string | null) => void;
+  updateProfile: (profileData: { name?: string; introduction?: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,6 +58,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const updatedUser: User = { 
         ...user, 
         premium_until: isPremium ? premiumUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null
+      };
+      setUser(updatedUser);
+      localStorage.setItem('nekota_user', JSON.stringify(updatedUser));
+    }
+  }, [user]);
+
+  const updateProfile = useCallback((profileData: { name?: string; introduction?: string }) => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        profile: {
+          ...user.profile,
+          ...profileData
+        }
       };
       setUser(updatedUser);
       localStorage.setItem('nekota_user', JSON.stringify(updatedUser));
@@ -120,6 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     updatePremiumStatus,
+    updateProfile,
   };
 
   return (

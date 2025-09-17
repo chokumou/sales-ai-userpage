@@ -11,7 +11,7 @@ interface ProfileData {
 }
 
 const Profile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const { t } = useLanguage();
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
@@ -32,19 +32,36 @@ const Profile: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const response = await profileAPI.get(user.id);
+      
+      // まずユーザー情報から読み込み
+      const currentName = user.profile?.name || user.name || '';
+      const currentIntroduction = user.profile?.introduction || '';
+      
       setProfileData({
-        name: response.name || '',
-        introduction: response.introduction || ''
+        name: currentName,
+        introduction: currentIntroduction
       });
       
       // 初回ログイン時（名前が未設定）は自動的に編集モードに
-      if (!response.name) {
+      if (!currentName) {
         setIsEditing(true);
       }
+      
+      // サーバーから最新情報を取得
+      try {
+        const response = await profileAPI.get(user.id);
+        if (response.profile) {
+          setProfileData({
+            name: response.profile.name || currentName,
+            introduction: response.profile.introduction || currentIntroduction
+          });
+        }
+      } catch (error) {
+        console.log('Server profile not found, using local data');
+      }
+      
     } catch (error) {
       console.error('Error loading profile:', error);
-      // プロフィールが存在しない場合は編集モードに
       setIsEditing(true);
     } finally {
       setIsLoading(false);
@@ -57,6 +74,10 @@ const Profile: React.FC = () => {
     try {
       setIsSaving(true);
       await profileAPI.update(user.id, profileData);
+      
+      // AuthContextのユーザー情報を更新
+      updateProfile(profileData);
+      
       setIsEditing(false);
       alert('プロフィールを保存しました！');
     } catch (error) {
