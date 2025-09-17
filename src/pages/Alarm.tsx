@@ -180,7 +180,8 @@ const Alarm: React.FC = () => {
     const tz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
     
     try {
-      const date = new Date(`${normalizedDateStr}T${timeStr}`);
+      // DBに保存されているのはUTC時刻なので、UTC時刻として解釈
+      const date = new Date(`${normalizedDateStr}T${timeStr}Z`);  // Zを追加してUTCとして解釈
       if (isNaN(date.getTime())) {
         // ここでも無効な日付をチェック
         return { date: '日付形式エラー', time: '時刻形式エラー' };
