@@ -803,12 +803,12 @@ class APIService {
   // Profile API
   profile = {
     get: async (userId: string) => {
-      const response = await this.request<any>(`/api/profile/${userId}`);
+      const response = await this.request<any>(`/api/profile?user_id=${userId}`);
       return response;
     },
 
     update: async (userId: string, profileData: { name: string; introduction: string }) => {
-      const response = await this.request<any>(`/api/profile/${userId}`, {
+      const response = await this.request<any>(`/api/profile?user_id=${userId}`, {
         method: 'PUT',
         body: JSON.stringify(profileData),
       });
