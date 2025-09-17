@@ -394,13 +394,6 @@ const Alarm: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => handleEdit(alarm)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
                         onClick={() => handleDelete(alarm.id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete"
