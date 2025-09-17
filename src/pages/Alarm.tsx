@@ -154,14 +154,15 @@ const Alarm: React.FC = () => {
   const formatTime = (alarmTime: string, timezone: string) => {
     try {
       const [hours, minutes] = alarmTime.split(':');
+      // DBに保存されているのはUTC時刻なので、UTC→JSTに変換
       const date = new Date();
-      date.setUTCHours(parseInt(hours), parseInt(minutes));
+      date.setUTCHours(parseInt(hours), parseInt(minutes), 0, 0);
       
-      return date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
+      return date.toLocaleTimeString('ja-JP', {
+        hour: '2-digit',
         minute: '2-digit',
-        hour12: true,
-        timeZone: timezone
+        hour12: false,
+        timeZone: timezone || 'Asia/Tokyo'
       });
     } catch {
       return alarmTime;
