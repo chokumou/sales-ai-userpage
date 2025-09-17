@@ -1,0 +1,223 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { profileAPI } from '../services/api';
+import { User, Save, Edit3, Camera } from 'lucide-react';
+
+interface ProfileData {
+  name: string;
+  introduction: string;
+  avatar?: string;
+}
+
+const Profile: React.FC = () => {
+  const { user } = useAuth();
+  const { t } = useLanguage();
+  const [profileData, setProfileData] = useState<ProfileData>({
+    name: '',
+    introduction: ''
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+    }
+  }, [user]);
+
+  const loadProfile = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+      const response = await profileAPI.get(user.id);
+      setProfileData({
+        name: response.name || '',
+        introduction: response.introduction || ''
+      });
+      
+      // 初回ログイン時（名前が未設定）は自動的に編集モードに
+      if (!response.name) {
+        setIsEditing(true);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      // プロフィールが存在しない場合は編集モードに
+      setIsEditing(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+
+    try {
+      setIsSaving(true);
+      await profileAPI.update(user.id, profileData);
+      setIsEditing(false);
+      alert('プロフィールを保存しました！');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('プロフィールの保存に失敗しました。再度お試しください。');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    loadProfile(); // 元のデータに戻す
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">プロフィールを読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">プロフィール</h1>
+                  <p className="text-gray-600">あなたの情報を設定してください</p>
+                </div>
+              </div>
+              {!isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span>編集</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="space-y-6">
+              {/* アバター（将来実装用） */}
+              <div className="flex items-center space-x-4">
+                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <User className="w-10 h-10 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium text-gray-900">プロフィール画像</h3>
+                  <p className="text-gray-600">将来実装予定</p>
+                </div>
+              </div>
+
+              {/* 名前 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  名前 <span className="text-red-500">*</span>
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={profileData.name}
+                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="あなたの名前を入力してください"
+                    maxLength={50}
+                  />
+                ) : (
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                    {profileData.name || <span className="text-gray-400">名前が設定されていません</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* 自己紹介 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  自己紹介
+                </label>
+                {isEditing ? (
+                  <textarea
+                    value={profileData.introduction}
+                    onChange={(e) => setProfileData({ ...profileData, introduction: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="あなたについて教えてください"
+                    rows={4}
+                    maxLength={200}
+                  />
+                ) : (
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg min-h-[100px]">
+                    {profileData.introduction || <span className="text-gray-400">自己紹介が設定されていません</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* ユーザーID（読み取り専用） */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ユーザーID
+                </label>
+                <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                  <code className="text-sm text-gray-600">{user?.id}</code>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  このIDを友達に教えて、友達申請してもらえます
+                </p>
+              </div>
+
+              {/* ボタン */}
+              {isEditing && (
+                <div className="flex items-center space-x-3 pt-4">
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving || !profileData.name.trim()}
+                    className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{isSaving ? '保存中...' : '保存'}</span>
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    disabled={isSaving}
+                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 友達機能の説明 */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-start space-x-3">
+            <User className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-medium text-blue-900">友達機能について</h3>
+              <p className="mt-1 text-sm text-blue-700">
+                名前と自己紹介を設定すると、友達があなたを見つけやすくなります。
+                また、将来実装予定のレター機能では友達同士でメッセージを送ることができます。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Profile;

@@ -800,6 +800,22 @@ class APIService {
     },
   };
 
+  // Profile API
+  profile = {
+    get: async (userId: string) => {
+      const response = await this.request<any>(`/api/profile/${userId}`);
+      return response;
+    },
+
+    update: async (userId: string, profileData: { name: string; introduction: string }) => {
+      const response = await this.request<any>(`/api/profile/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify(profileData),
+      });
+      return response;
+    },
+  };
+
   // バックエンドポート検出
   // async detectBackendPort(): Promise<void> { ... }
 }
@@ -831,6 +847,7 @@ export const voiceAPI = api.voice;
 export const paymentAPI = api.payment;
 export const adminAPI = api.admin;
 export const deviceAPI = api.device;
+export const profileAPI = api.profile;
 
 export default api;
 
