@@ -91,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
                 {user?.profile?.name || user?.name || `ユーザー${user?.id?.slice(0, 8)}` || 'User'}
               </p>
               <p className="text-xs text-gray-500 truncate">
-                {user?.profile?.introduction || `${user?.subscription?.plan || 'Free'} Plan`}
+                {user?.subscription?.plan || 'Free'} Plan
               </p>
             </div>
           )}
