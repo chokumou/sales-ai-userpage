@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { MessageSquare, Plus, Search, Trash2, Mic, User, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { messageAPI, friendAPI } from '../services/api';
-import { Volume2, Play, Trash2, Pause, MessageSquare, Mic } from 'lucide-react';
-import AudioRecorder from '../components/Audio/AudioRecorder';
 
-interface VoiceMessage {
+interface Message {
   id: string;
   from_user_id: string;
   to_user_id: string;
@@ -14,6 +13,7 @@ interface VoiceMessage {
   message_type?: string;  // "voice" or "letter"
   source?: string;        // "voice" or "web"
   created_at: string;
+  sender_name?: string;   // 送信者名
 }
 
 interface Friend {
@@ -24,265 +24,157 @@ interface Friend {
 
 const Messages: React.FC = () => {
   const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-  const [messages, setMessages] = useState<VoiceMessage[]>([]);
-  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [letterText, setLetterText] = useState('');
-  const [activeTab, setActiveTab] = useState<'voice' | 'letter'>('voice');
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newMessageText, setNewMessageText] = useState('');
+  const [selectedRecipient, setSelectedRecipient] = useState<Friend | null>(null);
+  const [messageType, setMessageType] = useState<'voice' | 'letter'>('letter');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
 
-  // 友達リストを取得
   useEffect(() => {
-    const loadFriends = async () => {
-      if (!user) return;
-      
-      try {
-        console.log('友達リスト取得開始:', { userId: user.id });
-        
-        // APIサービスを使用して友達リストを取得
-        const friends = await friendAPI.list(user.id);
-        console.log('友達リスト取得結果:', friends);
-        
-        // 各友達のデータ構造を確認
-        if (friends && friends.length > 0) {
-          friends.forEach((friend, index) => {
-            console.log(`友達${index + 1}:`, {
-              user_id: friend.user_id,
-              name: friend.name,
-              introduction: friend.introduction,
-              hasUserId: !!friend.user_id,
-              hasName: !!friend.name
-            });
-          });
-        }
-        
-        setFriends(friends || []);
-      } catch (error) {
-        console.error('友達リストの取得に失敗:', error);
-        setFriends([]);
-      }
-    };
-
-    loadFriends();
+    if (user) {
+      loadData();
+    }
   }, [user]);
 
-  // メッセージを取得
-  const loadMessages = async () => {
-    if (!selectedFriend || !user) {
-      setMessages([]);
-      return;
+  // Clear messages after 5 seconds
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 5000);
+      return () => clearTimeout(timer);
     }
+  }, [error, success]);
+
+  const loadData = async () => {
+    if (!user) return;
 
     try {
       setIsLoading(true);
-      const response = await messageAPI.getList(selectedFriend.user_id);
-      setMessages(response.messages || []);
+      setError('');
+      
+      // 友達リストを取得
+      const friendsList = await friendAPI.list(user.id);
+      setFriends(friendsList || []);
+      
+      // 全友達からのメッセージを取得
+      const allMessages: Message[] = [];
+      for (const friend of friendsList || []) {
+        try {
+          const response = await messageAPI.getList(friend.user_id);
+          if (response.messages) {
+            const friendMessages = response.messages.map((msg: any) => ({
+              ...msg,
+              sender_name: friend.name
+            }));
+            allMessages.push(...friendMessages);
+          }
+        } catch (error) {
+          console.error(`Failed to load messages from ${friend.name}:`, error);
+        }
+      }
+      
+      // 作成日時でソート（新しい順）
+      allMessages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setMessages(allMessages);
+      
     } catch (error) {
-      console.error('メッセージの取得に失敗:', error);
+      console.error('Error loading data:', error);
+      setError('データの読み込みに失敗しました。');
       setMessages([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 友達が選択されたときにメッセージを読み込み
-  useEffect(() => {
-    console.log('useEffect - selectedFriend:', selectedFriend);
-    console.log('useEffect - user:', user);
-    loadMessages();
-  }, [selectedFriend?.user_id, user?.id]);
+  const handleCreateMessage = async () => {
+    if (!user || !selectedRecipient || !newMessageText.trim()) {
+      setError('宛先とメッセージ内容を入力してください。');
+      return;
+    }
+
+    if (newMessageText.length > 500) {
+      setError('メッセージは500文字以内で入力してください。');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await messageAPI.sendLetter(selectedRecipient.user_id, newMessageText.trim(), 'web');
+      
+      setSuccess('メッセージを送信しました。');
+      setNewMessageText('');
+      setSelectedRecipient(null);
+      setShowAddModal(false);
+      
+      // メッセージリストを再読み込み
+      await loadData();
+      
+    } catch (error) {
+      console.error('Error creating message:', error);
+      setError('メッセージの送信に失敗しました。');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!confirm('このメッセージを削除しますか？')) return;
+
+    try {
+      await messageAPI.delete(messageId);
+      setSuccess('メッセージを削除しました。');
+      
+      // メッセージリストを再読み込み
+      await loadData();
+      
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      setError('メッセージの削除に失敗しました。');
+    }
+  };
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    const diffInDays = Math.floor(diffInHours / 24);
     
-    // 日付部分
-    const dateStr = date.toLocaleDateString('ja-JP', { 
-      year: 'numeric',
-      month: '2-digit', 
-      day: '2-digit'
-    }).replace(/\//g, '/');
-    
-    // 時間部分
-    let timeStr = '';
     if (diffInHours < 1) {
       const diffInMinutes = Math.floor(diffInHours * 60);
-      timeStr = `${diffInMinutes}分前`;
+      return `${diffInMinutes}分前`;
     } else if (diffInHours < 24) {
-      timeStr = `${Math.floor(diffInHours)}時間前`;
-    } else if (diffInDays < 7) {
-      timeStr = `${diffInDays}日前`;
+      return `${Math.floor(diffInHours)}時間前`;
+    } else if (diffInHours < 168) { // 1週間
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays}日前`;
     } else {
-      timeStr = date.toLocaleDateString('ja-JP', { 
+      return date.toLocaleDateString('ja-JP', { 
+        year: 'numeric',
         month: 'short', 
         day: 'numeric'
       });
     }
-    
-    return { date: dateStr, time: timeStr };
   };
 
-  // テキストレター送信
-  const handleSendLetter = async () => {
-    if (!selectedFriend || !user) {
-      alert('友達を選択してください。');
-      return;
-    }
-
-    if (!letterText.trim()) {
-      alert('メッセージ内容を入力してください。');
-      return;
-    }
-
-    try {
-      setIsSending(true);
-      await messageAPI.sendLetter(selectedFriend.user_id, letterText.trim(), 'web');
-      
-      // メッセージリストを更新
-      loadMessages();
-      setLetterText('');
-      alert('お手紙を送信しました');
-    } catch (error) {
-      console.error('お手紙の送信に失敗:', error);
-      alert('お手紙の送信に失敗しました。');
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  // AudioRecorderからの録音完了コールバック
-  const handleRecordingComplete = async (audioBlob: Blob, duration: number) => {
-    console.log('録音完了 - selectedFriend:', selectedFriend);
-    console.log('録音完了 - user:', user);
-    
-    if (!selectedFriend || !user) {
-      console.log('友達またはユーザーが選択されていません');
-      alert('友達を選択してください。');
-      return;
-    }
-
-    try {
-      setIsSending(true);
-      
-      // ファイルサイズチェック（30秒制限を想定して500KB制限）
-      if (audioBlob.size > 500 * 1024) {
-        alert('音声ファイルが大きすぎます。30秒以内で録音してください。');
-        return;
-      }
-
-      console.log('メッセージ送信開始 - 友達ID:', selectedFriend.user_id);
-      const file = new File([audioBlob], 'message.wav', { type: 'audio/wav' });
-      await messageAPI.send(selectedFriend.user_id, file);
-      
-      // メッセージリストを更新
-      loadMessages();
-      alert('メッセージを送信しました');
-    } catch (error) {
-      console.error('メッセージの送信に失敗:', error);
-      alert('メッセージの送信に失敗しました。');
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  // AudioRecorderからのファイルアップロードコールバック
-  const handleFileUpload = async (file: File) => {
-    if (!selectedFriend || !user) {
-      alert('友達を選択してください。');
-      return;
-    }
-
-    try {
-      setIsSending(true);
-      
-      // ファイルサイズチェック
-      if (file.size > 500 * 1024) {
-        alert('音声ファイルが大きすぎます。30秒以内の音声を選択してください。');
-        return;
-      }
-
-      await messageAPI.send(selectedFriend.user_id, file);
-      
-      // メッセージリストを更新
-      loadMessages();
-      alert('メッセージを送信しました');
-    } catch (error) {
-      console.error('メッセージの送信に失敗:', error);
-      alert('メッセージの送信に失敗しました。');
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const playMessage = async (message: VoiceMessage) => {
-    try {
-      // 既読にする（statusが"sent"の場合のみ）
-      if (message.status === "sent") {
-        await messageAPI.markAsRead(message.id);
-        // メッセージリストを更新して既読状態を反映
-        loadMessages();
-      }
-
-      // レターの場合は音声再生をスキップ
-      if (message.message_type === 'letter') {
-        return;
-      }
-
-      // 音声を再生
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-
-      const audio = new Audio(message.file_url);
-      audioRef.current = audio;
-      
-      audio.onplay = () => setPlayingAudio(message.id);
-      audio.onended = () => setPlayingAudio(null);
-      audio.onerror = () => {
-        setPlayingAudio(null);
-        alert('音声の再生に失敗しました。');
-      };
-      
-      await audio.play();
-    } catch (error) {
-      console.error('音声の再生に失敗:', error);
-      alert('音声の再生に失敗しました。');
-    }
-  };
-
-  const deleteMessage = async (messageId: string) => {
-    if (!confirm('このメッセージを削除しますか？')) return;
-
-    try {
-      await messageAPI.delete(messageId);
-      // メッセージリストを更新
-      loadMessages();
-      alert('メッセージを削除しました');
-    } catch (error) {
-      console.error('メッセージの削除に失敗:', error);
-      alert('メッセージの削除に失敗しました。');
-    }
-  };
-
-  // 5つのスロットを生成（最新のメッセージから順に表示）
-  const slots = Array.from({ length: 5 }, (_, index) => {
-    const message = messages[index] || null;
-    return { slotIndex: index, message };
+  // 検索フィルター
+  const filteredMessages = messages.filter(message => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      message.sender_name?.toLowerCase().includes(query) ||
+      message.transcribed_text?.toLowerCase().includes(query)
+    );
   });
-
-  // 友達を選択
-  const handleFriendSelect = (friend: Friend) => {
-    console.log('友達選択:', friend);
-    console.log('友達選択 - id:', friend.user_id);
-    console.log('友達選択 - name:', friend.name);
-    console.log('友達選択 - 全体データ:', JSON.stringify(friend, null, 2));
-    setSelectedFriend(friend);
-  };
 
   if (!user) {
     return (
@@ -293,259 +185,301 @@ const Messages: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">メッセージ・お手紙</h1>
-      
-      {/* デバッグ情報 */}
-      <div className="mb-4 p-2 bg-yellow-100 rounded text-sm">
-        <p>デバッグ情報:</p>
-        <p>友達数: {friends.length}</p>
-        <p>選択された友達: {selectedFriend ? `${selectedFriend.name} (${selectedFriend.user_id})` : 'なし'}</p>
-        <p>録音エリア表示条件: {selectedFriend ? 'true' : 'false'}</p>
-      </div>
-      
-      {/* 友達選択 */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">友達を選択</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {friends.map((friend) => (
-            <button
-              key={friend.user_id}
-              onClick={() => handleFriendSelect(friend)}
-              className={`p-3 rounded-lg border text-left transition-colors ${
-                selectedFriend?.user_id === friend.user_id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="font-medium">{friend.name}</div>
-              {friend.introduction && (
-                <div className="text-sm text-gray-600 mt-1">{friend.introduction}</div>
-              )}
-            </button>
-          ))}
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">メッセージ・お手紙</h1>
+          <p className="text-gray-600 mt-2">
+            友達とのメッセージを管理します。
+          </p>
+        </div>
+        <div className="mt-4 sm:mt-0 flex items-center space-x-2">
+          <span className="text-sm text-gray-500">
+            {messages.length} 件のメッセージ
+          </span>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>新規メッセージ</span>
+          </button>
         </div>
       </div>
 
-      {/* メッセージエリア */}
-      {selectedFriend && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">
-              {selectedFriend.name}からのメッセージ
-            </h3>
+      {/* Status Messages */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
+          <div className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5">⚠️</div>
+          <div>
+            <h3 className="font-medium text-red-900">エラー</h3>
+            <p className="text-red-700 text-sm mt-1">{error}</p>
           </div>
+        </div>
+      )}
 
-          {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-2 text-gray-600">読み込み中...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {slots.map(({ slotIndex, message }) => (
-                <div
-                  key={slotIndex}
-                  className="border border-gray-200 rounded-lg p-4 bg-white"
-                >
-                  {message ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        {/* Read/Unread Status Circle */}
-                        {message.status === "read" ? (
-                          <div className="w-3 h-3 rounded-full bg-green-500 flex-shrink-0" title="既読"></div>
-                        ) : (
-                          <div className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0" title="未読"></div>
-                        )}
+      {success && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3">
+          <div className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5">✅</div>
+          <div>
+            <h3 className="font-medium text-green-900">成功</h3>
+            <p className="text-green-700 text-sm mt-1">{success}</p>
+          </div>
+        </div>
+      )}
 
-                        {/* Icon and Title */}
-                        <div className="flex items-center space-x-2">
-                          {message.message_type === 'letter' ? (
-                            <MessageSquare className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <Volume2 className="w-5 h-5 text-blue-600" />
-                          )}
-                          <h4 className={`text-lg font-bold ${message.message_type === 'letter' ? 'text-green-600' : 'text-blue-600'}`}>
-                            {message.message_type === 'letter' ? 'お手紙' : 'メッセージ'}{slotIndex + 1}
-                          </h4>
-                          {/* 登録元表示 */}
-                          {message.source && (
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              message.source === 'voice' 
-                                ? 'bg-purple-100 text-purple-600' 
-                                : 'bg-gray-100 text-gray-600'
-                            }`}>
-                              {message.source === 'voice' ? '🎤 音声' : '💻 Web'}
-                            </span>
-                          )}
-                        </div>
-                        
-                        {/* Date and Time */}
-                        <div className="text-sm text-gray-900">
-                          <div className="font-semibold">
-                            {formatTime(message.created_at).date}
-                          </div>
-                          <div className="text-gray-600">
-                            {formatTime(message.created_at).time}
-                          </div>
-                        </div>
-                      </div>
+      {/* Search */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="メッセージを検索..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+      </div>
 
-                      {/* Action Buttons */}
+      {/* Messages List */}
+      <div className="bg-white rounded-xl border border-gray-200">
+        {isLoading ? (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-2 text-gray-600">読み込み中...</p>
+          </div>
+        ) : filteredMessages.length === 0 ? (
+          <div className="text-center py-16">
+            <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {messages.length === 0 ? 'メッセージがありません' : '検索条件に一致するメッセージがありません'}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {messages.length === 0 
+                ? '最初のメッセージを送信して、友達とコミュニケーションを始めましょう。'
+                : '検索条件を調整してください。'
+              }
+            </p>
+            {messages.length === 0 && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                最初のメッセージを送信
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {filteredMessages.map((message) => (
+              <div key={message.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-3 mb-2">
+                      {/* Message Type Icon */}
+                      {message.message_type === 'letter' ? (
+                        <MessageSquare className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <Mic className="w-5 h-5 text-blue-600" />
+                      )}
+                      
+                      {/* Sender Name */}
                       <div className="flex items-center space-x-2">
-                        {/* レターの場合は内容表示、音声の場合は再生ボタン */}
-                        {message.message_type === 'letter' ? (
-                          <div className="flex-1 mr-4">
-                            <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded border">
-                              {message.transcribed_text}
-                            </div>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => playMessage(message)}
-                            disabled={playingAudio === message.id}
-                            className="flex items-center space-x-1 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
-                          >
-                            {playingAudio === message.id ? (
-                              <Pause className="w-4 h-4" />
-                            ) : (
-                              <Play className="w-4 h-4" />
-                            )}
-                            <span>再生</span>
-                          </button>
-                        )}
-                        
-                        <button
-                          onClick={() => deleteMessage(message.id)}
-                          className="flex items-center space-x-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span>削除</span>
-                        </button>
+                        <User className="w-4 h-4 text-gray-400" />
+                        <span className="font-medium text-gray-900">
+                          {message.sender_name || '不明な送信者'}
+                        </span>
                       </div>
+                      
+                      {/* Source Badge */}
+                      {message.source && (
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          message.source === 'voice' 
+                            ? 'bg-purple-100 text-purple-600' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {message.source === 'voice' ? '🎤 音声' : '💻 Web'}
+                        </span>
+                      )}
+                      
+                      {/* Read/Unread Status */}
+                      <div className={`w-2 h-2 rounded-full ${
+                        message.status === "read" ? 'bg-green-500' : 'bg-red-500'
+                      }`} title={message.status === "read" ? "既読" : "未読"}></div>
                     </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-3 h-3 rounded-full bg-gray-300 flex-shrink-0"></div>
-                        <div className="flex items-center space-x-2">
-                          <Volume2 className="w-5 h-5 text-gray-400" />
-                          <h4 className="text-lg font-bold text-gray-400">
-                            メッセージ{slotIndex + 1}
-                          </h4>
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          <div className="font-semibold">---</div>
-                          <div>---</div>
-                        </div>
-                      </div>
-                      <div className="text-gray-400">空きスロット</div>
+                    
+                    {/* Message Content */}
+                    <div className="mb-3">
+                      {message.message_type === 'letter' ? (
+                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border">
+                          {message.transcribed_text}
+                        </p>
+                      ) : (
+                        <p className="text-gray-700 italic">
+                          🎵 音声メッセージ
+                        </p>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                    
+                    {/* Timestamp */}
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <Calendar className="w-4 h-4" />
+                      <span>{formatTime(message.created_at)}</span>
+                    </div>
+                  </div>
 
-          {/* 送信エリア */}
-          {selectedFriend && (
-            <div className="bg-gray-50 rounded-lg p-4">
-              {/* タブ切り替え */}
-              <div className="flex mb-4 border-b">
-                <button
-                  onClick={() => setActiveTab('voice')}
-                  className={`flex items-center space-x-2 px-4 py-2 font-medium ${
-                    activeTab === 'voice'
-                      ? 'border-b-2 border-blue-500 text-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Mic className="w-4 h-4" />
-                  <span>音声メッセージ</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('letter')}
-                  className={`flex items-center space-x-2 px-4 py-2 font-medium ${
-                    activeTab === 'letter'
-                      ? 'border-b-2 border-green-500 text-green-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>お手紙</span>
-                </button>
+                  {/* Action Buttons */}
+                  <div className="flex items-center space-x-2 ml-4">
+                    <button
+                      onClick={() => handleDeleteMessage(message.id)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="削除"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Add Message Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">新規メッセージ</h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Message Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  メッセージタイプ
+                </label>
+                <div className="flex space-x-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      value="letter"
+                      checked={messageType === 'letter'}
+                      onChange={(e) => setMessageType(e.target.value as 'letter')}
+                      className="mr-2"
+                    />
+                    <MessageSquare className="w-4 h-4 mr-1" />
+                    お手紙
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      value="voice"
+                      checked={messageType === 'voice'}
+                      onChange={(e) => setMessageType(e.target.value as 'voice')}
+                      className="mr-2"
+                    />
+                    <Mic className="w-4 h-4 mr-1" />
+                    音声
+                  </label>
+                </div>
               </div>
 
-              {/* 音声録音エリア */}
-              {activeTab === 'voice' && (
-                <div>
-                  <h4 className="text-md font-semibold mb-3">新しい音声メッセージを録音</h4>
-                  <AudioRecorder
-                    onRecordingComplete={handleRecordingComplete}
-                    onUpload={handleFileUpload}
-                    isUploading={isSending}
-                    maxDuration={30} // 30秒制限
-                    acceptedFormats={['.wav', '.mp3', '.m4a', '.ogg']}
-                  />
-                </div>
-              )}
+              {/* Recipient Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  宛先
+                </label>
+                <select
+                  value={selectedRecipient?.user_id || ''}
+                  onChange={(e) => {
+                    const friend = friends.find(f => f.user_id === e.target.value);
+                    setSelectedRecipient(friend || null);
+                  }}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">宛先を選択してください</option>
+                  {friends.map((friend) => (
+                    <option key={friend.user_id} value={friend.user_id}>
+                      {friend.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              {/* テキストレター送信エリア */}
-              {activeTab === 'letter' && (
+              {/* Message Content */}
+              {messageType === 'letter' && (
                 <div>
-                  <h4 className="text-md font-semibold mb-3">新しいお手紙を書く</h4>
-                  <div className="space-y-3">
-                    <textarea
-                      value={letterText}
-                      onChange={(e) => setLetterText(e.target.value)}
-                      placeholder="メッセージを入力してください..."
-                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      rows={4}
-                      maxLength={500}
-                    />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">
-                        {letterText.length}/500文字
-                      </span>
-                      <button
-                        onClick={handleSendLetter}
-                        disabled={isSending || !letterText.trim()}
-                        className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                      >
-                        {isSending ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>送信中...</span>
-                          </>
-                        ) : (
-                          <>
-                            <MessageSquare className="w-4 h-4" />
-                            <span>お手紙を送る</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    メッセージ内容
+                  </label>
+                  <textarea
+                    value={newMessageText}
+                    onChange={(e) => setNewMessageText(e.target.value)}
+                    placeholder="メッセージを入力してください..."
+                    className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={4}
+                    maxLength={500}
+                  />
+                  <div className="text-sm text-gray-500 mt-1">
+                    {newMessageText.length}/500文字
                   </div>
                 </div>
               )}
+
+              {/* Voice Message Note */}
+              {messageType === 'voice' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2">
+                    <Mic className="w-5 h-5 text-blue-600" />
+                    <span className="text-blue-800 font-medium">音声メッセージ</span>
+                  </div>
+                  <p className="text-blue-700 text-sm mt-1">
+                    音声メッセージは端末から送信してください。
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleCreateMessage}
+                  disabled={isSubmitting || !selectedRecipient || (messageType === 'letter' && !newMessageText.trim())}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>送信中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>送信</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          )}
-        </div>
-      )}
-
-      {!selectedFriend && friends.length > 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">友達を選択してメッセージを確認してください</p>
-        </div>
-      )}
-
-      {friends.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">友達がいません。友達を追加してメッセージを送受信できます。</p>
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-export default Messages; 
+export default Messages;
