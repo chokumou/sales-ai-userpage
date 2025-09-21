@@ -43,13 +43,12 @@ const Messages: React.FC = () => {
         console.log('友達リスト取得開始:', { userId: user.id });
         
         // APIサービスを使用して友達リストを取得
-        const response = await friendAPI.list(user.id);
-        console.log('友達リスト取得結果:', response);
-        console.log('友達データの詳細:', response.friends);
+        const friends = await friendAPI.list(user.id);
+        console.log('友達リスト取得結果:', friends);
         
         // 各友達のデータ構造を確認
-        if (response.friends) {
-          response.friends.forEach((friend, index) => {
+        if (friends && friends.length > 0) {
+          friends.forEach((friend, index) => {
             console.log(`友達${index + 1}:`, {
               user_id: friend.user_id,
               name: friend.name,
@@ -60,7 +59,7 @@ const Messages: React.FC = () => {
           });
         }
         
-        setFriends(Array.isArray(response.friends) ? (response.friends as Friend[]) : []);
+        setFriends(friends || []);
       } catch (error) {
         console.error('友達リストの取得に失敗:', error);
         setFriends([]);
