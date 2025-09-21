@@ -31,8 +31,7 @@ const Messages: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
     recipient: '',
-    message: '',
-    type: 'letter' as 'voice' | 'letter'
+    message: ''
   });
 
   useEffect(() => {
@@ -91,8 +90,7 @@ const Messages: React.FC = () => {
       
       setFormData({
         recipient: '',
-        message: '',
-        type: 'letter'
+        message: ''
       });
       setShowCreateForm(false);
       
@@ -109,9 +107,14 @@ const Messages: React.FC = () => {
     if (!confirm('このメッセージを削除しますか？')) return;
 
     try {
-      await messageAPI.delete(messageId);
+      console.log('Deleting message:', messageId);
+      const response = await messageAPI.delete(messageId);
+      console.log('Delete response:', response);
       
-      // メッセージリストを再読み込み
+      // メッセージリストから即座に削除
+      setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId));
+      
+      // 念のためデータを再読み込み
       await loadData();
       
     } catch (error) {
@@ -190,53 +193,23 @@ const Messages: React.FC = () => {
               Create New Message
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Recipient
-                  </label>
-                  <select
-                    value={formData.recipient}
-                    onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Select recipient</option>
-                    {friends.map((friend) => (
-                      <option key={friend.user_id} value={friend.user_id}>
-                        {friend.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Message Type
-                  </label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        value="letter"
-                        checked={formData.type === 'letter'}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value as 'letter' })}
-                        className="mr-2"
-                      />
-                      <MessageSquare className="w-4 h-4 mr-1" />
-                      Letter
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        value="voice"
-                        checked={formData.type === 'voice'}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value as 'voice' })}
-                        className="mr-2"
-                      />
-                      Voice
-                    </label>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Recipient
+                </label>
+                <select
+                  value={formData.recipient}
+                  onChange={(e) => setFormData({ ...formData, recipient: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Select recipient</option>
+                  {friends.map((friend) => (
+                    <option key={friend.user_id} value={friend.user_id}>
+                      {friend.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
