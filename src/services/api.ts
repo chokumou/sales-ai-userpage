@@ -568,6 +568,29 @@ class APIService {
       });
     },
 
+    // テキストレターを送信
+    sendLetter: (toUserId: string, message: string, source: string = 'web') => {
+      if (!toUserId || toUserId === 'undefined') {
+        throw new Error('送信先の友達IDが指定されていません');
+      }
+      if (!message || message.trim() === '') {
+        throw new Error('メッセージ内容を入力してください');
+      }
+      
+      const currentUserId = this.getCurrentUserId();
+      if (!currentUserId) {
+        throw new Error('ユーザーIDが取得できません');
+      }
+      
+      return this.post<any>('/api/message/send_letter', {
+        from_user_id: currentUserId,
+        to_user_id: toUserId,
+        message: message.trim(),
+        type: 'letter',
+        source: source
+      });
+    },
+
     // メッセージを削除
     delete: (messageId: string) =>
       this.request<any>(`/api/message/${messageId}`, {

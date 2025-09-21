@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { messageAPI, friendAPI } from '../services/api';
-import { Volume2, Play, Trash2, Pause } from 'lucide-react';
+import { Volume2, Play, Trash2, Pause, MessageSquare, Mic } from 'lucide-react';
 import AudioRecorder from '../components/Audio/AudioRecorder';
 
 interface VoiceMessage {
@@ -11,6 +11,8 @@ interface VoiceMessage {
   file_url: string;
   status?: string;
   transcribed_text?: string;
+  message_type?: string;  // "voice" or "letter"
+  source?: string;        // "voice" or "web"
   created_at: string;
 }
 
@@ -28,6 +30,8 @@ const Messages: React.FC = () => {
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [letterText, setLetterText] = useState('');
+  const [activeTab, setActiveTab] = useState<'voice' | 'letter'>('voice');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // 友達リストを取得
@@ -124,6 +128,34 @@ const Messages: React.FC = () => {
     return { date: dateStr, time: timeStr };
   };
 
+  // テキストレター送信
+  const handleSendLetter = async () => {
+    if (!selectedFriend || !user) {
+      alert('友達を選択してください。');
+      return;
+    }
+
+    if (!letterText.trim()) {
+      alert('メッセージ内容を入力してください。');
+      return;
+    }
+
+    try {
+      setIsSending(true);
+      await messageAPI.sendLetter(selectedFriend.user_id, letterText.trim(), 'web');
+      
+      // メッセージリストを更新
+      loadMessages();
+      setLetterText('');
+      alert('お手紙を送信しました');
+    } catch (error) {
+      console.error('お手紙の送信に失敗:', error);
+      alert('お手紙の送信に失敗しました。');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   // AudioRecorderからの録音完了コールバック
   const handleRecordingComplete = async (audioBlob: Blob, duration: number) => {
     console.log('録音完了 - selectedFriend:', selectedFriend);
@@ -197,6 +229,11 @@ const Messages: React.FC = () => {
         loadMessages();
       }
 
+      // レターの場合は音声再生をスキップ
+      if (message.message_type === 'letter') {
+        return;
+      }
+
       // 音声を再生
       if (audioRef.current) {
         audioRef.current.pause();
@@ -258,7 +295,7 @@ const Messages: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">音声メッセージ</h1>
+      <h1 className="text-2xl font-bold mb-6">メッセージ・お手紙</h1>
       
       {/* デバッグ情報 */}
       <div className="mb-4 p-2 bg-yellow-100 rounded text-sm">
@@ -324,10 +361,24 @@ const Messages: React.FC = () => {
 
                         {/* Icon and Title */}
                         <div className="flex items-center space-x-2">
-                          <Volume2 className="w-5 h-5 text-blue-600" />
-                          <h4 className="text-lg font-bold text-blue-600">
-                            メッセージ{slotIndex + 1}
+                          {message.message_type === 'letter' ? (
+                            <MessageSquare className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <Volume2 className="w-5 h-5 text-blue-600" />
+                          )}
+                          <h4 className={`text-lg font-bold ${message.message_type === 'letter' ? 'text-green-600' : 'text-blue-600'}`}>
+                            {message.message_type === 'letter' ? 'お手紙' : 'メッセージ'}{slotIndex + 1}
                           </h4>
+                          {/* 登録元表示 */}
+                          {message.source && (
+                            <span className={`text-xs px-2 py-1 rounded ${
+                              message.source === 'voice' 
+                                ? 'bg-purple-100 text-purple-600' 
+                                : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {message.source === 'voice' ? '🎤 音声' : '💻 Web'}
+                            </span>
+                          )}
                         </div>
                         
                         {/* Date and Time */}
@@ -343,18 +394,27 @@ const Messages: React.FC = () => {
 
                       {/* Action Buttons */}
                       <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => playMessage(message)}
-                          disabled={playingAudio === message.id}
-                          className="flex items-center space-x-1 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
-                        >
-                          {playingAudio === message.id ? (
-                            <Pause className="w-4 h-4" />
-                          ) : (
-                            <Play className="w-4 h-4" />
-                          )}
-                          <span>再生</span>
-                        </button>
+                        {/* レターの場合は内容表示、音声の場合は再生ボタン */}
+                        {message.message_type === 'letter' ? (
+                          <div className="flex-1 mr-4">
+                            <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded border">
+                              {message.transcribed_text}
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => playMessage(message)}
+                            disabled={playingAudio === message.id}
+                            className="flex items-center space-x-1 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+                          >
+                            {playingAudio === message.id ? (
+                              <Pause className="w-4 h-4" />
+                            ) : (
+                              <Play className="w-4 h-4" />
+                            )}
+                            <span>再生</span>
+                          </button>
+                        )}
                         
                         <button
                           onClick={() => deleteMessage(message.id)}
@@ -388,17 +448,87 @@ const Messages: React.FC = () => {
             </div>
           )}
 
-          {/* 録音エリア */}
+          {/* 送信エリア */}
           {selectedFriend && (
             <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-md font-semibold mb-3">新しいメッセージを録音</h4>
-              <AudioRecorder
-                onRecordingComplete={handleRecordingComplete}
-                onUpload={handleFileUpload}
-                isUploading={isSending}
-                maxDuration={30} // 30秒制限
-                acceptedFormats={['.wav', '.mp3', '.m4a', '.ogg']}
-              />
+              {/* タブ切り替え */}
+              <div className="flex mb-4 border-b">
+                <button
+                  onClick={() => setActiveTab('voice')}
+                  className={`flex items-center space-x-2 px-4 py-2 font-medium ${
+                    activeTab === 'voice'
+                      ? 'border-b-2 border-blue-500 text-blue-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Mic className="w-4 h-4" />
+                  <span>音声メッセージ</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('letter')}
+                  className={`flex items-center space-x-2 px-4 py-2 font-medium ${
+                    activeTab === 'letter'
+                      ? 'border-b-2 border-green-500 text-green-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>お手紙</span>
+                </button>
+              </div>
+
+              {/* 音声録音エリア */}
+              {activeTab === 'voice' && (
+                <div>
+                  <h4 className="text-md font-semibold mb-3">新しい音声メッセージを録音</h4>
+                  <AudioRecorder
+                    onRecordingComplete={handleRecordingComplete}
+                    onUpload={handleFileUpload}
+                    isUploading={isSending}
+                    maxDuration={30} // 30秒制限
+                    acceptedFormats={['.wav', '.mp3', '.m4a', '.ogg']}
+                  />
+                </div>
+              )}
+
+              {/* テキストレター送信エリア */}
+              {activeTab === 'letter' && (
+                <div>
+                  <h4 className="text-md font-semibold mb-3">新しいお手紙を書く</h4>
+                  <div className="space-y-3">
+                    <textarea
+                      value={letterText}
+                      onChange={(e) => setLetterText(e.target.value)}
+                      placeholder="メッセージを入力してください..."
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      rows={4}
+                      maxLength={500}
+                    />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">
+                        {letterText.length}/500文字
+                      </span>
+                      <button
+                        onClick={handleSendLetter}
+                        disabled={isSending || !letterText.trim()}
+                        className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                      >
+                        {isSending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>送信中...</span>
+                          </>
+                        ) : (
+                          <>
+                            <MessageSquare className="w-4 h-4" />
+                            <span>お手紙を送る</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
