@@ -146,24 +146,14 @@ const Messages: React.FC = () => {
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
     
-    if (diffInHours < 1) {
-      const diffInMinutes = Math.floor(diffInHours * 60);
-      return `${diffInMinutes}分前`;
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}時間前`;
-    } else if (diffInHours < 168) { // 1週間
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays}日前`;
-    } else {
-      return date.toLocaleDateString('ja-JP', { 
-        year: 'numeric',
-        month: 'short', 
-        day: 'numeric'
-      });
-    }
+    return `${year}年${month}月${day}日(${dayOfWeek})　${hours}:${minutes}`;
   };
 
   // 検索フィルター
@@ -185,7 +175,7 @@ const Messages: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -312,15 +302,9 @@ const Messages: React.FC = () => {
                     
                     {/* Message Content */}
                     <div className="mb-3">
-                      {message.message_type === 'letter' ? (
-                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border">
-                          {message.transcribed_text}
-                        </p>
-                      ) : (
-                        <p className="text-gray-700 italic">
-                          🎵 音声メッセージ
-                        </p>
-                      )}
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-lg border">
+                        {message.transcribed_text || 'メッセージ内容なし'}
+                      </p>
                     </div>
                     
                     {/* Timestamp */}
