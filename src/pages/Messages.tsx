@@ -108,18 +108,43 @@ const Messages: React.FC = () => {
 
     try {
       console.log('Deleting message:', messageId);
+      
+      // メッセージを取得して送信者かどうか確認
+      const message = messages.find(msg => msg.id === messageId);
+      if (!message) {
+        alert('メッセージが見つかりません。');
+        return;
+      }
+      
+      console.log('Message details:', {
+        id: message.id,
+        from_user_id: message.from_user_id,
+        to_user_id: message.to_user_id,
+        current_user_id: user?.id
+      });
+      
+      // 送信者か受信者かをチェック
+      const isSender = message.from_user_id === user?.id;
+      const isReceiver = message.to_user_id === user?.id;
+      
+      console.log('Permission check:', { isSender, isReceiver });
+      
+      if (!isSender && !isReceiver) {
+        alert('このメッセージを削除する権限がありません。');
+        return;
+      }
+      
       const response = await messageAPI.delete(messageId);
       console.log('Delete response:', response);
       
       // メッセージリストから即座に削除
       setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId));
       
-      // 念のためデータを再読み込み
-      await loadData();
+      alert('メッセージを削除しました。');
       
     } catch (error) {
       console.error('Error deleting message:', error);
-      alert('メッセージの削除に失敗しました。');
+      alert(`メッセージの削除に失敗しました: ${error.message || error}`);
     }
   };
 
