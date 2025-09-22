@@ -33,6 +33,7 @@ const Messages: React.FC = () => {
     recipient: '',
     message: ''
   });
+  const [messageCount, setMessageCount] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -70,6 +71,9 @@ const Messages: React.FC = () => {
       // 作成日時でソート（新しい順）
       allMessages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setMessages(allMessages);
+      
+      // メッセージ数をカウント
+      setMessageCount(allMessages.length);
       
     } catch (error) {
       console.error('Error loading data:', error);
@@ -199,6 +203,9 @@ const Messages: React.FC = () => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
                 <p className="text-gray-600">友達とのメッセージを管理します</p>
+                <p className="text-sm text-gray-500">
+                  保存済みメッセージ: {messageCount}件（500件を超えると古いものから自動削除されます）
+                </p>
               </div>
             </div>
             <button
