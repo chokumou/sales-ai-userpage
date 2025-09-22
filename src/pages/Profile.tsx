@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { profileAPI } from '../services/api';
-import { User, Save, Edit3, Camera } from 'lucide-react';
+import { User, Save, Edit3, Camera, Settings } from 'lucide-react';
 
 interface ProfileData {
   name: string;
@@ -20,6 +20,7 @@ const Profile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [nekotaLettersEnabled, setNekotaLettersEnabled] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -60,11 +61,53 @@ const Profile: React.FC = () => {
         console.log('Server profile not found, using local data');
       }
       
+      // ネコタ手紙設定を取得
+      await loadNekotaLetterSettings();
+      
     } catch (error) {
       console.error('Error loading profile:', error);
       setIsEditing(true);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadNekotaLetterSettings = async () => {
+    try {
+      const response = await fetch('/api/nekota-letters/settings', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const settings = await response.json();
+        setNekotaLettersEnabled(settings.nekota_letters_enabled);
+      }
+    } catch (error) {
+      console.error('Error loading nekota letter settings:', error);
+    }
+  };
+
+  const handleNekotaLetterToggle = async () => {
+    try {
+      const newValue = !nekotaLettersEnabled;
+      setNekotaLettersEnabled(newValue);
+      
+      await fetch('/api/nekota-letters/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          nekota_letters_enabled: newValue
+        })
+      });
+    } catch (error) {
+      console.error('Error updating nekota letter settings:', error);
+      // エラー時は元の値に戻す
+      setNekotaLettersEnabled(!nekotaLettersEnabled);
     }
   };
 
@@ -196,6 +239,36 @@ const Profile: React.FC = () => {
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
                   このIDを友達に教えて、友達申請してもらえます
+                </p>
+              </div>
+
+              {/* ネコタ手紙設定 */}
+              <div className="border-t pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Settings className="w-5 h-5 text-blue-500" />
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900">ネコタ手紙設定</h3>
+                      <p className="text-sm text-gray-500">
+                        毎日ランダムでネコタから手紙が届きます
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleNekotaLetterToggle}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      nekotaLettersEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        nekotaLettersEnabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  {nekotaLettersEnabled ? 'ネコタ手紙が有効です' : 'ネコタ手紙が無効です'}
                 </p>
               </div>
 
