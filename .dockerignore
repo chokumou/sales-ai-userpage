@@ -8,6 +8,5 @@ README.md
 coverage
 .dockerignore
 Dockerfile
-nginx.conf
 dist
 *.log
