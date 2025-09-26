@@ -13,7 +13,7 @@ import {
   ChevronRight,
   Globe,
   User,
-  Clock,
+  // Clock icon removed - alarm page deleted
   MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -36,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     { to: '/messages', icon: MessageCircle, label: t('nav.messages') || 'Messages' },
     { to: '/memory', icon: Brain, label: t('nav.memory') },
     { to: '/friends', icon: Users, label: t('nav.friends') },
-    { to: '/alarm', icon: Clock, label: t('nav.alarm') || 'Alarms' },
+    // Alarm page removed - voice alarm only
     { to: '/profile', icon: User, label: 'プロフィール' },
     { to: '/upgrade', icon: CreditCard, label: t('nav.upgrade') },
     { to: '/payments', icon: Receipt, label: t('nav.payments') },

@@ -9,7 +9,7 @@ import VoiceRegistration from './pages/VoiceRegistration';
 import Messages from './pages/Messages';
 import Memory from './pages/Memory';
 import Friends from './pages/Friends';
-import Alarm from './pages/Alarm';
+// Alarm page removed - voice alarm only
 import Profile from './pages/Profile';
 import Upgrade from './pages/Upgrade';
 import PaymentHistory from './pages/PaymentHistory';
@@ -52,7 +52,7 @@ const AppRoutes: React.FC = () => {
         <Route path="messages" element={<Messages />} />
         <Route path="memory" element={<Memory />} />
         <Route path="friends" element={<Friends />} />
-        <Route path="alarm" element={<Alarm />} />
+        {/* Alarm page removed - voice alarm only */}
         <Route path="profile" element={<Profile />} />
         <Route path="upgrade" element={<Upgrade />} />
         <Route path="payments" element={<PaymentHistory />} />
