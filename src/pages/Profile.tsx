@@ -7,15 +7,35 @@ import { User, Save, Edit3, Camera, Settings } from 'lucide-react';
 interface ProfileData {
   name: string;
   introduction: string;
+  country: string;
   avatar?: string;
 }
 
 const Profile: React.FC = () => {
   const { user, updateProfile } = useAuth();
   const { t } = useLanguage();
+
+  // 国名を日本語で表示する関数
+  const getCountryName = (countryCode: string): string => {
+    const countryNames: { [key: string]: string } = {
+      'Japan': '日本',
+      'USA': 'アメリカ',
+      'UK': 'イギリス',
+      'France': 'フランス',
+      'Germany': 'ドイツ',
+      'Australia': 'オーストラリア',
+      'Canada': 'カナダ',
+      'Korea': '韓国',
+      'China': '中国',
+      'Thailand': 'タイ',
+      'Other': 'その他'
+    };
+    return countryNames[countryCode] || countryCode;
+  };
   const [profileData, setProfileData] = useState<ProfileData>({
     name: '',
-    introduction: ''
+    introduction: '',
+    country: 'Japan'
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -37,10 +57,12 @@ const Profile: React.FC = () => {
       // まずユーザー情報から読み込み
       const currentName = user.profile?.name || user.name || '';
       const currentIntroduction = user.profile?.introduction || '';
+      const currentCountry = user.profile?.country || 'Japan';
       
       setProfileData({
         name: currentName,
-        introduction: currentIntroduction
+        introduction: currentIntroduction,
+        country: currentCountry
       });
       
       // 初回ログイン時（名前が未設定）は自動的に編集モードに
@@ -54,7 +76,8 @@ const Profile: React.FC = () => {
         if (response.profile) {
           setProfileData({
             name: response.profile.name || currentName,
-            introduction: response.profile.introduction || currentIntroduction
+            introduction: response.profile.introduction || currentIntroduction,
+            country: response.profile.country || currentCountry
           });
         }
       } catch (error) {
@@ -204,6 +227,36 @@ const Profile: React.FC = () => {
                 ) : (
                   <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
                     {profileData.name || <span className="text-gray-400">名前が設定されていません</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* 国・地域 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  国・地域
+                </label>
+                {isEditing ? (
+                  <select
+                    value={profileData.country}
+                    onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="Japan">日本</option>
+                    <option value="USA">アメリカ</option>
+                    <option value="UK">イギリス</option>
+                    <option value="France">フランス</option>
+                    <option value="Germany">ドイツ</option>
+                    <option value="Australia">オーストラリア</option>
+                    <option value="Canada">カナダ</option>
+                    <option value="Korea">韓国</option>
+                    <option value="China">中国</option>
+                    <option value="Thailand">タイ</option>
+                    <option value="Other">その他</option>
+                  </select>
+                ) : (
+                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                    {getCountryName(profileData.country)}
                   </div>
                 )}
               </div>
