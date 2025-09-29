@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, MessageCircle, Users, Zap, TrendingUp, Clock, Star, Settings, RefreshCw } from 'lucide-react';
+import { Brain, MessageCircle, Users, Zap, TrendingUp, Clock, Star, Settings, RefreshCw, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { userAPI, memoryAPI, friendAPI } from '../services/api';
+import NeKotaDiary from '../components/ShortMemory/NeKotaDiary';
 
 interface DashboardStats {
   totalMessages: number;
@@ -421,6 +422,11 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
         )}
+      </div>
+
+      {/* NeKota Diary Section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <NeKotaDiary />
       </div>
 
       {/* Quick Actions */}

@@ -720,6 +720,53 @@ class APIService {
       }),
   };
 
+  // Short Memory API
+  shortMemory = {
+    // 短期記憶取得
+    get: () => this.request<any>('/api/memory'),
+
+    // 短期記憶エントリ追加
+    append: (sentence: string) => 
+      this.request<any>('/api/memory/append', {
+        method: 'POST',
+        body: JSON.stringify({ sentence }),
+      }),
+
+    // 短期記憶エントリ上書き
+    overwrite: (index: number, sentence: string) => 
+      this.request<any>('/api/memory/overwrite', {
+        method: 'PUT',
+        body: JSON.stringify({ index, sentence }),
+      }),
+
+    // 短期記憶エントリ削除
+    deleteEntry: (index: number) => 
+      this.request<any>('/api/memory/entry', {
+        method: 'DELETE',
+        body: JSON.stringify({ index }),
+      }),
+
+    // 短期記憶全消去
+    clear: () => 
+      this.request<any>('/api/memory/clear', {
+        method: 'DELETE',
+      }),
+
+    // 辞書更新
+    updateGlossary: (term: string, meaning: string) => 
+      this.request<any>('/api/memory/glossary', {
+        method: 'PUT',
+        body: JSON.stringify({ term, meaning }),
+      }),
+
+    // 辞書項目削除
+    deleteGlossaryEntry: (term: string) => 
+      this.request<any>('/api/memory/glossary', {
+        method: 'DELETE',
+        body: JSON.stringify({ term }),
+      }),
+  };
+
   // Alarm API
   alarm = {
     create: (alarmData: { user_id: string; date: string; time: string; timezone: string; text: string }) =>
@@ -865,6 +912,7 @@ export const userAPI = api.user;
 export const messageAPI = api.message;
 export const friendAPI = api.friend;
 export const memoryAPI = api.memory;
+export const shortMemoryAPI = api.shortMemory;
 export const alarmAPI = api.alarm;
 export const voiceAPI = api.voice;
 export const paymentAPI = api.payment;
