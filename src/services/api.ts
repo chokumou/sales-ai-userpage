@@ -741,15 +741,9 @@ class APIService {
 
     // 短期記憶エントリ削除
     deleteEntry: (index: number) => 
-      this.request<any>('/api/memory/entry', {
+      this.request<any>('/api/memory/entry/delete', {
         method: 'DELETE',
         body: JSON.stringify({ index }),
-      }),
-
-    // 短期記憶全消去
-    clear: () => 
-      this.request<any>('/api/memory/clear', {
-        method: 'DELETE',
       }),
 
     // 辞書更新
