@@ -85,7 +85,17 @@ const NeKotaDiary: React.FC = () => {
     }
 
     try {
-      await api.shortMemory.overwrite(index, editingText.trim());
+      // 各行を個別のエントリとして処理
+      const lines = editingText.trim().split('\n').filter(line => line.trim());
+      
+      // 既存のエントリを全削除
+      await api.shortMemory.clear();
+      
+      // 新しいエントリを追加
+      for (const line of lines) {
+        await api.shortMemory.append(line.trim());
+      }
+      
       setEditingIndex(null);
       setEditingText('');
       setSuccess('日記を更新しました');
