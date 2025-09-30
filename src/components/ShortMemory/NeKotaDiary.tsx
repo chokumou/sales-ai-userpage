@@ -44,7 +44,13 @@ const NeKotaDiary: React.FC = () => {
     try {
       setIsLoading(true);
       const data = await api.shortMemory.get();
-      setDiaryData(data);
+      console.log('🔍 Raw API response:', data);
+      
+      // APIは配列を返すので、最初の要素を取得
+      const diaryRecord = Array.isArray(data) ? data[0] : data;
+      console.log('🔍 Diary record:', diaryRecord);
+      
+      setDiaryData(diaryRecord);
       setError('');
     } catch (err) {
       setError('日記の読み込みに失敗しました');
