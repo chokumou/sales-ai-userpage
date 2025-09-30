@@ -158,9 +158,11 @@ const NeKotaDiary: React.FC = () => {
     });
   };
 
-  const filteredEntries = diaryData?.entries.filter(entry =>
-    entry.t.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredEntries = (diaryData?.entries && Array.isArray(diaryData.entries)) 
+    ? diaryData.entries.filter(entry =>
+        entry.t.toLowerCase().includes(searchQuery.toLowerCase())
+      ) 
+    : [];
 
   const filteredGlossary = diaryData?.glossary ? Object.entries(diaryData.glossary).filter(([term, meaning]) =>
     term.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -271,65 +273,65 @@ const NeKotaDiary: React.FC = () => {
             {searchQuery ? '検索結果が見つかりません' : 'まだ日記がありません'}
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredEntries.map((entry, index) => (
-              <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                {editingIndex === index ? (
-                  <div className="space-y-3">
-                    <textarea
-                      value={editingText}
-                      onChange={(e) => setEditingText(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows={3}
-                    />
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => editDiaryEntry(index)}
-                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                      >
-                        保存
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingIndex(null);
-                          setEditingText('');
-                        }}
-                        className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-                      >
-                        キャンセル
-                      </button>
+          <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            {editingIndex === null ? (
+              <div className="space-y-4">
+                <div className="text-gray-900 leading-relaxed whitespace-pre-line">
+                  {filteredEntries.map((entry, index) => (
+                    <div key={index} className="mb-3">
+                      <span className="text-gray-700">{entry.t}</span>
+                      <span className="text-gray-400 text-sm ml-2">
+                        ({formatDate(entry.ts)})
+                      </span>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-gray-900">{entry.t}</p>
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{formatDate(entry.ts)}</span>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => {
-                            setEditingIndex(index);
-                            setEditingText(entry.t);
-                          }}
-                          className="p-1 text-blue-500 hover:text-blue-700 transition-colors"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => deleteDiaryEntry(index)}
-                          className="p-1 text-red-500 hover:text-red-700 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+                <div className="flex justify-end space-x-2 pt-4 border-t">
+                  <button
+                    onClick={() => {
+                      setEditingIndex(-1);
+                      setEditingText(filteredEntries.map(entry => entry.t).join('\n'));
+                    }}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    編集
+                  </button>
+                  <button
+                    onClick={clearAllDiary}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    すべて削除
+                  </button>
+                </div>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-3">
+                <textarea
+                  value={editingText}
+                  onChange={(e) => setEditingText(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={10}
+                  placeholder="日記の内容を入力してください（各行が1つのエントリになります）"
+                />
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => editDiaryEntry(editingIndex)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    保存
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingIndex(null);
+                      setEditingText('');
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
