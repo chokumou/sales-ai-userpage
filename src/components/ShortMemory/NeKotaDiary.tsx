@@ -88,8 +88,17 @@ const NeKotaDiary: React.FC = () => {
       // 各行を個別のエントリとして処理
       const lines = editingText.trim().split('\n').filter(line => line.trim());
       
-      // 既存のエントリを全削除
-      await api.shortMemory.clear();
+      // 既存のエントリを個別削除で対応（clear APIの問題回避）
+      if (diaryData?.entries && Array.isArray(diaryData.entries)) {
+        // 逆順で削除（インデックスの問題回避）
+        for (let i = diaryData.entries.length - 1; i >= 0; i--) {
+          try {
+            await api.shortMemory.deleteEntry(i);
+          } catch (deleteErr) {
+            console.warn(`Failed to delete entry ${i}:`, deleteErr);
+          }
+        }
+      }
       
       // 新しいエントリを追加
       for (const line of lines) {
@@ -123,7 +132,17 @@ const NeKotaDiary: React.FC = () => {
     if (!confirm('すべての日記を削除しますか？この操作は元に戻せません。')) return;
 
     try {
-      await api.shortMemory.clear();
+      // 個別削除で対応（clear APIの問題回避）
+      if (diaryData?.entries && Array.isArray(diaryData.entries)) {
+        // 逆順で削除（インデックスの問題回避）
+        for (let i = diaryData.entries.length - 1; i >= 0; i--) {
+          try {
+            await api.shortMemory.deleteEntry(i);
+          } catch (deleteErr) {
+            console.warn(`Failed to delete entry ${i}:`, deleteErr);
+          }
+        }
+      }
       setSuccess('すべての日記を削除しました');
       await loadDiaryData();
     } catch (err) {
