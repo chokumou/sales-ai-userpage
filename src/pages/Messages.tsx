@@ -59,7 +59,7 @@ const Messages: React.FC = () => {
           if (response.messages) {
             const friendMessages = response.messages.map((msg: any) => ({
               ...msg,
-              sender_name: friend.name
+              sender_name: msg.from_user_name || friend.name
             }));
             allMessages.push(...friendMessages);
           }
