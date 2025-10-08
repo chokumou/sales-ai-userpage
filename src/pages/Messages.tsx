@@ -27,6 +27,7 @@ const Messages: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -34,6 +35,8 @@ const Messages: React.FC = () => {
     message: ''
   });
   const [messageCount, setMessageCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [friendOffsets, setFriendOffsets] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (user) {
@@ -51,8 +54,11 @@ const Messages: React.FC = () => {
       const friendsList = await friendAPI.list(user.id);
       setFriends(friendsList || []);
       
-      // 全友達からのメッセージを取得
+      // 全友達からのメッセージを取得（初期5件）
       const allMessages: Message[] = [];
+      let totalMessages = 0;
+      const offsets: Record<string, number> = {};
+      
       for (const friend of friendsList || []) {
         try {
           const response = await messageAPI.getList(friend.user_id);
@@ -62,6 +68,8 @@ const Messages: React.FC = () => {
               sender_name: msg.from_user_name || friend.name
             }));
             allMessages.push(...friendMessages);
+            totalMessages += response.total_count || 0;
+            offsets[friend.user_id] = response.messages.length; // 現在のオフセットを保存
           }
         } catch (error) {
           console.error(`Failed to load messages from ${friend.name}:`, error);
@@ -71,15 +79,60 @@ const Messages: React.FC = () => {
       // 作成日時でソート（新しい順）
       allMessages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setMessages(allMessages);
-      
-      // メッセージ数をカウント
       setMessageCount(allMessages.length);
+      setTotalCount(totalMessages);
+      setFriendOffsets(offsets);
       
     } catch (error) {
       console.error('Error loading data:', error);
       setMessages([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadMoreMessages = async () => {
+    if (!user || isLoadingMore) return;
+
+    try {
+      setIsLoadingMore(true);
+      
+      // 各友達から追加のメッセージを取得
+      const additionalMessages: Message[] = [];
+      const newOffsets = { ...friendOffsets };
+      
+      for (const friend of friends) {
+        try {
+          const currentOffset = friendOffsets[friend.user_id] || 0;
+          
+          // オフセットを指定して追加取得
+          const response = await messageAPI.getList(friend.user_id, 5, currentOffset);
+          
+          if (response.messages) {
+            const friendMessages = response.messages.map((msg: any) => ({
+              ...msg,
+              sender_name: msg.from_user_name || friend.name
+            }));
+            additionalMessages.push(...friendMessages);
+            newOffsets[friend.user_id] = currentOffset + friendMessages.length;
+          }
+        } catch (error) {
+          console.error(`Failed to load more messages from ${friend.name}:`, error);
+        }
+      }
+      
+      // 新しいメッセージを追加してソート
+      const allMessages = [...messages, ...additionalMessages];
+      allMessages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      setMessages(allMessages);
+      setMessageCount(allMessages.length);
+      setFriendOffsets(newOffsets);
+      
+    } catch (error) {
+      console.error('Error loading more messages:', error);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -313,65 +366,87 @@ const Messages: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
-              {filteredMessages.map((message) => (
-                <div key={message.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-3 mb-3">
-                        {/* Sender Name */}
-                        <div className="flex items-center space-x-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium text-gray-900">
-                            {message.sender_name || 'Unknown sender'}
-                          </span>
+            <>
+              <div className="divide-y divide-gray-200">
+                {filteredMessages.map((message) => (
+                  <div key={message.id} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-3 mb-3">
+                          {/* Sender Name */}
+                          <div className="flex items-center space-x-2">
+                            <User className="w-4 h-4 text-gray-400" />
+                            <span className="font-medium text-gray-900">
+                              {message.sender_name || 'Unknown sender'}
+                            </span>
+                          </div>
+                          
+                          {/* Source Badge */}
+                          {message.source && (
+                            <span className={`text-xs px-2 py-1 rounded ${
+                              message.source === 'voice' 
+                                ? 'bg-purple-100 text-purple-600' 
+                                : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {message.source === 'voice' ? '🎤 Voice' : '💻 Web'}
+                            </span>
+                          )}
+                          
+                          {/* Read/Unread Status */}
+                          <div className={`w-2 h-2 rounded-full ${
+                            message.status === "read" ? 'bg-green-500' : 'bg-red-500'
+                          }`} title={message.status === "read" ? "Read" : "Unread"}></div>
                         </div>
                         
-                        {/* Source Badge */}
-                        {message.source && (
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            message.source === 'voice' 
-                              ? 'bg-purple-100 text-purple-600' 
-                              : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            {message.source === 'voice' ? '🎤 Voice' : '💻 Web'}
-                          </span>
-                        )}
+                        {/* Message Content */}
+                        <div className="mb-3">
+                          <p className="text-gray-900">
+                            {message.transcribed_text || 'No message content'}
+                          </p>
+                        </div>
                         
-                        {/* Read/Unread Status */}
-                        <div className={`w-2 h-2 rounded-full ${
-                          message.status === "read" ? 'bg-green-500' : 'bg-red-500'
-                        }`} title={message.status === "read" ? "Read" : "Unread"}></div>
+                        {/* Timestamp */}
+                        <div className="flex items-center space-x-2 text-sm text-gray-500">
+                          <Calendar className="w-4 h-4" />
+                          <span>{formatTime(message.created_at)}</span>
+                        </div>
                       </div>
-                      
-                      {/* Message Content */}
-                      <div className="mb-3">
-                        <p className="text-gray-900">
-                          {message.transcribed_text || 'No message content'}
-                        </p>
-                      </div>
-                      
-                      {/* Timestamp */}
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatTime(message.created_at)}</span>
-                      </div>
-                    </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center space-x-2 ml-4">
-                      <button
-                        onClick={() => handleDeleteMessage(message.id)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {/* Action Buttons */}
+                      <div className="flex items-center space-x-2 ml-4">
+                        <button
+                          onClick={() => handleDeleteMessage(message.id)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
+
+              {/* Load More Button */}
+              {messageCount < totalCount && (
+                <div className="p-6 border-t border-gray-200 text-center">
+                  <button
+                    onClick={loadMoreMessages}
+                    disabled={isLoadingMore}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {isLoadingMore ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>読み込み中...</span>
+                      </div>
+                    ) : (
+                      `もっと見る (${messageCount} / ${totalCount})`
+                    )}
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>

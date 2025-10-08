@@ -550,12 +550,12 @@ class APIService {
 
   // Message API
   message = {
-    // 友達とのメッセージ一覧を取得（最新5件まで）
-    getList: (friendId: string) => {
+    // 友達とのメッセージ一覧を取得（ページネーション対応）
+    getList: (friendId: string, limit: number = 5, offset: number = 0) => {
       if (!friendId || friendId === 'undefined') {
         throw new Error('友達IDが指定されていません');
       }
-      return this.request<{ messages: any[]; total_count: number }>(`/api/message/list?friend_id=${friendId}`);
+      return this.request<{ messages: any[]; total_count: number }>(`/api/message/list?friend_id=${friendId}&limit=${limit}&offset=${offset}`);
     },
 
     // 音声メッセージを送信
