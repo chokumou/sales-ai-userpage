@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, MessageCircle, Users, Zap, Clock, Star, Settings, RefreshCw, BookOpen } from 'lucide-react';
+import { Brain, MessageCircle, Users, Clock, Star, Settings, RefreshCw, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api, userAPI, friendAPI } from '../services/api';
@@ -357,114 +357,12 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl border border-gray-200 p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Recent Activity</h2>
-          <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
-            View All
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {[
-            {
-              action: 'Voice message sent',
-              target: 'AI Assistant',
-              time: '2 minutes ago',
-              icon: MessageCircle,
-              color: 'blue'
-            },
-            {
-              action: 'Memory created',
-              target: 'Important meeting notes',
-              time: '1 hour ago',
-              icon: Brain,
-              color: 'purple'
-            },
-            {
-              action: 'Friend request accepted',
-              target: 'John Smith',
-              time: '3 hours ago',
-              icon: Users,
-              color: 'green'
-            }
-          ].map((activity, index) => (
-            <div key={index} className="flex items-center space-x-4 p-4 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className={`p-2 rounded-lg bg-${activity.color}-50`}>
-                <activity.icon className={`w-5 h-5 text-${activity.color}-600`} />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                <p className="text-sm text-gray-600">{activity.target}</p>
-              </div>
-              <span className="text-xs text-gray-500">{activity.time}</span>
-            </div>
-          ))}
-        </div>
-
-        {stats.totalMessages === 0 && (
-          <div className="text-center py-12">
-            <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No activity yet</h3>
-            <p className="text-gray-600 mb-6">Start your first AI conversation to see activity here.</p>
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-              Start Conversation
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* NeKota Diary Section */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <NeKotaDiary />
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          {
-            title: 'Register Voice',
-            description: 'Add your voice profile',
-            icon: Zap,
-            color: 'blue',
-            href: '/voice'
-          },
-          {
-            title: 'Add Memory',
-            description: 'Store important information',
-            icon: Brain,
-            color: 'purple',
-            href: '/memory'
-          },
-          {
-            title: 'Find Friends',
-            description: 'Connect with others',
-            icon: Users,
-            color: 'green',
-            href: '/friends'
-          },
-          {
-            title: 'Upgrade Plan',
-            description: 'Unlock premium features',
-            icon: Star,
-            color: 'orange',
-            href: '/upgrade'
-          }
-        ].map((action, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 cursor-pointer group"
-            onClick={() => window.location.href = action.href}
-          >
-            <div className={`w-12 h-12 rounded-xl bg-${action.color}-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-              <action.icon className={`w-6 h-6 text-${action.color}-600`} />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{action.title}</h3>
-            <p className="text-gray-600 text-sm">{action.description}</p>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };
