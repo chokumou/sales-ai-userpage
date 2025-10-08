@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Plus, Search, Trash2, User, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { messageAPI, friendAPI } from '../services/api';
@@ -50,21 +50,20 @@ const Messages: React.FC = () => {
     const target = observerTarget.current;
     if (!target) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoadingMore && messageCount < totalCount) {
-          loadMoreMessages();
-        }
-      },
-      { threshold: 0.1 }
-    );
+    const handleIntersect = async (entries: IntersectionObserverEntry[]) => {
+      if (entries[0].isIntersecting && !isLoadingMore && messageCount < totalCount) {
+        loadMoreMessages();
+      }
+    };
+
+    const observer = new IntersectionObserver(handleIntersect, { threshold: 0.1 });
 
     observer.observe(target);
 
     return () => {
       observer.unobserve(target);
     };
-  }, [isLoadingMore, messageCount, totalCount, loadMoreMessages]);
+  }, [isLoadingMore, messageCount, totalCount]);
 
   const loadData = async () => {
     if (!user) return;
@@ -113,7 +112,7 @@ const Messages: React.FC = () => {
     }
   };
 
-  const loadMoreMessages = useCallback(async () => {
+  const loadMoreMessages = async () => {
     if (!user || isLoadingMore || messageCount >= totalCount) return;
 
     try {
@@ -157,7 +156,7 @@ const Messages: React.FC = () => {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [user, isLoadingMore, messageCount, totalCount, friends, friendOffsets]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
