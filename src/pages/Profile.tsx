@@ -97,40 +97,78 @@ const Profile: React.FC = () => {
 
   const loadNekotaLetterSettings = async () => {
     try {
+      console.log('🔍 [SETTINGS] 設定読み込み開始...');
+      const token = localStorage.getItem('token');
+      console.log('🔍 [SETTINGS] トークン:', token ? 'あり' : 'なし');
+      
       const response = await fetch('/api/nekota-letters/settings', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
+      console.log('🔍 [SETTINGS] レスポンスステータス:', response.status);
+      
       if (response.ok) {
         const settings = await response.json();
+        console.log('✅ [SETTINGS] 設定取得成功:', settings);
         setNekotaLettersEnabled(settings.nekota_letters_enabled);
+      } else {
+        console.error('❌ [SETTINGS] 設定取得失敗:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('❌ [SETTINGS] エラー詳細:', errorText);
+        // デフォルト値を設定
+        setNekotaLettersEnabled(true);
       }
     } catch (error) {
-      console.error('Error loading nekota letter settings:', error);
+      console.error('❌ [SETTINGS] 設定読み込みエラー:', error);
+      // デフォルト値を設定
+      setNekotaLettersEnabled(true);
     }
   };
 
   const handleNekotaLetterToggle = async () => {
     try {
       const newValue = !nekotaLettersEnabled;
+      console.log('💾 [SETTINGS] 設定更新開始:', newValue);
+      
+      // UI更新（楽観的更新）
       setNekotaLettersEnabled(newValue);
       
-      await fetch('/api/nekota-letters/settings', {
+      const token = localStorage.getItem('token');
+      console.log('💾 [SETTINGS] トークン:', token ? 'あり' : 'なし');
+      
+      const response = await fetch('/api/nekota-letters/settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           nekota_letters_enabled: newValue
         })
       });
+      
+      console.log('💾 [SETTINGS] レスポンスステータス:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ [SETTINGS] 設定更新成功:', result);
+        // サーバーから返された値で再設定（念のため）
+        setNekotaLettersEnabled(result.nekota_letters_enabled);
+      } else {
+        console.error('❌ [SETTINGS] 設定更新失敗:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('❌ [SETTINGS] エラー詳細:', errorText);
+        // エラー時は元の値に戻す
+        setNekotaLettersEnabled(!newValue);
+        alert('設定の保存に失敗しました。再度お試しください。');
+      }
     } catch (error) {
-      console.error('Error updating nekota letter settings:', error);
+      console.error('❌ [SETTINGS] 設定更新エラー:', error);
       // エラー時は元の値に戻す
       setNekotaLettersEnabled(!nekotaLettersEnabled);
+      alert('設定の保存に失敗しました。再度お試しください。');
     }
   };
 
