@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageSquare, Plus, Search, Trash2, User, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { messageAPI, friendAPI } from '../services/api';
@@ -37,12 +37,34 @@ const Messages: React.FC = () => {
   const [messageCount, setMessageCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [friendOffsets, setFriendOffsets] = useState<Record<string, number>>({});
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user) {
       loadData();
     }
   }, [user]);
+
+  // 無限スクロール用のIntersection Observer
+  useEffect(() => {
+    const target = observerTarget.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore && messageCount < totalCount) {
+          loadMoreMessages();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.unobserve(target);
+    };
+  }, [isLoadingMore, messageCount, totalCount, loadMoreMessages]);
 
   const loadData = async () => {
     if (!user) return;
@@ -91,8 +113,8 @@ const Messages: React.FC = () => {
     }
   };
 
-  const loadMoreMessages = async () => {
-    if (!user || isLoadingMore) return;
+  const loadMoreMessages = useCallback(async () => {
+    if (!user || isLoadingMore || messageCount >= totalCount) return;
 
     try {
       setIsLoadingMore(true);
@@ -121,12 +143,13 @@ const Messages: React.FC = () => {
         }
       }
       
-      // 新しいメッセージを追加してソート
-      const allMessages = [...messages, ...additionalMessages];
-      allMessages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      
-      setMessages(allMessages);
-      setMessageCount(allMessages.length);
+      // 新しいメッセージを追加してソート（functional updateパターン）
+      setMessages((prevMessages) => {
+        const allMessages = [...prevMessages, ...additionalMessages];
+        allMessages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        return allMessages;
+      });
+      setMessageCount((prev) => prev + additionalMessages.length);
       setFriendOffsets(newOffsets);
       
     } catch (error) {
@@ -134,7 +157,7 @@ const Messages: React.FC = () => {
     } finally {
       setIsLoadingMore(false);
     }
-  };
+  }, [user, isLoadingMore, messageCount, totalCount, friends, friendOffsets]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -427,23 +450,22 @@ const Messages: React.FC = () => {
                 ))}
               </div>
 
-              {/* Load More Button */}
+              {/* Infinite Scroll Trigger & Loading Indicator */}
               {messageCount < totalCount && (
-                <div className="p-6 border-t border-gray-200 text-center">
-                  <button
-                    onClick={loadMoreMessages}
-                    disabled={isLoadingMore}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    {isLoadingMore ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>読み込み中...</span>
-                      </div>
-                    ) : (
-                      `もっと見る (${messageCount} / ${totalCount})`
-                    )}
-                  </button>
+                <div ref={observerTarget} className="p-6 text-center">
+                  {isLoadingMore && (
+                    <div className="flex items-center justify-center space-x-2 text-gray-500">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      <span className="text-sm">読み込み中...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* All Messages Loaded */}
+              {messageCount >= totalCount && messageCount > 0 && (
+                <div className="p-4 text-center text-sm text-gray-500 border-t border-gray-200">
+                  全てのメッセージを表示しました
                 </div>
               )}
             </>
