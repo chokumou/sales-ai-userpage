@@ -4,6 +4,9 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { profileAPI } from '../services/api';
 import { User, Save, Edit3, Camera, Settings } from 'lucide-react';
 
+// APIベースURLを環境変数から取得（本番環境対応）
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+
 interface ProfileData {
   name: string;
   introduction: string;
@@ -98,10 +101,14 @@ const Profile: React.FC = () => {
   const loadNekotaLetterSettings = async () => {
     try {
       console.log('🔍 [SETTINGS] 設定読み込み開始...');
+      console.log('🔍 [SETTINGS] API_BASE_URL:', API_BASE_URL);
       const token = localStorage.getItem('token');
       console.log('🔍 [SETTINGS] トークン:', token ? 'あり' : 'なし');
       
-      const response = await fetch('/api/nekota-letters/settings', {
+      const url = `${API_BASE_URL}/api/nekota-letters/settings`;
+      console.log('🔍 [SETTINGS] リクエストURL:', url);
+      
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -131,6 +138,7 @@ const Profile: React.FC = () => {
     try {
       const newValue = !nekotaLettersEnabled;
       console.log('💾 [SETTINGS] 設定更新開始:', newValue);
+      console.log('💾 [SETTINGS] API_BASE_URL:', API_BASE_URL);
       
       // UI更新（楽観的更新）
       setNekotaLettersEnabled(newValue);
@@ -138,7 +146,10 @@ const Profile: React.FC = () => {
       const token = localStorage.getItem('token');
       console.log('💾 [SETTINGS] トークン:', token ? 'あり' : 'なし');
       
-      const response = await fetch('/api/nekota-letters/settings', {
+      const url = `${API_BASE_URL}/api/nekota-letters/settings`;
+      console.log('💾 [SETTINGS] リクエストURL:', url);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
