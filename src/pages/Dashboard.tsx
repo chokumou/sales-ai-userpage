@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Brain, MessageCircle, Users, Zap, Clock, Star, Settings, RefreshCw, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { userAPI, memoryAPI, friendAPI } from '../services/api';
+import { api, userAPI, friendAPI } from '../services/api';
 import NeKotaDiary from '../components/ShortMemory/NeKotaDiary';
 
 interface DashboardStats {
@@ -101,7 +101,8 @@ const Dashboard: React.FC = () => {
         return { message_count: 0 };
       });
 
-      const memoriesData = await memoryAPI.list(user.id, 1, 1).catch((error) => {
+      // メモリ数を取得（完全なレスポンスを取得するため直接APIを呼ぶ）
+      const memoriesData = await api.get<any>(`/api/memory/?user_id=${user.id}&page=1&limit=1`).catch((error) => {
         console.error('Dashboard: Error loading memories:', error);
         return { total: 0 };
       });
