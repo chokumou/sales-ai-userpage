@@ -102,7 +102,7 @@ const Profile: React.FC = () => {
     try {
       console.log('🔍 [SETTINGS] 設定読み込み開始...');
       console.log('🔍 [SETTINGS] API_BASE_URL:', API_BASE_URL);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('nekota_token');
       console.log('🔍 [SETTINGS] トークン:', token ? 'あり' : 'なし');
       
       const url = `${API_BASE_URL}/api/nekota-letters/settings`;
@@ -143,7 +143,7 @@ const Profile: React.FC = () => {
       // UI更新（楽観的更新）
       setNekotaLettersEnabled(newValue);
       
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('nekota_token');
       console.log('💾 [SETTINGS] トークン:', token ? 'あり' : 'なし');
       
       const url = `${API_BASE_URL}/api/nekota-letters/settings`;
