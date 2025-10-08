@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, MessageCircle, Users, Zap, TrendingUp, Clock, Star, Settings, RefreshCw, BookOpen } from 'lucide-react';
+import { Brain, MessageCircle, Users, Zap, Clock, Star, Settings, RefreshCw, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { userAPI, memoryAPI, friendAPI } from '../services/api';
@@ -183,29 +183,25 @@ const Dashboard: React.FC = () => {
       title: 'Total Messages',
       value: stats.totalMessages.toLocaleString(),
       icon: MessageCircle,
-      color: 'blue',
-      trend: '+12%'
+      color: 'blue'
     },
     {
       title: 'Friends Connected',
       value: stats.totalFriends.toLocaleString(),
       icon: Users,
-      color: 'green',
-      trend: '+5%'
+      color: 'green'
     },
     {
       title: 'AI Memories',
       value: stats.totalMemories.toLocaleString(),
       icon: Brain,
-      color: 'purple',
-      trend: '+18%'
+      color: 'purple'
     },
     {
       title: 'Current Plan',
       value: stats.subscriptionPlan.charAt(0).toUpperCase() + stats.subscriptionPlan.slice(1),
       icon: Star,
-      color: 'orange',
-      trend: ''
+      color: 'orange'
     }
   ];
 
@@ -301,12 +297,6 @@ const Dashboard: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">{card.title}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{card.value}</p>
-                {card.trend && (
-                  <div className="flex items-center mt-2">
-                    <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                    <span className="text-sm text-green-600">{card.trend}</span>
-                  </div>
-                )}
               </div>
               <div className={`p-3 rounded-xl bg-${card.color}-50`}>
                 <card.icon className={`w-6 h-6 text-${card.color}-600`} />
