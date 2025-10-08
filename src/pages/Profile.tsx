@@ -119,6 +119,9 @@ const Profile: React.FC = () => {
       if (response.ok) {
         const settings = await response.json();
         console.log('✅ [SETTINGS] 設定取得成功:', settings);
+        console.log('✅ [SETTINGS] nekota_letters_enabled:', settings.nekota_letters_enabled);
+        console.log('✅ [SETTINGS] 型:', typeof settings.nekota_letters_enabled);
+        console.log('✅ [SETTINGS] 値の詳細:', JSON.stringify(settings));
         setNekotaLettersEnabled(settings.nekota_letters_enabled);
       } else {
         console.error('❌ [SETTINGS] 設定取得失敗:', response.status, response.statusText);
@@ -129,8 +132,9 @@ const Profile: React.FC = () => {
       }
     } catch (error) {
       console.error('❌ [SETTINGS] 設定読み込みエラー:', error);
-      // デフォルト値を設定
-      setNekotaLettersEnabled(true);
+      // デフォルト値を設定（現在の状態を維持）
+      console.log('⚠️ [SETTINGS] 設定読み込み失敗、現在の状態を維持');
+      // setNekotaLettersEnabled(true); // ← 削除（現在の状態を維持）
     }
   };
 
@@ -165,6 +169,9 @@ const Profile: React.FC = () => {
       if (response.ok) {
         const result = await response.json();
         console.log('✅ [SETTINGS] 設定更新成功:', result);
+        console.log('✅ [SETTINGS] 更新後のnekota_letters_enabled:', result.nekota_letters_enabled);
+        console.log('✅ [SETTINGS] 更新後の型:', typeof result.nekota_letters_enabled);
+        console.log('✅ [SETTINGS] 更新後の値の詳細:', JSON.stringify(result));
         // サーバーから返された値で再設定（念のため）
         setNekotaLettersEnabled(result.nekota_letters_enabled);
       } else {
