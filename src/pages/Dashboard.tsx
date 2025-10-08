@@ -307,6 +307,11 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
+      {/* NeKota Diary Section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <NeKotaDiary />
+      </div>
+
       {/* AI Model Selection */}
       <div className="bg-white rounded-xl border border-gray-200 p-8">
         <div className="flex items-center justify-between mb-6">
@@ -355,12 +360,6 @@ const Dashboard: React.FC = () => {
             </div>
           ))}
         </div>
-      </div>
-
-
-      {/* NeKota Diary Section */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <NeKotaDiary />
       </div>
 
     </div>
