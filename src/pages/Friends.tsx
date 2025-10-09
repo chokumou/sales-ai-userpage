@@ -127,12 +127,12 @@ const Friends: React.FC = () => {
       await friendAPI.testRequest(user.id, cleanFriendId);
       setNewFriendId('');
       setShowAddFriend(false);
-      alert('Friend request sent successfully!');
+      alert('フレンド申請を送信しました！');
       // Reload friends to show updated data
       await loadFriends();
     } catch (error) {
       console.error('Error sending friend request:', error);
-      alert('Failed to send friend request. Please try again.');
+      alert('フレンド申請の送信に失敗しました。もう一度お試しください。');
     }
   };
 
@@ -181,7 +181,7 @@ const Friends: React.FC = () => {
       setReceivedRequests(prev => prev.filter(req => req.user_id_a !== fromUserId));
     } catch (error) {
       console.error('Error accepting friend request:', error);
-      alert('Failed to accept friend request. Please try again.');
+      alert('フレンド承認に失敗しました。もう一度お試しください。');
     }
   };
 
@@ -263,21 +263,21 @@ const Friends: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Friends</h1>
+          <h1 className="text-3xl font-bold text-gray-900">フレンド</h1>
           <p className="text-gray-600 mt-2">
-            Connect with others and share AI-powered voice conversations.
+            友達とつながって、AI音声会話を共有しましょう。
           </p>
         </div>
         <div className="mt-4 sm:mt-0 flex items-center space-x-4">
           <span className="text-sm text-gray-500">
-            {Array.isArray(friends) ? friends.length : 0} friends
+            {Array.isArray(friends) ? friends.length : 0}人のフレンド
           </span>
           <button
             onClick={() => setShowAddFriend(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Friend</span>
+            <span>フレンド追加</span>
           </button>
         </div>
       </div>
@@ -289,7 +289,7 @@ const Friends: React.FC = () => {
           {receivedRequests.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Friend Requests ({receivedRequests.length})
+                フレンド申請 ({receivedRequests.length}件)
               </h2>
               <div className="space-y-4">
                 {receivedRequests.map((request) => {
@@ -307,15 +307,15 @@ const Friends: React.FC = () => {
                           </span>
                         </div>
                         <div>
-                          <h3 className="font-medium text-gray-900">{request.from_user.name || 'Unknown User'}</h3>
-                          <p className="text-sm text-gray-600">{request.from_user.introduction || 'No introduction'}</p>
+                          <h3 className="font-medium text-gray-900">{request.from_user.name || '不明なユーザー'}</h3>
+                          <p className="text-sm text-gray-600">{request.from_user.introduction || '自己紹介なし'}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleAcceptFriendRequest(request.user_id_a)}
                           className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                          title="Accept"
+                          title="承認"
                           disabled={!request.user_id_a}
                         >
                           <UserCheck className="w-4 h-4" />
@@ -323,7 +323,7 @@ const Friends: React.FC = () => {
                         <button
                           onClick={() => handleRejectFriendRequest(request.user_id_a)}
                           className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                          title="Decline"
+                          title="拒否"
                         >
                           <UserX className="w-4 h-4" />
                         </button>
@@ -341,7 +341,7 @@ const Friends: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search friends..."
+                placeholder="フレンドを検索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -355,12 +355,12 @@ const Friends: React.FC = () => {
               <div className="text-center py-16">
                 <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {Array.isArray(friends) && friends.length === 0 ? 'No friends yet' : 'No friends match your search'}
+                  {Array.isArray(friends) && friends.length === 0 ? 'まだフレンドがいません' : '検索結果が見つかりません'}
                 </h3>
                 <p className="text-gray-600 mb-6">
                   {Array.isArray(friends) && friends.length === 0 
-                    ? 'Start building your network by adding friends to share AI conversations.'
-                    : 'Try adjusting your search terms.'
+                    ? 'フレンドを追加してAI会話を共有しましょう。'
+                    : '検索条件を変更してみてください。'
                   }
                 </p>
                 {Array.isArray(friends) && friends.length === 0 && (
@@ -368,7 +368,7 @@ const Friends: React.FC = () => {
                     onClick={() => setShowAddFriend(true)}
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Add Your First Friend
+                    最初のフレンドを追加
                   </button>
                 )}
               </div>
