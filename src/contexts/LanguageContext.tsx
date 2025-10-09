@@ -1528,6 +1528,277 @@ const translations: Translations = {
     de: 'API-Zugriff',
     ko: 'API 액세스',
     zh: 'API访问'
+  },
+  // Payment History
+  'payment.title': {
+    en: 'Payment History',
+    ja: '支払い履歴',
+    es: 'Historial de Pagos',
+    fr: 'Historique des Paiements',
+    de: 'Zahlungshistorie',
+    ko: '결제 내역',
+    zh: '支付历史'
+  },
+  'payment.description': {
+    en: 'View and manage your payment history and invoices',
+    ja: '支払い履歴と請求書を表示・管理します',
+    es: 'Ver y gestionar tu historial de pagos y facturas',
+    fr: 'Voir et gérer votre historique de paiements et factures',
+    de: 'Zahlungshistorie und Rechnungen anzeigen und verwalten',
+    ko: '결제 내역 및 청구서 보기 및 관리',
+    zh: '查看和管理您的支付历史和发票'
+  },
+  'payment.totalSpent': {
+    en: 'Total Spent',
+    ja: '総支払額',
+    es: 'Total Gastado',
+    fr: 'Total Dépensé',
+    de: 'Insgesamt Ausgegeben',
+    ko: '총 지출액',
+    zh: '总支出'
+  },
+  'payment.search': {
+    en: 'Search transactions...',
+    ja: '取引を検索...',
+    es: 'Buscar transacciones...',
+    fr: 'Rechercher des transactions...',
+    de: 'Transaktionen suchen...',
+    ko: '거래 검색...',
+    zh: '搜索交易...'
+  },
+  'payment.filterStatus': {
+    en: 'Filter by status',
+    ja: 'ステータスでフィルター',
+    es: 'Filtrar por estado',
+    fr: 'Filtrer par statut',
+    de: 'Nach Status filtern',
+    ko: '상태로 필터링',
+    zh: '按状态过滤'
+  },
+  'payment.allStatuses': {
+    en: 'All Statuses',
+    ja: '全てのステータス',
+    es: 'Todos los Estados',
+    fr: 'Tous les Statuts',
+    de: 'Alle Status',
+    ko: '모든 상태',
+    zh: '所有状态'
+  },
+  'payment.succeeded': {
+    en: 'Succeeded',
+    ja: '成功',
+    es: 'Exitoso',
+    fr: 'Réussi',
+    de: 'Erfolgreich',
+    ko: '성공',
+    zh: '成功'
+  },
+  'payment.pending': {
+    en: 'Pending',
+    ja: '保留中',
+    es: 'Pendiente',
+    fr: 'En Attente',
+    de: 'Ausstehend',
+    ko: '보류 중',
+    zh: '待处理'
+  },
+  'payment.failed': {
+    en: 'Failed',
+    ja: '失敗',
+    es: 'Fallido',
+    fr: 'Échoué',
+    de: 'Fehlgeschlagen',
+    ko: '실패',
+    zh: '失败'
+  },
+  'payment.refunded': {
+    en: 'Refunded',
+    ja: '返金済み',
+    es: 'Reembolsado',
+    fr: 'Remboursé',
+    de: 'Rückerstattet',
+    ko: '환불됨',
+    zh: '已退款'
+  },
+  'payment.filterDate': {
+    en: 'Filter by date',
+    ja: '日付でフィルター',
+    es: 'Filtrar por fecha',
+    fr: 'Filtrer par date',
+    de: 'Nach Datum filtern',
+    ko: '날짜로 필터링',
+    zh: '按日期过滤'
+  },
+  'payment.allTime': {
+    en: 'All Time',
+    ja: '全期間',
+    es: 'Todo el Tiempo',
+    fr: 'Tout le Temps',
+    de: 'Alle Zeiten',
+    ko: '전체 기간',
+    zh: '所有时间'
+  },
+  'payment.last7days': {
+    en: 'Last 7 Days',
+    ja: '過去7日間',
+    es: 'Últimos 7 Días',
+    fr: '7 Derniers Jours',
+    de: 'Letzte 7 Tage',
+    ko: '지난 7일',
+    zh: '过去7天'
+  },
+  'payment.last30days': {
+    en: 'Last 30 Days',
+    ja: '過去30日間',
+    es: 'Últimos 30 Días',
+    fr: '30 Derniers Jours',
+    de: 'Letzte 30 Tage',
+    ko: '지난 30일',
+    zh: '过去30天'
+  },
+  'payment.last3months': {
+    en: 'Last 3 Months',
+    ja: '過去3ヶ月',
+    es: 'Últimos 3 Meses',
+    fr: '3 Derniers Mois',
+    de: 'Letzte 3 Monate',
+    ko: '지난 3개월',
+    zh: '过去3个月'
+  },
+  'payment.lastYear': {
+    en: 'Last Year',
+    ja: '過去1年',
+    es: 'Último Año',
+    fr: 'Dernière Année',
+    de: 'Letztes Jahr',
+    ko: '지난 1년',
+    zh: '过去1年'
+  },
+  'payment.date': {
+    en: 'Date',
+    ja: '日付',
+    es: 'Fecha',
+    fr: 'Date',
+    de: 'Datum',
+    ko: '날짜',
+    zh: '日期'
+  },
+  'payment.description': {
+    en: 'Description',
+    ja: '説明',
+    es: 'Descripción',
+    fr: 'Description',
+    de: 'Beschreibung',
+    ko: '설명',
+    zh: '描述'
+  },
+  'payment.amount': {
+    en: 'Amount',
+    ja: '金額',
+    es: 'Monto',
+    fr: 'Montant',
+    de: 'Betrag',
+    ko: '금액',
+    zh: '金额'
+  },
+  'payment.status': {
+    en: 'Status',
+    ja: 'ステータス',
+    es: 'Estado',
+    fr: 'Statut',
+    de: 'Status',
+    ko: '상태',
+    zh: '状态'
+  },
+  'payment.invoice': {
+    en: 'Invoice',
+    ja: '請求書',
+    es: 'Factura',
+    fr: 'Facture',
+    de: 'Rechnung',
+    ko: '청구서',
+    zh: '发票'
+  },
+  'payment.download': {
+    en: 'Download',
+    ja: 'ダウンロード',
+    es: 'Descargar',
+    fr: 'Télécharger',
+    de: 'Herunterladen',
+    ko: '다운로드',
+    zh: '下载'
+  },
+  'payment.noPayments': {
+    en: 'No payment history',
+    ja: '支払い履歴がありません',
+    es: 'No hay historial de pagos',
+    fr: 'Pas d\'historique de paiements',
+    de: 'Keine Zahlungshistorie',
+    ko: '결제 내역 없음',
+    zh: '无支付历史'
+  },
+  'payment.noMatch': {
+    en: 'No payments match your filters',
+    ja: 'フィルター条件に一致する支払いがありません',
+    es: 'No hay pagos que coincidan con tus filtros',
+    fr: 'Aucun paiement ne correspond à vos filtres',
+    de: 'Keine Zahlungen entsprechen Ihren Filtern',
+    ko: '필터와 일치하는 결제가 없습니다',
+    zh: '没有符合您筛选条件的支付'
+  },
+  'payment.makeFirstPayment': {
+    en: 'Make your first payment to see transaction history.',
+    ja: '最初の支払いを行うと取引履歴が表示されます。',
+    es: 'Realiza tu primer pago para ver el historial de transacciones.',
+    fr: 'Effectuez votre premier paiement pour voir l\'historique des transactions.',
+    de: 'Tätigen Sie Ihre erste Zahlung, um die Transaktionshistorie zu sehen.',
+    ko: '첫 번째 결제를 하면 거래 내역이 표시됩니다.',
+    zh: '进行首次支付以查看交易历史。'
+  },
+  'payment.adjustFilters': {
+    en: 'Try adjusting your search or filter criteria.',
+    ja: '検索条件やフィルターを変更してみてください。',
+    es: 'Intenta ajustar tus criterios de búsqueda o filtro.',
+    fr: 'Essayez d\'ajuster vos critères de recherche ou de filtre.',
+    de: 'Versuchen Sie, Ihre Such- oder Filterkriterien anzupassen.',
+    ko: '검색 또는 필터 조건을 조정해 보세요.',
+    zh: '尝试调整您的搜索或过滤条件。'
+  },
+  'payment.upgradeNow': {
+    en: 'Upgrade Now',
+    ja: '今すぐアップグレード',
+    es: 'Actualizar Ahora',
+    fr: 'Mettre à Niveau Maintenant',
+    de: 'Jetzt Upgraden',
+    ko: '지금 업그레이드',
+    zh: '立即升级'
+  },
+  'payment.invoiceNotAvailable': {
+    en: 'Invoice not available for this payment',
+    ja: 'この支払いの請求書は利用できません',
+    es: 'Factura no disponible para este pago',
+    fr: 'Facture non disponible pour ce paiement',
+    de: 'Rechnung für diese Zahlung nicht verfügbar',
+    ko: '이 결제에 대한 청구서를 사용할 수 없습니다',
+    zh: '此支付的发票不可用'
+  },
+  'payment.previous': {
+    en: 'Previous',
+    ja: '前へ',
+    es: 'Anterior',
+    fr: 'Précédent',
+    de: 'Zurück',
+    ko: '이전',
+    zh: '上一页'
+  },
+  'payment.next': {
+    en: 'Next',
+    ja: '次へ',
+    es: 'Siguiente',
+    fr: 'Suivant',
+    de: 'Weiter',
+    ko: '다음',
+    zh: '下一页'
   }
 };
 
