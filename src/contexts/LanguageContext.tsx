@@ -1844,6 +1844,70 @@ const translations: Translations = {
     de: 'Aktionen',
     ko: '작업',
     zh: '操作'
+  },
+  // Profile
+  'profile.title': {
+    en: 'Profile',
+    ja: 'プロフィール',
+    es: 'Perfil',
+    fr: 'Profil',
+    de: 'Profil',
+    ko: '프로필',
+    zh: '个人资料'
+  },
+  'profile.description': {
+    en: 'Set your information',
+    ja: 'あなたの情報を設定してください',
+    es: 'Configura tu información',
+    fr: 'Configurez vos informations',
+    de: 'Ihre Informationen einstellen',
+    ko: '정보를 설정하세요',
+    zh: '设置您的信息'
+  },
+  'profile.edit': {
+    en: 'Edit',
+    ja: '編集',
+    es: 'Editar',
+    fr: 'Modifier',
+    de: 'Bearbeiten',
+    ko: '편집',
+    zh: '编辑'
+  },
+  'profile.save': {
+    en: 'Save',
+    ja: '保存',
+    es: 'Guardar',
+    fr: 'Enregistrer',
+    de: 'Speichern',
+    ko: '저장',
+    zh: '保存'
+  },
+  'profile.cancel': {
+    en: 'Cancel',
+    ja: 'キャンセル',
+    es: 'Cancelar',
+    fr: 'Annuler',
+    de: 'Abbrechen',
+    ko: '취소',
+    zh: '取消'
+  },
+  'profile.saving': {
+    en: 'Saving...',
+    ja: '保存中...',
+    es: 'Guardando...',
+    fr: 'Enregistrement...',
+    de: 'Speichern...',
+    ko: '저장 중...',
+    zh: '保存中...'
+  },
+  'profile.loading': {
+    en: 'Loading profile...',
+    ja: 'プロフィールを読み込み中...',
+    es: 'Cargando perfil...',
+    fr: 'Chargement du profil...',
+    de: 'Profil wird geladen...',
+    ko: '프로필 로딩 중...',
+    zh: '加载个人资料中...'
   }
 };
 

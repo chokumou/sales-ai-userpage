@@ -220,7 +220,7 @@ const Profile: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">プロフィールを読み込み中...</p>
+          <p className="mt-4 text-gray-600">{t('profile.loading')}</p>
         </div>
       </div>
     );
@@ -237,8 +237,8 @@ const Profile: React.FC = () => {
                   <User className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">プロフィール</h1>
-                  <p className="text-gray-600">あなたの情報を設定してください</p>
+                  <h1 className="text-2xl font-bold text-gray-900">{t('profile.title')}</h1>
+                  <p className="text-gray-600">{t('profile.description')}</p>
                 </div>
               </div>
               {!isEditing && (
@@ -247,7 +247,7 @@ const Profile: React.FC = () => {
                   className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Edit3 className="w-4 h-4" />
-                  <span>編集</span>
+                  <span>{t('profile.edit')}</span>
                 </button>
               )}
             </div>
@@ -390,14 +390,14 @@ const Profile: React.FC = () => {
                     className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
                     <Save className="w-4 h-4" />
-                    <span>{isSaving ? '保存中...' : '保存'}</span>
+                    <span>{isSaving ? t('profile.saving') : t('profile.save')}</span>
                   </button>
                   <button
                     onClick={handleCancel}
                     disabled={isSaving}
                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    キャンセル
+                    {t('profile.cancel')}
                   </button>
                 </div>
               )}
