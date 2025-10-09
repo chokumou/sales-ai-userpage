@@ -261,15 +261,15 @@ const Profile: React.FC = () => {
                   <User className="w-10 h-10 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-medium text-gray-900">プロフィール画像</h3>
-                  <p className="text-gray-600">将来実装予定</p>
+                  <h3 className="text-lg font-medium text-gray-900">{t('profile.profileImage')}</h3>
+                  <p className="text-gray-600">{t('profile.comingSoon')}</p>
                 </div>
               </div>
 
               {/* 名前 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  名前 <span className="text-red-500">*</span>
+                  {t('profile.name')} <span className="text-red-500">*</span>
                 </label>
                 {isEditing ? (
                   <input
@@ -277,12 +277,12 @@ const Profile: React.FC = () => {
                     value={profileData.name}
                     onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="あなたの名前を入力してください"
+                    placeholder={t('profile.enterName')}
                     maxLength={50}
                   />
                 ) : (
                   <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                    {profileData.name || <span className="text-gray-400">名前が設定されていません</span>}
+                    {profileData.name || <span className="text-gray-400">{t('profile.nameNotSet')}</span>}
                   </div>
                 )}
               </div>
@@ -290,7 +290,7 @@ const Profile: React.FC = () => {
               {/* 国・地域 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  国・地域
+                  {t('profile.country')}
                 </label>
                 {isEditing ? (
                   <select
@@ -320,20 +320,20 @@ const Profile: React.FC = () => {
               {/* 自己紹介 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  自己紹介
+                  {t('profile.introduction')}
                 </label>
                 {isEditing ? (
                   <textarea
                     value={profileData.introduction}
                     onChange={(e) => setProfileData({ ...profileData, introduction: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="あなたについて教えてください"
+                    placeholder={t('profile.enterIntroduction')}
                     rows={4}
                     maxLength={200}
                   />
                 ) : (
                   <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg min-h-[100px]">
-                    {profileData.introduction || <span className="text-gray-400">自己紹介が設定されていません</span>}
+                    {profileData.introduction || <span className="text-gray-400">{t('profile.introductionNotSet')}</span>}
                   </div>
                 )}
               </div>
@@ -341,7 +341,7 @@ const Profile: React.FC = () => {
               {/* ユーザーID（読み取り専用） */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ユーザーID
+                  {t('profile.userId')}
                 </label>
                 <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
                   <code className="text-sm text-gray-600">{user?.id}</code>
@@ -357,7 +357,7 @@ const Profile: React.FC = () => {
                   <div className="flex items-center space-x-3">
                     <Settings className="w-5 h-5 text-blue-500" />
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900">ネコタ手紙設定</h3>
+                      <h3 className="text-lg font-medium text-gray-900">{t('profile.nekotaLetters')}</h3>
                       <p className="text-sm text-gray-500">
                         毎日ランダムでネコタから手紙が届きます
                       </p>
@@ -377,7 +377,7 @@ const Profile: React.FC = () => {
                   </button>
                 </div>
                 <p className="mt-2 text-sm text-gray-600">
-                  {nekotaLettersEnabled ? 'ネコタ手紙が有効です' : 'ネコタ手紙が無効です'}
+                  {nekotaLettersEnabled ? t('profile.nekotaLettersEnabled') : t('profile.nekotaLettersDisabled')}
                 </p>
               </div>
 
@@ -410,10 +410,9 @@ const Profile: React.FC = () => {
           <div className="flex items-start space-x-3">
             <User className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
-              <h3 className="text-sm font-medium text-blue-900">友達機能について</h3>
+              <h3 className="text-sm font-medium text-blue-900">{t('profile.friendsFeature')}</h3>
               <p className="mt-1 text-sm text-blue-700">
-                名前と自己紹介を設定すると、友達があなたを見つけやすくなります。
-                また、将来実装予定のレター機能では友達同士でメッセージを送ることができます。
+                {t('profile.friendsDescription')}
               </p>
             </div>
           </div>

@@ -82,6 +82,15 @@ const translations: Translations = {
     ko: '관리자',
     zh: '管理员'
   },
+  'nav.profile': {
+    en: 'Profile',
+    ja: 'プロフィール',
+    es: 'Perfil',
+    fr: 'Profil',
+    de: 'Profil',
+    ko: '프로필',
+    zh: '个人资料'
+  },
   // Auth
   'auth.login': {
     en: 'Login',
@@ -1701,7 +1710,7 @@ const translations: Translations = {
     ko: '날짜',
     zh: '日期'
   },
-  'payment.description': {
+  'payment.descriptionColumn': {
     en: 'Description',
     ja: '説明',
     es: 'Descripción',
@@ -1908,6 +1917,277 @@ const translations: Translations = {
     de: 'Profil wird geladen...',
     ko: '프로필 로딩 중...',
     zh: '加载个人资料中...'
+  },
+  'profile.profileImage': {
+    en: 'Profile Image',
+    ja: 'プロフィール画像',
+    es: 'Imagen de Perfil',
+    fr: 'Image de Profil',
+    de: 'Profilbild',
+    ko: '프로필 이미지',
+    zh: '个人资料图片'
+  },
+  'profile.comingSoon': {
+    en: 'Coming soon',
+    ja: '将来実装予定',
+    es: 'Próximamente',
+    fr: 'Bientôt disponible',
+    de: 'Demnächst verfügbar',
+    ko: '곧 출시 예정',
+    zh: '即将推出'
+  },
+  'profile.name': {
+    en: 'Name',
+    ja: '名前',
+    es: 'Nombre',
+    fr: 'Nom',
+    de: 'Name',
+    ko: '이름',
+    zh: '姓名'
+  },
+  'profile.nameRequired': {
+    en: '* Required',
+    ja: '* 必須',
+    es: '* Requerido',
+    fr: '* Requis',
+    de: '* Erforderlich',
+    ko: '* 필수',
+    zh: '* 必填'
+  },
+  'profile.enterName': {
+    en: 'Enter your name',
+    ja: 'あなたの名前を入力してください',
+    es: 'Ingrese su nombre',
+    fr: 'Entrez votre nom',
+    de: 'Geben Sie Ihren Namen ein',
+    ko: '이름을 입력하세요',
+    zh: '输入您的姓名'
+  },
+  'profile.nameNotSet': {
+    en: 'Name not set',
+    ja: '名前が設定されていません',
+    es: 'Nombre no establecido',
+    fr: 'Nom non défini',
+    de: 'Name nicht festgelegt',
+    ko: '이름이 설정되지 않음',
+    zh: '未设置姓名'
+  },
+  'profile.country': {
+    en: 'Country/Region',
+    ja: '国・地域',
+    es: 'País/Región',
+    fr: 'Pays/Région',
+    de: 'Land/Region',
+    ko: '국가/지역',
+    zh: '国家/地区'
+  },
+  'profile.introduction': {
+    en: 'Introduction',
+    ja: '自己紹介',
+    es: 'Presentación',
+    fr: 'Présentation',
+    de: 'Vorstellung',
+    ko: '자기소개',
+    zh: '自我介绍'
+  },
+  'profile.enterIntroduction': {
+    en: 'Introduce yourself to your friends...',
+    ja: '友達に自己紹介をしてください...',
+    es: 'Preséntate a tus amigos...',
+    fr: 'Présentez-vous à vos amis...',
+    de: 'Stellen Sie sich Ihren Freunden vor...',
+    ko: '친구들에게 자기소개를 하세요...',
+    zh: '向您的朋友介绍自己...'
+  },
+  'profile.introductionNotSet': {
+    en: 'Introduction not set',
+    ja: '自己紹介が設定されていません',
+    es: 'Presentación no establecida',
+    fr: 'Présentation non définie',
+    de: 'Vorstellung nicht festgelegt',
+    ko: '자기소개가 설정되지 않음',
+    zh: '未设置自我介绍'
+  },
+  'profile.userId': {
+    en: 'User ID',
+    ja: 'ユーザーID',
+    es: 'ID de Usuario',
+    fr: 'ID Utilisateur',
+    de: 'Benutzer-ID',
+    ko: '사용자 ID',
+    zh: '用户ID'
+  },
+  'profile.deviceNumber': {
+    en: 'Device Number',
+    ja: 'デバイス番号',
+    es: 'Número de Dispositivo',
+    fr: 'Numéro d\'Appareil',
+    de: 'Gerätenummer',
+    ko: '장치 번호',
+    zh: '设备号码'
+  },
+  'profile.nekotaLetters': {
+    en: 'NeKota Letters',
+    ja: 'ネコタ手紙',
+    es: 'Cartas NeKota',
+    fr: 'Lettres NeKota',
+    de: 'NeKota Briefe',
+    ko: 'NeKota 편지',
+    zh: 'NeKota信件'
+  },
+  'profile.nekotaLettersEnabled': {
+    en: 'NeKota Letters enabled',
+    ja: 'ネコタ手紙が有効です',
+    es: 'Cartas NeKota habilitadas',
+    fr: 'Lettres NeKota activées',
+    de: 'NeKota Briefe aktiviert',
+    ko: 'NeKota 편지가 활성화되었습니다',
+    zh: 'NeKota信件已启用'
+  },
+  'profile.nekotaLettersDisabled': {
+    en: 'NeKota Letters disabled',
+    ja: 'ネコタ手紙が無効です',
+    es: 'Cartas NeKota deshabilitadas',
+    fr: 'Lettres NeKota désactivées',
+    de: 'NeKota Briefe deaktiviert',
+    ko: 'NeKota 편지가 비활성화되었습니다',
+    zh: 'NeKota信件已禁用'
+  },
+  'profile.friendsFeature': {
+    en: 'About Friends Feature',
+    ja: '友達機能について',
+    es: 'Acerca de la Función de Amigos',
+    fr: 'À Propos de la Fonctionnalité Amis',
+    de: 'Über die Freunde-Funktion',
+    ko: '친구 기능에 대하여',
+    zh: '关于朋友功能'
+  },
+  'profile.friendsDescription': {
+    en: 'Setting your name and introduction helps friends find you. The upcoming letter feature will allow you to send messages to friends.',
+    ja: '名前と自己紹介を設定すると、友達があなたを見つけやすくなります。また、将来実装予定のレター機能では友達同士でメッセージを送ることができます。',
+    es: 'Configurar tu nombre e introducción ayuda a los amigos a encontrarte. La próxima función de carta te permitirá enviar mensajes a amigos.',
+    fr: 'Définir votre nom et votre présentation aide les amis à vous trouver. La fonctionnalité de lettre à venir vous permettra d\'envoyer des messages à des amis.',
+    de: 'Das Festlegen Ihres Namens und Ihrer Vorstellung hilft Freunden, Sie zu finden. Die kommende Brief-Funktion ermöglicht es Ihnen, Nachrichten an Freunde zu senden.',
+    ko: '이름과 소개를 설정하면 친구가 당신을 쉽게 찾을 수 있습니다. 곧 출시될 편지 기능을 통해 친구에게 메시지를 보낼 수 있습니다.',
+    zh: '设置您的姓名和介绍可帮助朋友找到您。即将推出的信件功能将允许您向朋友发送消息。'
+  },
+  // Upgrade - Feature Comparison
+  'upgrade.featureComparison': {
+    en: 'Feature Comparison',
+    ja: '機能比較',
+    es: 'Comparación de Características',
+    fr: 'Comparaison des Fonctionnalités',
+    de: 'Funktionsvergleich',
+    ko: '기능 비교',
+    zh: '功能比较'
+  },
+  'upgrade.feature': {
+    en: 'Feature',
+    ja: '機能',
+    es: 'Característica',
+    fr: 'Fonctionnalité',
+    de: 'Funktion',
+    ko: '기능',
+    zh: '功能'
+  },
+  'upgrade.featureAIModels': {
+    en: 'AI Models',
+    ja: 'AIモデル',
+    es: 'Modelos de IA',
+    fr: 'Modèles IA',
+    de: 'KI-Modelle',
+    ko: 'AI 모델',
+    zh: 'AI模型'
+  },
+  'upgrade.featureMemories': {
+    en: 'Memories',
+    ja: 'メモリ',
+    es: 'Memorias',
+    fr: 'Mémoires',
+    de: 'Erinnerungen',
+    ko: '메모리',
+    zh: '记忆'
+  },
+  'upgrade.featureFriends': {
+    en: 'Friends',
+    ja: 'フレンド',
+    es: 'Amigos',
+    fr: 'Amis',
+    de: 'Freunde',
+    ko: '친구',
+    zh: '朋友'
+  },
+  'upgrade.featureSupport': {
+    en: 'Support Level',
+    ja: 'サポートレベル',
+    es: 'Nivel de Soporte',
+    fr: 'Niveau de Support',
+    de: 'Support-Level',
+    ko: '지원 수준',
+    zh: '支持级别'
+  },
+  'upgrade.featureAnalytics': {
+    en: 'Analytics',
+    ja: '分析',
+    es: 'Análisis',
+    fr: 'Analytique',
+    de: 'Analytik',
+    ko: '분석',
+    zh: '分析'
+  },
+  'upgrade.featureAPIAccess': {
+    en: 'API Access',
+    ja: 'APIアクセス',
+    es: 'Acceso a API',
+    fr: 'Accès API',
+    de: 'API-Zugriff',
+    ko: 'API 액세스',
+    zh: 'API访问'
+  },
+  'upgrade.featureTeam': {
+    en: 'Team Features',
+    ja: 'チーム機能',
+    es: 'Funciones de Equipo',
+    fr: 'Fonctionnalités d\'Équipe',
+    de: 'Team-Funktionen',
+    ko: '팀 기능',
+    zh: '团队功能'
+  },
+  'upgrade.standard': {
+    en: 'Standard',
+    ja: '標準',
+    es: 'Estándar',
+    fr: 'Standard',
+    de: 'Standard',
+    ko: '표준',
+    zh: '标准'
+  },
+  'upgrade.priority': {
+    en: 'Priority',
+    ja: '優先',
+    es: 'Prioritario',
+    fr: 'Prioritaire',
+    de: 'Priorität',
+    ko: '우선',
+    zh: '优先'
+  },
+  'upgrade.dedicated': {
+    en: 'Dedicated',
+    ja: '専任',
+    es: 'Dedicado',
+    fr: 'Dédié',
+    de: 'Dediziert',
+    ko: '전담',
+    zh: '专属'
+  },
+  'upgrade.advanced': {
+    en: 'Advanced',
+    ja: '高度',
+    es: 'Avanzado',
+    fr: 'Avancé',
+    de: 'Erweitert',
+    ko: '고급',
+    zh: '高级'
   }
 };
 

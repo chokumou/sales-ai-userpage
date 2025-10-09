@@ -384,29 +384,29 @@ const Upgrade: React.FC = () => {
       {/* Features Comparison */}
       <div className="bg-white rounded-xl border border-gray-200 p-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
-          Feature Comparison
+          {t('upgrade.featureComparison')}
         </h2>
         
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-4 px-6 font-medium text-gray-900">Feature</th>
-                <th className="text-center py-4 px-6 font-medium text-gray-900">Free</th>
-                <th className="text-center py-4 px-6 font-medium text-gray-900">Premium</th>
-                <th className="text-center py-4 px-6 font-medium text-gray-900">Enterprise</th>
+                <th className="text-left py-4 px-6 font-medium text-gray-900">{t('upgrade.feature')}</th>
+                <th className="text-center py-4 px-6 font-medium text-gray-900">{t('upgrade.planFree')}</th>
+                <th className="text-center py-4 px-6 font-medium text-gray-900">{t('upgrade.planPremium')}</th>
+                <th className="text-center py-4 px-6 font-medium text-gray-900">{t('upgrade.planEnterprise')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {[
-                { feature: 'AI Model Access', free: 'DeepSeek', premium: 'DeepSeek + ChatGPT', enterprise: 'All Models' },
-                { feature: 'Memory Storage', free: '10 memories', premium: 'Unlimited', enterprise: 'Unlimited' },
-                { feature: 'Friend Connections', free: '5 friends', premium: 'Unlimited', enterprise: 'Unlimited' },
-                { feature: 'Voice Profiles', free: 'Basic', premium: 'Advanced', enterprise: 'Advanced' },
-                { feature: 'Support Level', free: 'Standard', premium: 'Priority', enterprise: 'Dedicated' },
-                { feature: 'Analytics', free: '❌', premium: '✅', enterprise: '✅ Advanced' },
-                { feature: 'API Access', free: '❌', premium: '❌', enterprise: '✅' },
-                { feature: 'Team Features', free: '❌', premium: '❌', enterprise: '✅' }
+                { feature: t('upgrade.featureAIModels'), free: 'DeepSeek', premium: 'DeepSeek + ChatGPT', enterprise: t('upgrade.feature.allModels') },
+                { feature: t('upgrade.featureMemories'), free: t('upgrade.feature.memories10'), premium: t('upgrade.feature.unlimitedMemories'), enterprise: t('upgrade.feature.unlimitedMemories') },
+                { feature: t('upgrade.featureFriends'), free: t('upgrade.feature.friends5'), premium: t('upgrade.feature.unlimitedFriends'), enterprise: t('upgrade.feature.unlimitedFriends') },
+                { feature: t('upgrade.feature.basicVoice'), free: t('upgrade.feature.basicVoice'), premium: t('upgrade.feature.advancedVoice'), enterprise: t('upgrade.feature.advancedVoice') },
+                { feature: t('upgrade.featureSupport'), free: t('upgrade.standard'), premium: t('upgrade.priority'), enterprise: t('upgrade.dedicated') },
+                { feature: t('upgrade.featureAnalytics'), free: '❌', premium: '✅', enterprise: `✅ ${t('upgrade.advanced')}` },
+                { feature: t('upgrade.featureAPIAccess'), free: '❌', premium: '❌', enterprise: '✅' },
+                { feature: t('upgrade.featureTeam'), free: '❌', premium: '❌', enterprise: '✅' }
               ].map((row, index) => (
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="py-4 px-6 text-gray-900 font-medium">{row.feature}</td>
