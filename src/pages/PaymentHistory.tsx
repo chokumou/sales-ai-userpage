@@ -143,7 +143,7 @@ const PaymentHistory: React.FC = () => {
     if (payment.invoice_url) {
       window.open(payment.invoice_url, '_blank');
     } else {
-      alert('Invoice not available for this payment');
+      alert(t('payment.invoiceNotAvailable'));
     }
   };
 
@@ -169,9 +169,9 @@ const PaymentHistory: React.FC = () => {
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Payment History</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('payment.title')}</h1>
         <p className="text-gray-600 mt-2">
-          View and manage your subscription payments and billing history.
+          {t('payment.description')}
         </p>
       </div>
 
@@ -180,7 +180,7 @@ const PaymentHistory: React.FC = () => {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Spent</p>
+              <p className="text-sm font-medium text-gray-600">{t('payment.totalSpent')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {formatAmount(totalSpent, 'USD')}
               </p>
@@ -194,7 +194,7 @@ const PaymentHistory: React.FC = () => {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Payments</p>
+              <p className="text-sm font-medium text-gray-600">{t('payment.totalPayments')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">{payments.length}</p>
             </div>
             <div className="p-3 rounded-xl bg-blue-50">
@@ -206,9 +206,9 @@ const PaymentHistory: React.FC = () => {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Current Plan</p>
+              <p className="text-sm font-medium text-gray-600">{t('payment.currentPlan')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                {user && user.premium_until ? 'Premium' : 'Free'}
+                {user && user.premium_until ? t('upgrade.planPremium') : t('upgrade.planFree')}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-purple-50">
@@ -225,7 +225,7 @@ const PaymentHistory: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by description or ID..."
+              placeholder={t('payment.search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-2 w-full border rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -238,11 +238,11 @@ const PaymentHistory: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="pl-10 pr-4 py-2 w-full md:w-48 border rounded-lg appearance-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="">All Statuses</option>
-              <option value="succeeded">Succeeded</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
+              <option value="">{t('payment.allStatuses')}</option>
+              <option value="succeeded">{t('payment.succeeded')}</option>
+              <option value="pending">{t('payment.pending')}</option>
+              <option value="failed">{t('payment.failed')}</option>
+              <option value="refunded">{t('payment.refunded')}</option>
             </select>
           </div>
           <div className="relative">
@@ -252,11 +252,11 @@ const PaymentHistory: React.FC = () => {
               onChange={(e) => setDateFilter(e.target.value)}
               className="pl-10 pr-4 py-2 w-full md:w-48 border rounded-lg appearance-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="">All Time</option>
-              <option value="last7days">Last 7 days</option>
-              <option value="last30days">Last 30 days</option>
-              <option value="last3months">Last 3 months</option>
-              <option value="lastyear">Last 1 year</option>
+              <option value="">{t('payment.allTime')}</option>
+              <option value="last7days">{t('payment.last7days')}</option>
+              <option value="last30days">{t('payment.last30days')}</option>
+              <option value="last3months">{t('payment.last3months')}</option>
+              <option value="lastyear">{t('payment.lastYear')}</option>
             </select>
           </div>
         </div>
@@ -269,22 +269,22 @@ const PaymentHistory: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payment
+                  {t('payment.payment')}
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
+                  {t('payment.amount')}
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t('payment.status')}
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
+                  {t('payment.date')}
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Plan
+                  {t('payment.plan')}
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t('payment.actions')}
                 </th>
               </tr>
             </thead>
@@ -309,7 +309,7 @@ const PaymentHistory: React.FC = () => {
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.status)}`}>
                       <div className="flex items-center gap-1">
                         {getStatusIcon(payment.status)}
-                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                        {t(`payment.${payment.status}`)}
                       </div>
                     </span>
                   </td>
@@ -325,10 +325,10 @@ const PaymentHistory: React.FC = () => {
                       onClick={() => downloadInvoice(payment)}
                       className="text-indigo-600 hover:text-indigo-900 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1"
                       disabled={!payment.invoice_url}
-                      title={payment.invoice_url ? "Download Invoice" : "Invoice not available"}
+                      title={payment.invoice_url ? t('payment.download') : t('payment.invoiceNotAvailable')}
                     >
                       <Download className="w-4 h-4" />
-                      Invoice
+                      {t('payment.invoice')}
                     </button>
                   </td>
                 </tr>
@@ -338,7 +338,7 @@ const PaymentHistory: React.FC = () => {
         </div>
         {filteredPayments.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">No payment history found.</p>
+            <p className="text-gray-500">{payments.length === 0 ? t('payment.noPayments') : t('payment.noMatch')}</p>
           </div>
         )}
       </div>
@@ -399,14 +399,14 @@ const PaymentHistory: React.FC = () => {
             className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
           >
             <ChevronLeft className="w-4 h-4" />
-            Previous
+            {t('payment.previous')}
           </button>
           <button
             onClick={handleNextPage}
             disabled={!hasMore}
             className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
           >
-            Next
+            {t('payment.next')}
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>

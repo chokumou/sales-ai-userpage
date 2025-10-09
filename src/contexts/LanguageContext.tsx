@@ -1557,6 +1557,24 @@ const translations: Translations = {
     ko: '총 지출액',
     zh: '总支出'
   },
+  'payment.totalPayments': {
+    en: 'Total Payments',
+    ja: '総支払回数',
+    es: 'Total de Pagos',
+    fr: 'Total des Paiements',
+    de: 'Gesamtzahlungen',
+    ko: '총 결제 횟수',
+    zh: '总支付次数'
+  },
+  'payment.currentPlan': {
+    en: 'Current Plan',
+    ja: '現在のプラン',
+    es: 'Plan Actual',
+    fr: 'Plan Actuel',
+    de: 'Aktueller Plan',
+    ko: '현재 플랜',
+    zh: '当前计划'
+  },
   'payment.search': {
     en: 'Search transactions...',
     ja: '取引を検索...',
@@ -1799,6 +1817,33 @@ const translations: Translations = {
     de: 'Weiter',
     ko: '다음',
     zh: '下一页'
+  },
+  'payment.payment': {
+    en: 'Payment',
+    ja: '支払い',
+    es: 'Pago',
+    fr: 'Paiement',
+    de: 'Zahlung',
+    ko: '결제',
+    zh: '支付'
+  },
+  'payment.plan': {
+    en: 'Plan',
+    ja: 'プラン',
+    es: 'Plan',
+    fr: 'Plan',
+    de: 'Plan',
+    ko: '플랜',
+    zh: '计划'
+  },
+  'payment.actions': {
+    en: 'Actions',
+    ja: '操作',
+    es: 'Acciones',
+    fr: 'Actions',
+    de: 'Aktionen',
+    ko: '작업',
+    zh: '操作'
   }
 };
 
