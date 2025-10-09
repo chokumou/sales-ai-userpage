@@ -814,6 +814,286 @@ const translations: Translations = {
     de: 'Freundschaftsanfrage konnte nicht akzeptiert werden. Bitte versuchen Sie es erneut.',
     ko: '친구 요청 수락에 실패했습니다. 다시 시도하세요.',
     zh: '接受好友请求失败。请重试。'
+  },
+  // Memory
+  'memory.title': {
+    en: 'Memory',
+    ja: 'メモリ',
+    es: 'Memoria',
+    fr: 'Mémoire',
+    de: 'Gedächtnis',
+    ko: '메모리',
+    zh: '记忆'
+  },
+  'memory.description': {
+    en: 'Manage AI memories and important information',
+    ja: 'AIメモリと重要な情報を管理します',
+    es: 'Gestiona memorias de IA e información importante',
+    fr: 'Gérer les mémoires IA et les informations importantes',
+    de: 'KI-Erinnerungen und wichtige Informationen verwalten',
+    ko: 'AI 메모리 및 중요한 정보 관리',
+    zh: '管理AI记忆和重要信息'
+  },
+  'memory.addMemory': {
+    en: 'Add Memory',
+    ja: 'メモリを追加',
+    es: 'Agregar Memoria',
+    fr: 'Ajouter une Mémoire',
+    de: 'Erinnerung Hinzufügen',
+    ko: '메모리 추가',
+    zh: '添加记忆'
+  },
+  'memory.search': {
+    en: 'Search memories...',
+    ja: 'メモリを検索...',
+    es: 'Buscar memorias...',
+    fr: 'Rechercher des mémoires...',
+    de: 'Erinnerungen suchen...',
+    ko: '메모리 검색...',
+    zh: '搜索记忆...'
+  },
+  'memory.filterCategory': {
+    en: 'Filter by category',
+    ja: 'カテゴリでフィルター',
+    es: 'Filtrar por categoría',
+    fr: 'Filtrer par catégorie',
+    de: 'Nach Kategorie filtern',
+    ko: '카테고리로 필터링',
+    zh: '按类别过滤'
+  },
+  'memory.allCategories': {
+    en: 'All Categories',
+    ja: '全てのカテゴリ',
+    es: 'Todas las Categorías',
+    fr: 'Toutes les Catégories',
+    de: 'Alle Kategorien',
+    ko: '모든 카테고리',
+    zh: '所有类别'
+  },
+  'memory.noMemories': {
+    en: 'No memories yet',
+    ja: 'まだメモリがありません',
+    es: 'Aún no hay memorias',
+    fr: 'Pas encore de mémoires',
+    de: 'Noch keine Erinnerungen',
+    ko: '아직 메모리가 없습니다',
+    zh: '还没有记忆'
+  },
+  'memory.noMatch': {
+    en: 'No memories match your search',
+    ja: '検索結果が見つかりません',
+    es: 'No hay memorias que coincidan',
+    fr: 'Aucune mémoire ne correspond',
+    de: 'Keine passenden Erinnerungen',
+    ko: '검색 결과가 없습니다',
+    zh: '没有匹配的记忆'
+  },
+  'memory.createFirst': {
+    en: 'Create your first memory to help AI remember important information.',
+    ja: 'AIに重要な情報を覚えてもらうために最初のメモリを作成しましょう。',
+    es: 'Crea tu primera memoria para ayudar a la IA a recordar información importante.',
+    fr: 'Créez votre première mémoire pour aider l\'IA à se souvenir d\'informations importantes.',
+    de: 'Erstellen Sie Ihre erste Erinnerung, um der KI zu helfen, wichtige Informationen zu merken.',
+    ko: 'AI가 중요한 정보를 기억하도록 첫 번째 메모리를 만드세요.',
+    zh: '创建您的第一个记忆以帮助AI记住重要信息。'
+  },
+  'memory.adjustSearch': {
+    en: 'Try adjusting your search or filter criteria.',
+    ja: '検索条件やフィルターを変更してみてください。',
+    es: 'Intenta ajustar tus criterios de búsqueda o filtro.',
+    fr: 'Essayez d\'ajuster vos critères de recherche ou de filtre.',
+    de: 'Versuchen Sie, Ihre Such- oder Filterkriterien anzupassen.',
+    ko: '검색 또는 필터 조건을 조정해 보세요.',
+    zh: '尝试调整您的搜索或过滤条件。'
+  },
+  'memory.createFirstButton': {
+    en: 'Create First Memory',
+    ja: '最初のメモリを作成',
+    es: 'Crear Primera Memoria',
+    fr: 'Créer la Première Mémoire',
+    de: 'Erste Erinnerung Erstellen',
+    ko: '첫 번째 메모리 만들기',
+    zh: '创建第一个记忆'
+  },
+  'memory.edit': {
+    en: 'Edit',
+    ja: '編集',
+    es: 'Editar',
+    fr: 'Modifier',
+    de: 'Bearbeiten',
+    ko: '편집',
+    zh: '编辑'
+  },
+  'memory.delete': {
+    en: 'Delete',
+    ja: '削除',
+    es: 'Eliminar',
+    fr: 'Supprimer',
+    de: 'Löschen',
+    ko: '삭제',
+    zh: '删除'
+  },
+  'memory.confirmDelete': {
+    en: 'Are you sure you want to delete this memory?',
+    ja: 'このメモリを削除してもよろしいですか？',
+    es: '¿Estás seguro de que quieres eliminar esta memoria?',
+    fr: 'Êtes-vous sûr de vouloir supprimer cette mémoire?',
+    de: 'Sind Sie sicher, dass Sie diese Erinnerung löschen möchten?',
+    ko: '이 메모리를 삭제하시겠습니까?',
+    zh: '您确定要删除这个记忆吗？'
+  },
+  'memory.addNew': {
+    en: 'Add New Memory',
+    ja: '新しいメモリを追加',
+    es: 'Agregar Nueva Memoria',
+    fr: 'Ajouter une Nouvelle Mémoire',
+    de: 'Neue Erinnerung Hinzufügen',
+    ko: '새 메모리 추가',
+    zh: '添加新记忆'
+  },
+  'memory.memoryText': {
+    en: 'Memory Text',
+    ja: 'メモリの内容',
+    es: 'Texto de Memoria',
+    fr: 'Texte de Mémoire',
+    de: 'Erinnerungstext',
+    ko: '메모리 텍스트',
+    zh: '记忆文本'
+  },
+  'memory.enterText': {
+    en: 'Enter information you want AI to remember...',
+    ja: 'AIに覚えてもらいたい情報を入力してください...',
+    es: 'Ingrese información que desea que la IA recuerde...',
+    fr: 'Entrez les informations que vous voulez que l\'IA se souvienne...',
+    de: 'Geben Sie Informationen ein, die sich die KI merken soll...',
+    ko: 'AI가 기억하기를 원하는 정보를 입력하세요...',
+    zh: '输入您希望AI记住的信息...'
+  },
+  'memory.category': {
+    en: 'Category',
+    ja: 'カテゴリ',
+    es: 'Categoría',
+    fr: 'Catégorie',
+    de: 'Kategorie',
+    ko: '카테고리',
+    zh: '类别'
+  },
+  'memory.selectCategory': {
+    en: 'Select category (optional)',
+    ja: 'カテゴリを選択（任意）',
+    es: 'Seleccionar categoría (opcional)',
+    fr: 'Sélectionner une catégorie (facultatif)',
+    de: 'Kategorie auswählen (optional)',
+    ko: '카테고리 선택 (선택사항)',
+    zh: '选择类别（可选）'
+  },
+  'memory.personal': {
+    en: 'Personal',
+    ja: '個人',
+    es: 'Personal',
+    fr: 'Personnel',
+    de: 'Persönlich',
+    ko: '개인',
+    zh: '个人'
+  },
+  'memory.work': {
+    en: 'Work',
+    ja: '仕事',
+    es: 'Trabajo',
+    fr: 'Travail',
+    de: 'Arbeit',
+    ko: '업무',
+    zh: '工作'
+  },
+  'memory.ideas': {
+    en: 'Ideas',
+    ja: 'アイデア',
+    es: 'Ideas',
+    fr: 'Idées',
+    de: 'Ideen',
+    ko: '아이디어',
+    zh: '想法'
+  },
+  'memory.important': {
+    en: 'Important',
+    ja: '重要',
+    es: 'Importante',
+    fr: 'Important',
+    de: 'Wichtig',
+    ko: '중요',
+    zh: '重要'
+  },
+  'memory.other': {
+    en: 'Other',
+    ja: 'その他',
+    es: 'Otro',
+    fr: 'Autre',
+    de: 'Andere',
+    ko: '기타',
+    zh: '其他'
+  },
+  'memory.characterCount': {
+    en: 'characters',
+    ja: '文字',
+    es: 'caracteres',
+    fr: 'caractères',
+    de: 'Zeichen',
+    ko: '글자',
+    zh: '字符'
+  },
+  'memory.save': {
+    en: 'Save Memory',
+    ja: 'メモリを保存',
+    es: 'Guardar Memoria',
+    fr: 'Enregistrer la Mémoire',
+    de: 'Erinnerung Speichern',
+    ko: '메모리 저장',
+    zh: '保存记忆'
+  },
+  'memory.saving': {
+    en: 'Saving...',
+    ja: '保存中...',
+    es: 'Guardando...',
+    fr: 'Enregistrement...',
+    de: 'Speichern...',
+    ko: '저장 중...',
+    zh: '保存中...'
+  },
+  'memory.errorRequired': {
+    en: 'Please enter memory content.',
+    ja: 'メモリの内容を入力してください。',
+    es: 'Por favor ingrese el contenido de la memoria.',
+    fr: 'Veuillez entrer le contenu de la mémoire.',
+    de: 'Bitte geben Sie den Erinnerungsinhalt ein.',
+    ko: '메모리 내용을 입력하세요.',
+    zh: '请输入记忆内容。'
+  },
+  'memory.errorTooLong': {
+    en: 'Memory content must be 1000 characters or less.',
+    ja: 'メモリの内容は1000文字以内で入力してください。',
+    es: 'El contenido de la memoria debe tener 1000 caracteres o menos.',
+    fr: 'Le contenu de la mémoire doit contenir 1000 caractères ou moins.',
+    de: 'Der Erinnerungsinhalt muss 1000 Zeichen oder weniger enthalten.',
+    ko: '메모리 내용은 1000자 이하여야 합니다.',
+    zh: '记忆内容必须是1000个字符或更少。'
+  },
+  'memory.successCreated': {
+    en: 'Memory created successfully!',
+    ja: 'メモリを作成しました！',
+    es: '¡Memoria creada con éxito!',
+    fr: 'Mémoire créée avec succès!',
+    de: 'Erinnerung erfolgreich erstellt!',
+    ko: '메모리가 성공적으로 생성되었습니다!',
+    zh: '记忆创建成功！'
+  },
+  'memory.errorCreating': {
+    en: 'Failed to create memory. Please try again.',
+    ja: 'メモリの作成に失敗しました。もう一度お試しください。',
+    es: 'No se pudo crear la memoria. Inténtalo de nuevo.',
+    fr: 'Échec de la création de la mémoire. Veuillez réessayer.',
+    de: 'Erinnerung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.',
+    ko: '메모리 생성에 실패했습니다. 다시 시도하세요.',
+    zh: '创建记忆失败。请重试。'
   }
 };
 
