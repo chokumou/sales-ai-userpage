@@ -56,33 +56,33 @@ const Upgrade: React.FC = () => {
   const plans: PricingPlan[] = [
     {
       id: 'free',
-      name: 'Free',
+      name: t('upgrade.planFree'),
       price: 0,
-      period: 'forever',
-      description: 'Perfect for getting started',
+      period: t('upgrade.forever'),
+      description: t('upgrade.freeDesc'),
       features: [
-        'DeepSeek AI model',
-        '10 memories',
-        '5 friend connections',
-        'Basic voice features',
-        'Community support'
+        t('upgrade.feature.deepseekModel'),
+        t('upgrade.feature.memories10'),
+        t('upgrade.feature.friends5'),
+        t('upgrade.feature.basicVoice'),
+        t('upgrade.feature.communitySupport')
       ],
       icon: Zap,
       color: 'gray'
     },
     {
       id: 'premium',
-      name: 'Premium',
+      name: t('upgrade.planPremium'),
       price: billingPeriod === 'monthly' ? 9.99 : 99.99,
-      period: billingPeriod === 'monthly' ? '/month' : '/year',
-      description: 'Most popular choice for power users',
+      period: billingPeriod === 'monthly' ? t('upgrade.perMonth') : t('upgrade.perYear'),
+      description: t('upgrade.premiumDesc'),
       features: [
-        'DeepSeek + ChatGPT models',
-        'Unlimited memories',
-        'Unlimited friends',
-        'Advanced voice features',
-        'Priority support',
-        'Custom AI personalities'
+        t('upgrade.feature.deepseekChatgpt'),
+        t('upgrade.feature.unlimitedMemories'),
+        t('upgrade.feature.unlimitedFriends'),
+        t('upgrade.feature.advancedVoice'),
+        t('upgrade.feature.prioritySupport'),
+        t('upgrade.feature.customAI')
       ],
       icon: Star,
       color: 'blue',
@@ -91,17 +91,17 @@ const Upgrade: React.FC = () => {
     },
     {
       id: 'enterprise',
-      name: 'Enterprise',
+      name: t('upgrade.planEnterprise'),
       price: billingPeriod === 'monthly' ? 29.99 : 299.99,
-      period: billingPeriod === 'monthly' ? '/month' : '/year',
-      description: 'For teams and organizations',
+      period: billingPeriod === 'monthly' ? t('upgrade.perMonth') : t('upgrade.perYear'),
+      description: t('upgrade.enterpriseDesc'),
       features: [
-        'All AI models (DeepSeek, ChatGPT, Claude)',
-        'Unlimited everything',
-        'Team management',
-        'Advanced security features',
-        'Multi-language support',
-        'API access'
+        t('upgrade.feature.allModels'),
+        t('upgrade.feature.unlimitedEverything'),
+        t('upgrade.feature.teamManagement'),
+        t('upgrade.feature.advancedSecurity'),
+        t('upgrade.feature.multiLanguage'),
+        t('upgrade.feature.apiAccess')
       ],
       icon: Crown,
       color: 'purple',
@@ -162,10 +162,10 @@ const Upgrade: React.FC = () => {
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Upgrade Your AI Experience
+          {t('upgrade.title')}
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Unlock advanced AI models, unlimited features, and premium support to enhance your voice conversations.
+          {t('upgrade.subtitle')}
         </p>
       </div>
 
@@ -178,26 +178,26 @@ const Upgrade: React.FC = () => {
             </div>
             <div>
               <h3 className="font-semibold text-blue-900">
-                Current Plan: {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
+                {t('upgrade.currentPlan')}: {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
               </h3>
               <p className="text-blue-700 text-sm">
                 {currentPlan === 'free' 
-                  ? 'Upgrade to unlock premium features' 
+                  ? t('upgrade.unlockPremium')
                   : currentPlan === 'premium' || currentPlan === 'enterprise'
-                  ? 'You already have premium access!'
-                  : 'Thank you for being a premium subscriber!'
+                  ? t('upgrade.alreadyPremium')
+                  : t('upgrade.thankYou')
                 }
               </p>
             </div>
           </div>
           {(currentPlan === 'premium' || currentPlan === 'enterprise') && (
             <span className="bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium">
-              Active
+              {t('upgrade.active')}
             </span>
           )}
           {currentPlan === 'free' && (
             <span className="bg-gray-600 text-white px-4 py-2 rounded-full text-sm font-medium">
-              Free
+              {t('upgrade.free')}
             </span>
           )}
         </div>
@@ -212,10 +212,10 @@ const Upgrade: React.FC = () => {
             </div>
             <div>
               <h3 className="font-semibold text-green-900">
-                Premium Access Active
+                {t('upgrade.premiumAccessActive')}
               </h3>
               <p className="text-green-700 text-sm mt-1">
-                You already have access to all premium features. Enjoy your enhanced AI experience!
+                {t('upgrade.enjoyFeatures')}
               </p>
             </div>
           </div>
@@ -224,13 +224,13 @@ const Upgrade: React.FC = () => {
               onClick={() => window.location.href = '/dashboard'}
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
             >
-              Go to Dashboard
+              {t('upgrade.goToDashboard')}
             </button>
             <button
               onClick={() => window.location.href = '/memory'}
               className="bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
             >
-              Try Premium Features
+              {t('upgrade.tryPremiumFeatures')}
             </button>
           </div>
         </div>
@@ -244,7 +244,7 @@ const Upgrade: React.FC = () => {
               <Users className="w-5 h-5 text-gray-500" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700">Logged in as</p>
+              <p className="text-sm font-medium text-gray-700">{t('upgrade.loggedInAs')}</p>
               <p className="text-sm text-gray-500">{user.id || 'Unknown'}</p>
             </div>
           </div>
@@ -254,9 +254,9 @@ const Upgrade: React.FC = () => {
             <div className="flex items-center space-x-3">
               <CreditCard className="w-5 h-5 text-gray-500" />
               <div>
-                <p className="text-sm font-medium text-gray-700">Payment Information</p>
+                <p className="text-sm font-medium text-gray-700">{t('upgrade.paymentInfo')}</p>
                 <p className="text-xs text-gray-500">
-                  Your email address will be collected securely during the payment process with Stripe.
+                  {t('upgrade.stripeSecure')}
                 </p>
               </div>
             </div>
@@ -275,7 +275,7 @@ const Upgrade: React.FC = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Monthly
+            {t('upgrade.monthly')}
           </button>
           <button
             onClick={() => setBillingPeriod('yearly')}
@@ -285,9 +285,9 @@ const Upgrade: React.FC = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Yearly
+            {t('upgrade.yearly')}
             <span className="ml-2 bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">
-              Save 17%
+              {t('upgrade.savePercent')}
             </span>
           </button>
         </div>
@@ -308,7 +308,7 @@ const Upgrade: React.FC = () => {
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-1">
                   <Sparkles className="w-4 h-4" />
-                  <span>Most Popular</span>
+                  <span>{t('upgrade.mostPopular')}</span>
                 </span>
               </div>
             )}
@@ -362,18 +362,18 @@ const Upgrade: React.FC = () => {
               {isLoading === plan.id ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Processing...</span>
+                  <span>{t('upgrade.upgrading')}</span>
                 </>
               ) : currentPlan === plan.id ? (
-                <span>Current Plan</span>
+                <span>{t('upgrade.currentPlanBadge')}</span>
               ) : plan.id === 'free' ? (
-                <span>Current Plan</span>
+                <span>{t('upgrade.currentPlanBadge')}</span>
               ) : currentPlan === 'premium' || currentPlan === 'enterprise' ? (
-                <span>Already Premium</span>
+                <span>{t('upgrade.alreadyPremium')}</span>
               ) : (
                 <>
                   <CreditCard className="w-5 h-5" />
-                  <span>Upgrade to {plan.name}</span>
+                  <span>{t('upgrade.choosePlan')}</span>
                 </>
               )}
             </button>
