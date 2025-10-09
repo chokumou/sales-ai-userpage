@@ -1094,6 +1094,440 @@ const translations: Translations = {
     de: 'Erinnerung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.',
     ko: '메모리 생성에 실패했습니다. 다시 시도하세요.',
     zh: '创建记忆失败。请重试。'
+  },
+  // Upgrade
+  'upgrade.title': {
+    en: 'Upgrade Your AI Experience',
+    ja: 'AIエクスペリエンスをアップグレード',
+    es: 'Mejora Tu Experiencia de IA',
+    fr: 'Améliorez Votre Expérience IA',
+    de: 'Verbessern Sie Ihre KI-Erfahrung',
+    ko: 'AI 경험 업그레이드',
+    zh: '升级您的AI体验'
+  },
+  'upgrade.subtitle': {
+    en: 'Unlock advanced AI models, unlimited features, and premium support to enhance your voice conversations.',
+    ja: '高度なAIモデル、無制限機能、プレミアムサポートでボイス会話を強化しましょう。',
+    es: 'Desbloquea modelos de IA avanzados, funciones ilimitadas y soporte premium para mejorar tus conversaciones de voz.',
+    fr: 'Débloquez des modèles IA avancés, des fonctionnalités illimitées et un support premium pour améliorer vos conversations vocales.',
+    de: 'Schalten Sie erweiterte KI-Modelle, unbegrenzte Funktionen und Premium-Support frei, um Ihre Sprachgespräche zu verbessern.',
+    ko: '음성 대화를 향상시키기 위해 고급 AI 모델, 무제한 기능 및 프리미엄 지원을 잠금 해제하세요.',
+    zh: '解锁高级AI模型、无限功能和高级支持，增强您的语音对话。'
+  },
+  'upgrade.currentPlan': {
+    en: 'Current Plan',
+    ja: '現在のプラン',
+    es: 'Plan Actual',
+    fr: 'Plan Actuel',
+    de: 'Aktueller Plan',
+    ko: '현재 플랜',
+    zh: '当前计划'
+  },
+  'upgrade.unlockPremium': {
+    en: 'Upgrade to unlock premium features',
+    ja: 'プレミアム機能を利用するにはアップグレードしてください',
+    es: 'Actualiza para desbloquear funciones premium',
+    fr: 'Passez à la version supérieure pour débloquer les fonctionnalités premium',
+    de: 'Upgraden Sie, um Premium-Funktionen freizuschalten',
+    ko: '프리미엄 기능을 잠금 해제하려면 업그레이드하세요',
+    zh: '升级以解锁高级功能'
+  },
+  'upgrade.alreadyPremium': {
+    en: 'You already have premium access!',
+    ja: '既にプレミアムアクセスをお持ちです！',
+    es: '¡Ya tienes acceso premium!',
+    fr: 'Vous avez déjà un accès premium!',
+    de: 'Sie haben bereits Premium-Zugang!',
+    ko: '이미 프리미엄 액세스 권한이 있습니다!',
+    zh: '您已经拥有高级访问权限！'
+  },
+  'upgrade.thankYou': {
+    en: 'Thank you for being a premium subscriber!',
+    ja: 'プレミアム会員になっていただきありがとうございます！',
+    es: '¡Gracias por ser un suscriptor premium!',
+    fr: 'Merci d\'être un abonné premium!',
+    de: 'Vielen Dank, dass Sie Premium-Abonnent sind!',
+    ko: '프리미엄 구독자가 되어 주셔서 감사합니다!',
+    zh: '感谢您成为高级订阅者！'
+  },
+  'upgrade.active': {
+    en: 'Active',
+    ja: '有効',
+    es: 'Activo',
+    fr: 'Actif',
+    de: 'Aktiv',
+    ko: '활성',
+    zh: '激活'
+  },
+  'upgrade.free': {
+    en: 'Free',
+    ja: '無料',
+    es: 'Gratis',
+    fr: 'Gratuit',
+    de: 'Kostenlos',
+    ko: '무료',
+    zh: '免费'
+  },
+  'upgrade.premiumAccessActive': {
+    en: 'Premium Access Active',
+    ja: 'プレミアムアクセス有効',
+    es: 'Acceso Premium Activo',
+    fr: 'Accès Premium Actif',
+    de: 'Premium-Zugang Aktiv',
+    ko: '프리미엄 액세스 활성',
+    zh: '高级访问激活'
+  },
+  'upgrade.enjoyFeatures': {
+    en: 'You already have access to all premium features. Enjoy your enhanced AI experience!',
+    ja: '全てのプレミアム機能にアクセスできます。強化されたAI体験をお楽しみください！',
+    es: 'Ya tienes acceso a todas las funciones premium. ¡Disfruta de tu experiencia de IA mejorada!',
+    fr: 'Vous avez déjà accès à toutes les fonctionnalités premium. Profitez de votre expérience IA améliorée!',
+    de: 'Sie haben bereits Zugriff auf alle Premium-Funktionen. Genießen Sie Ihre verbesserte KI-Erfahrung!',
+    ko: '이미 모든 프리미엄 기능에 액세스할 수 있습니다. 향상된 AI 경험을 즐기세요!',
+    zh: '您已经可以访问所有高级功能。享受您增强的AI体验！'
+  },
+  'upgrade.goToDashboard': {
+    en: 'Go to Dashboard',
+    ja: 'ダッシュボードへ',
+    es: 'Ir al Panel',
+    fr: 'Aller au Tableau de bord',
+    de: 'Zum Dashboard',
+    ko: '대시보드로 이동',
+    zh: '前往仪表板'
+  },
+  'upgrade.tryPremiumFeatures': {
+    en: 'Try Premium Features',
+    ja: 'プレミアム機能を試す',
+    es: 'Probar Funciones Premium',
+    fr: 'Essayer les Fonctionnalités Premium',
+    de: 'Premium-Funktionen Ausprobieren',
+    ko: '프리미엄 기능 사용해보기',
+    zh: '尝试高级功能'
+  },
+  'upgrade.loggedInAs': {
+    en: 'Logged in as',
+    ja: 'ログイン中',
+    es: 'Conectado como',
+    fr: 'Connecté en tant que',
+    de: 'Angemeldet als',
+    ko: '로그인 중',
+    zh: '登录为'
+  },
+  'upgrade.paymentInfo': {
+    en: 'Payment Information',
+    ja: '支払い情報',
+    es: 'Información de Pago',
+    fr: 'Informations de Paiement',
+    de: 'Zahlungsinformationen',
+    ko: '결제 정보',
+    zh: '支付信息'
+  },
+  'upgrade.stripeSecure': {
+    en: 'Your email address will be collected securely during the payment process with Stripe.',
+    ja: 'お客様のメールアドレスはStripeの支払いプロセス中に安全に収集されます。',
+    es: 'Su dirección de correo electrónico se recopilará de forma segura durante el proceso de pago con Stripe.',
+    fr: 'Votre adresse e-mail sera collectée en toute sécurité pendant le processus de paiement avec Stripe.',
+    de: 'Ihre E-Mail-Adresse wird während des Zahlungsvorgangs mit Stripe sicher erfasst.',
+    ko: '결제 과정에서 Stripe를 통해 이메일 주소가 안전하게 수집됩니다.',
+    zh: '您的电子邮件地址将在Stripe支付过程中安全收集。'
+  },
+  'upgrade.monthly': {
+    en: 'Monthly',
+    ja: '月額',
+    es: 'Mensual',
+    fr: 'Mensuel',
+    de: 'Monatlich',
+    ko: '월간',
+    zh: '每月'
+  },
+  'upgrade.yearly': {
+    en: 'Yearly',
+    ja: '年額',
+    es: 'Anual',
+    fr: 'Annuel',
+    de: 'Jährlich',
+    ko: '연간',
+    zh: '每年'
+  },
+  'upgrade.savePercent': {
+    en: 'Save 17%',
+    ja: '17%お得',
+    es: 'Ahorra 17%',
+    fr: 'Économisez 17%',
+    de: 'Sparen Sie 17%',
+    ko: '17% 절약',
+    zh: '节省17%'
+  },
+  'upgrade.planFree': {
+    en: 'Free',
+    ja: '無料',
+    es: 'Gratis',
+    fr: 'Gratuit',
+    de: 'Kostenlos',
+    ko: '무료',
+    zh: '免费'
+  },
+  'upgrade.planPremium': {
+    en: 'Premium',
+    ja: 'プレミアム',
+    es: 'Premium',
+    fr: 'Premium',
+    de: 'Premium',
+    ko: '프리미엄',
+    zh: '高级会员'
+  },
+  'upgrade.planEnterprise': {
+    en: 'Enterprise',
+    ja: 'エンタープライズ',
+    es: 'Empresarial',
+    fr: 'Entreprise',
+    de: 'Unternehmen',
+    ko: '기업',
+    zh: '企业版'
+  },
+  'upgrade.freeDesc': {
+    en: 'Perfect for getting started',
+    ja: '始めるのに最適',
+    es: 'Perfecto para empezar',
+    fr: 'Parfait pour commencer',
+    de: 'Perfekt für den Einstieg',
+    ko: '시작하기에 완벽',
+    zh: '非常适合入门'
+  },
+  'upgrade.premiumDesc': {
+    en: 'Most popular choice for power users',
+    ja: 'パワーユーザーに最も人気',
+    es: 'La opción más popular para usuarios avanzados',
+    fr: 'Le choix le plus populaire pour les utilisateurs avancés',
+    de: 'Beliebteste Wahl für Power-User',
+    ko: '파워 유저에게 가장 인기 있는 선택',
+    zh: '高级用户的最受欢迎选择'
+  },
+  'upgrade.enterpriseDesc': {
+    en: 'For teams and organizations',
+    ja: 'チームと組織向け',
+    es: 'Para equipos y organizaciones',
+    fr: 'Pour les équipes et les organisations',
+    de: 'Für Teams und Organisationen',
+    ko: '팀 및 조직용',
+    zh: '适用于团队和组织'
+  },
+  'upgrade.forever': {
+    en: 'forever',
+    ja: '永久',
+    es: 'para siempre',
+    fr: 'pour toujours',
+    de: 'für immer',
+    ko: '영구',
+    zh: '永久'
+  },
+  'upgrade.perMonth': {
+    en: '/month',
+    ja: '/月',
+    es: '/mes',
+    fr: '/mois',
+    de: '/Monat',
+    ko: '/월',
+    zh: '/月'
+  },
+  'upgrade.perYear': {
+    en: '/year',
+    ja: '/年',
+    es: '/año',
+    fr: '/an',
+    de: '/Jahr',
+    ko: '/년',
+    zh: '/年'
+  },
+  'upgrade.mostPopular': {
+    en: 'Most Popular',
+    ja: '最も人気',
+    es: 'Más Popular',
+    fr: 'Le Plus Populaire',
+    de: 'Am Beliebtesten',
+    ko: '가장 인기 있음',
+    zh: '最受欢迎'
+  },
+  'upgrade.currentPlanBadge': {
+    en: 'Current Plan',
+    ja: '現在のプラン',
+    es: 'Plan Actual',
+    fr: 'Plan Actuel',
+    de: 'Aktueller Plan',
+    ko: '현재 플랜',
+    zh: '当前计划'
+  },
+  'upgrade.choosePlan': {
+    en: 'Choose Plan',
+    ja: 'プランを選択',
+    es: 'Elegir Plan',
+    fr: 'Choisir le Plan',
+    de: 'Plan Wählen',
+    ko: '플랜 선택',
+    zh: '选择计划'
+  },
+  'upgrade.upgrading': {
+    en: 'Upgrading...',
+    ja: 'アップグレード中...',
+    es: 'Actualizando...',
+    fr: 'Mise à niveau...',
+    de: 'Upgraden...',
+    ko: '업그레이드 중...',
+    zh: '升级中...'
+  },
+  // Plan Features
+  'upgrade.feature.deepseekModel': {
+    en: 'DeepSeek AI model',
+    ja: 'DeepSeek AIモデル',
+    es: 'Modelo DeepSeek IA',
+    fr: 'Modèle DeepSeek IA',
+    de: 'DeepSeek KI-Modell',
+    ko: 'DeepSeek AI 모델',
+    zh: 'DeepSeek AI模型'
+  },
+  'upgrade.feature.memories10': {
+    en: '10 memories',
+    ja: '10個のメモリ',
+    es: '10 memorias',
+    fr: '10 mémoires',
+    de: '10 Erinnerungen',
+    ko: '10개 메모리',
+    zh: '10个记忆'
+  },
+  'upgrade.feature.friends5': {
+    en: '5 friend connections',
+    ja: '5人のフレンド接続',
+    es: '5 conexiones de amigos',
+    fr: '5 connexions d\'amis',
+    de: '5 Freundschaftsverbindungen',
+    ko: '5명의 친구 연결',
+    zh: '5位朋友连接'
+  },
+  'upgrade.feature.basicVoice': {
+    en: 'Basic voice features',
+    ja: '基本音声機能',
+    es: 'Funciones de voz básicas',
+    fr: 'Fonctionnalités vocales de base',
+    de: 'Grundlegende Sprachfunktionen',
+    ko: '기본 음성 기능',
+    zh: '基本语音功能'
+  },
+  'upgrade.feature.communitySupport': {
+    en: 'Community support',
+    ja: 'コミュニティサポート',
+    es: 'Soporte comunitario',
+    fr: 'Support communautaire',
+    de: 'Community-Support',
+    ko: '커뮤니티 지원',
+    zh: '社区支持'
+  },
+  'upgrade.feature.deepseekChatgpt': {
+    en: 'DeepSeek + ChatGPT models',
+    ja: 'DeepSeek + ChatGPTモデル',
+    es: 'Modelos DeepSeek + ChatGPT',
+    fr: 'Modèles DeepSeek + ChatGPT',
+    de: 'DeepSeek + ChatGPT Modelle',
+    ko: 'DeepSeek + ChatGPT 모델',
+    zh: 'DeepSeek + ChatGPT模型'
+  },
+  'upgrade.feature.unlimitedMemories': {
+    en: 'Unlimited memories',
+    ja: '無制限のメモリ',
+    es: 'Memorias ilimitadas',
+    fr: 'Mémoires illimitées',
+    de: 'Unbegrenzte Erinnerungen',
+    ko: '무제한 메모리',
+    zh: '无限记忆'
+  },
+  'upgrade.feature.unlimitedFriends': {
+    en: 'Unlimited friends',
+    ja: '無制限のフレンド',
+    es: 'Amigos ilimitados',
+    fr: 'Amis illimités',
+    de: 'Unbegrenzte Freunde',
+    ko: '무제한 친구',
+    zh: '无限朋友'
+  },
+  'upgrade.feature.advancedVoice': {
+    en: 'Advanced voice features',
+    ja: '高度な音声機能',
+    es: 'Funciones de voz avanzadas',
+    fr: 'Fonctionnalités vocales avancées',
+    de: 'Erweiterte Sprachfunktionen',
+    ko: '고급 음성 기능',
+    zh: '高级语音功能'
+  },
+  'upgrade.feature.prioritySupport': {
+    en: 'Priority support',
+    ja: '優先サポート',
+    es: 'Soporte prioritario',
+    fr: 'Support prioritaire',
+    de: 'Prioritäts-Support',
+    ko: '우선 지원',
+    zh: '优先支持'
+  },
+  'upgrade.feature.customAI': {
+    en: 'Custom AI personalities',
+    ja: 'カスタムAIパーソナリティ',
+    es: 'Personalidades IA personalizadas',
+    fr: 'Personnalités IA personnalisées',
+    de: 'Benutzerdefinierte KI-Persönlichkeiten',
+    ko: '맞춤형 AI 성격',
+    zh: '自定义AI个性'
+  },
+  'upgrade.feature.allModels': {
+    en: 'All AI models (DeepSeek, ChatGPT, Claude)',
+    ja: '全AIモデル（DeepSeek、ChatGPT、Claude）',
+    es: 'Todos los modelos de IA (DeepSeek, ChatGPT, Claude)',
+    fr: 'Tous les modèles IA (DeepSeek, ChatGPT, Claude)',
+    de: 'Alle KI-Modelle (DeepSeek, ChatGPT, Claude)',
+    ko: '모든 AI 모델 (DeepSeek, ChatGPT, Claude)',
+    zh: '所有AI模型（DeepSeek、ChatGPT、Claude）'
+  },
+  'upgrade.feature.unlimitedEverything': {
+    en: 'Unlimited everything',
+    ja: '全て無制限',
+    es: 'Todo ilimitado',
+    fr: 'Tout illimité',
+    de: 'Alles unbegrenzt',
+    ko: '모든 것 무제한',
+    zh: '一切无限'
+  },
+  'upgrade.feature.teamManagement': {
+    en: 'Team management',
+    ja: 'チーム管理',
+    es: 'Gestión de equipos',
+    fr: 'Gestion d\'équipe',
+    de: 'Team-Management',
+    ko: '팀 관리',
+    zh: '团队管理'
+  },
+  'upgrade.feature.advancedSecurity': {
+    en: 'Advanced security features',
+    ja: '高度なセキュリティ機能',
+    es: 'Funciones de seguridad avanzadas',
+    fr: 'Fonctionnalités de sécurité avancées',
+    de: 'Erweiterte Sicherheitsfunktionen',
+    ko: '고급 보안 기능',
+    zh: '高级安全功能'
+  },
+  'upgrade.feature.multiLanguage': {
+    en: 'Multi-language support',
+    ja: '多言語サポート',
+    es: 'Soporte multiidioma',
+    fr: 'Support multilingue',
+    de: 'Mehrsprachiger Support',
+    ko: '다국어 지원',
+    zh: '多语言支持'
+  },
+  'upgrade.feature.apiAccess': {
+    en: 'API access',
+    ja: 'APIアクセス',
+    es: 'Acceso a API',
+    fr: 'Accès API',
+    de: 'API-Zugriff',
+    ko: 'API 액세스',
+    zh: 'API访问'
   }
 };
 
