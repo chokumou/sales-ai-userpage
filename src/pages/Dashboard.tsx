@@ -158,22 +158,22 @@ const Dashboard: React.FC = () => {
   const modelOptions = [
     {
       id: 'deepseek',
-      name: 'DeepSeek',
-      description: 'Fast and efficient AI model',
+      name: t('dashboard.modelDeepseek'),
+      description: t('dashboard.modelDeepseekDesc'),
       isPremium: false,
       color: 'blue'
     },
     {
       id: 'chatgpt',
-      name: 'ChatGPT',
-      description: 'Advanced conversational AI',
+      name: t('dashboard.modelChatgpt'),
+      description: t('dashboard.modelChatgptDesc'),
       isPremium: true,
       color: 'green'
     },
     {
       id: 'claude',
-      name: 'Claude',
-      description: 'Sophisticated reasoning AI',
+      name: t('dashboard.modelClaude'),
+      description: t('dashboard.modelClaudeDesc'),
       isPremium: true,
       color: 'purple'
     }
@@ -181,25 +181,25 @@ const Dashboard: React.FC = () => {
 
   const statCards = [
     {
-      title: 'Total Messages',
+      title: t('dashboard.totalMessages'),
       value: stats.totalMessages.toLocaleString(),
       icon: MessageCircle,
       color: 'blue'
     },
     {
-      title: 'Friends Connected',
+      title: t('dashboard.friendsConnected'),
       value: stats.totalFriends.toLocaleString(),
       icon: Users,
       color: 'green'
     },
     {
-      title: 'AI Memories',
+      title: t('dashboard.aiMemories'),
       value: stats.totalMemories.toLocaleString(),
       icon: Brain,
       color: 'purple'
     },
     {
-      title: 'Current Plan',
+      title: t('dashboard.currentPlan'),
       value: stats.subscriptionPlan.charAt(0).toUpperCase() + stats.subscriptionPlan.slice(1),
       icon: Star,
       color: 'orange'
@@ -273,16 +273,16 @@ const Dashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {user?.name || user?.introduction || user?.id || 'User'}!
+            {t('dashboard.welcome')}, {user?.name || user?.introduction || user?.id || 'User'}!
           </h1>
           <p className="text-gray-600 mt-1">
-            Here's what's happening with your AI conversations today.
+            {t('dashboard.subtitle')}
           </p>
         </div>
         <div className="mt-4 sm:mt-0">
           <div className="flex items-center space-x-2 text-sm text-gray-500">
             <Clock className="w-4 h-4" />
-            <span>Last updated: {new Date().toLocaleTimeString()}</span>
+            <span>{t('dashboard.lastUpdated')}: {new Date().toLocaleTimeString()}</span>
           </div>
         </div>
       </div>
@@ -316,8 +316,8 @@ const Dashboard: React.FC = () => {
       <div className="bg-white rounded-xl border border-gray-200 p-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">AI Model Selection</h2>
-            <p className="text-gray-600 mt-1">Choose your preferred AI model for conversations</p>
+            <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.aiModelSelection')}</h2>
+            <p className="text-gray-600 mt-1">{t('dashboard.aiModelDescription')}</p>
           </div>
           <Settings className="w-6 h-6 text-gray-400" />
         </div>
@@ -336,7 +336,7 @@ const Dashboard: React.FC = () => {
               {model.isPremium && stats.subscriptionPlan === 'free' && (
                 <div className="absolute -top-2 -right-2">
                   <div className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                    Premium
+                    {t('dashboard.premium')}
                   </div>
                 </div>
               )}
@@ -353,7 +353,7 @@ const Dashboard: React.FC = () => {
               {model.isPremium && stats.subscriptionPlan === 'free' && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <p className="text-xs text-orange-600 font-medium">
-                    Upgrade to Premium to unlock this model
+                    {t('dashboard.upgradeToPremium')}
                   </p>
                 </div>
               )}
