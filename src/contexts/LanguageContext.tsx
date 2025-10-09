@@ -514,8 +514,306 @@ const translations: Translations = {
     es: 'Todos los mensajes mostrados',
     fr: 'Tous les messages affichés',
     de: 'Alle Nachrichten angezeigt',
-    ko: '모든 메시지 표시됨',
+    ko: '모든 메시지 표示됨',
     zh: '已显示所有消息'
+  },
+  // Friends
+  'friends.title': {
+    en: 'Friends',
+    ja: 'フレンド',
+    es: 'Amigos',
+    fr: 'Amis',
+    de: 'Freunde',
+    ko: '친구',
+    zh: '朋友'
+  },
+  'friends.description': {
+    en: 'Connect with others and share AI-powered voice conversations.',
+    ja: '友達とつながって、AI音声会話を共有しましょう。',
+    es: 'Conéctate con otros y comparte conversaciones de voz con IA.',
+    fr: 'Connectez-vous avec d\'autres et partagez des conversations vocales IA.',
+    de: 'Verbinden Sie sich mit anderen und teilen Sie KI-gestützte Sprachgespräche.',
+    ko: '다른 사람들과 연결하고 AI 음성 대화를 공유하세요.',
+    zh: '与他人连接并分享AI语音对话。'
+  },
+  'friends.count': {
+    en: 'friends',
+    ja: '人のフレンド',
+    es: 'amigos',
+    fr: 'amis',
+    de: 'Freunde',
+    ko: '명의 친구',
+    zh: '位朋友'
+  },
+  'friends.addFriend': {
+    en: 'Add Friend',
+    ja: 'フレンド追加',
+    es: 'Agregar Amigo',
+    fr: 'Ajouter un Ami',
+    de: 'Freund hinzufügen',
+    ko: '친구 추가',
+    zh: '添加朋友'
+  },
+  'friends.requests': {
+    en: 'Friend Requests',
+    ja: 'フレンド申請',
+    es: 'Solicitudes de Amistad',
+    fr: 'Demandes d\'Amis',
+    de: 'Freundschaftsanfragen',
+    ko: '친구 요청',
+    zh: '好友请求'
+  },
+  'friends.unknownUser': {
+    en: 'Unknown User',
+    ja: '不明なユーザー',
+    es: 'Usuario Desconocido',
+    fr: 'Utilisateur Inconnu',
+    de: 'Unbekannter Benutzer',
+    ko: '알 수 없는 사용자',
+    zh: '未知用户'
+  },
+  'friends.noIntroduction': {
+    en: 'No introduction',
+    ja: '自己紹介なし',
+    es: 'Sin presentación',
+    fr: 'Pas de présentation',
+    de: 'Keine Einführung',
+    ko: '자기소개 없음',
+    zh: '无自我介绍'
+  },
+  'friends.accept': {
+    en: 'Accept',
+    ja: '承認',
+    es: 'Aceptar',
+    fr: 'Accepter',
+    de: 'Akzeptieren',
+    ko: '수락',
+    zh: '接受'
+  },
+  'friends.decline': {
+    en: 'Decline',
+    ja: '拒否',
+    es: 'Rechazar',
+    fr: 'Refuser',
+    de: 'Ablehnen',
+    ko: '거절',
+    zh: '拒绝'
+  },
+  'friends.search': {
+    en: 'Search friends...',
+    ja: 'フレンドを検索...',
+    es: 'Buscar amigos...',
+    fr: 'Rechercher des amis...',
+    de: 'Freunde suchen...',
+    ko: '친구 검색...',
+    zh: '搜索朋友...'
+  },
+  'friends.noFriends': {
+    en: 'No friends yet',
+    ja: 'まだフレンドがいません',
+    es: 'Aún no hay amigos',
+    fr: 'Pas encore d\'amis',
+    de: 'Noch keine Freunde',
+    ko: '아직 친구가 없습니다',
+    zh: '还没有朋友'
+  },
+  'friends.noMatch': {
+    en: 'No friends match your search',
+    ja: '検索結果が見つかりません',
+    es: 'No hay amigos que coincidan',
+    fr: 'Aucun ami ne correspond',
+    de: 'Keine passenden Freunde',
+    ko: '검색 결과가 없습니다',
+    zh: '没有匹配的朋友'
+  },
+  'friends.buildNetwork': {
+    en: 'Start building your network by adding friends to share AI conversations.',
+    ja: 'フレンドを追加してAI会話を共有しましょう。',
+    es: 'Comienza a construir tu red agregando amigos para compartir conversaciones de IA.',
+    fr: 'Commencez à construire votre réseau en ajoutant des amis pour partager des conversations IA.',
+    de: 'Beginnen Sie mit dem Aufbau Ihres Netzwerks, indem Sie Freunde hinzufügen, um KI-Gespräche zu teilen.',
+    ko: 'AI 대화를 공유할 친구를 추가하여 네트워크를 구축하세요.',
+    zh: '通过添加朋友来分享AI对话，开始建立您的网络。'
+  },
+  'friends.adjustSearch': {
+    en: 'Try adjusting your search terms.',
+    ja: '検索条件を変更してみてください。',
+    es: 'Intenta ajustar tus términos de búsqueda.',
+    fr: 'Essayez d\'ajuster vos termes de recherche.',
+    de: 'Versuchen Sie, Ihre Suchbegriffe anzupassen.',
+    ko: '검색어를 조정해 보세요.',
+    zh: '尝试调整您的搜索词。'
+  },
+  'friends.addFirst': {
+    en: 'Add Your First Friend',
+    ja: '最初のフレンドを追加',
+    es: 'Agrega tu Primer Amigo',
+    fr: 'Ajoutez Votre Premier Ami',
+    de: 'Fügen Sie Ihren Ersten Freund Hinzu',
+    ko: '첫 번째 친구 추가',
+    zh: '添加您的第一位朋友'
+  },
+  'friends.lastMessage': {
+    en: 'Last message',
+    ja: '最新メッセージ',
+    es: 'Último mensaje',
+    fr: 'Dernier message',
+    de: 'Letzte Nachricht',
+    ko: '마지막 메시지',
+    zh: '最新消息'
+  },
+  'friends.startConversation': {
+    en: 'Start conversation',
+    ja: '会話を開始',
+    es: 'Iniciar conversación',
+    fr: 'Démarrer la conversation',
+    de: 'Gespräch starten',
+    ko: '대화 시작',
+    zh: '开始对话'
+  },
+  'friends.yourNetwork': {
+    en: 'Your Network',
+    ja: 'あなたのネットワーク',
+    es: 'Tu Red',
+    fr: 'Votre Réseau',
+    de: 'Ihr Netzwerk',
+    ko: '당신의 네트워크',
+    zh: '您的网络'
+  },
+  'friends.totalFriends': {
+    en: 'Total Friends',
+    ja: '合計フレンド数',
+    es: 'Total de Amigos',
+    fr: 'Total d\'Amis',
+    de: 'Gesamte Freunde',
+    ko: '총 친구 수',
+    zh: '总朋友数'
+  },
+  'friends.onlineNow': {
+    en: 'Online Now',
+    ja: '現在オンライン',
+    es: 'En Línea Ahora',
+    fr: 'En Ligne Maintenant',
+    de: 'Jetzt Online',
+    ko: '현재 온라인',
+    zh: '当前在线'
+  },
+  'friends.unreadMessages': {
+    en: 'Unread Messages',
+    ja: '未読メッセージ',
+    es: 'Mensajes No Leídos',
+    fr: 'Messages Non Lus',
+    de: 'Ungelesene Nachrichten',
+    ko: '읽지 않은 메시지',
+    zh: '未读消息'
+  },
+  'friends.tips': {
+    en: 'Tips',
+    ja: 'ヒント',
+    es: 'Consejos',
+    fr: 'Conseils',
+    de: 'Tipps',
+    ko: '팁',
+    zh: '提示'
+  },
+  'friends.tip1': {
+    en: '• Send voice messages for richer conversations',
+    ja: '• 音声メッセージでより豊かな会話を',
+    es: '• Envía mensajes de voz para conversaciones más ricas',
+    fr: '• Envoyez des messages vocaux pour des conversations plus riches',
+    de: '• Senden Sie Sprachnachrichten für reichhaltigere Gespräche',
+    ko: '• 더 풍부한 대화를 위해 음성 메시지 보내기',
+    zh: '• 发送语音消息以获得更丰富的对话'
+  },
+  'friends.tip2': {
+    en: '• AI can remember context across friend chats',
+    ja: '• AIはフレンドとのチャット全体で文脈を記憶します',
+    es: '• La IA puede recordar el contexto en los chats de amigos',
+    fr: '• L\'IA peut se souvenir du contexte dans les discussions entre amis',
+    de: '• KI kann sich den Kontext über Freundschaftschats hinweg merken',
+    ko: '• AI는 친구 채팅 전반에 걸쳐 맥락을 기억할 수 있습니다',
+    zh: 'AI可以记住朋友聊天中的上下文'
+  },
+  'friends.tip3': {
+    en: '• Use voice profiles for personalized responses',
+    ja: '• 音声プロフィールでパーソナライズされた応答を',
+    es: '• Usa perfiles de voz para respuestas personalizadas',
+    fr: '• Utilisez des profils vocaux pour des réponses personnalisées',
+    de: '• Verwenden Sie Sprachprofile für personalisierte Antworten',
+    ko: '• 음성 프로필을 사용하여 맞춤형 응답 받기',
+    zh: '• 使用语音配置文件获取个性化回复'
+  },
+  'friends.tip4': {
+    en: '• Friends can share AI memories',
+    ja: '• フレンドとAIメモリを共有できます',
+    es: '• Los amigos pueden compartir memorias de IA',
+    fr: '• Les amis peuvent partager des mémoires IA',
+    de: '• Freunde können KI-Erinnerungen teilen',
+    ko: '• 친구들과 AI 메모리 공유 가능',
+    zh: '• 朋友可以分享AI记忆'
+  },
+  'friends.addNew': {
+    en: 'Add New Friend',
+    ja: '新しいフレンドを追加',
+    es: 'Agregar Nuevo Amigo',
+    fr: 'Ajouter un Nouvel Ami',
+    de: 'Neuen Freund Hinzufügen',
+    ko: '새 친구 추가',
+    zh: '添加新朋友'
+  },
+  'friends.friendUserId': {
+    en: "Friend's User ID",
+    ja: 'フレンドのユーザーID',
+    es: 'ID de Usuario del Amigo',
+    fr: 'ID Utilisateur de l\'Ami',
+    de: 'Benutzer-ID des Freundes',
+    ko: '친구의 사용자 ID',
+    zh: '朋友的用户ID'
+  },
+  'friends.uuidFormat': {
+    en: 'Please enter in UUID format (e.g., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)',
+    ja: 'UUID形式で入力してください（例: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）',
+    es: 'Ingrese en formato UUID (ej., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)',
+    fr: 'Veuillez saisir au format UUID (par ex., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)',
+    de: 'Bitte im UUID-Format eingeben (z.B. xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)',
+    ko: 'UUID 형식으로 입력하세요 (예: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)',
+    zh: '请以UUID格式输入（例如：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）'
+  },
+  'friends.sendRequest': {
+    en: 'Send Request',
+    ja: '申請を送信',
+    es: 'Enviar Solicitud',
+    fr: 'Envoyer la Demande',
+    de: 'Anfrage Senden',
+    ko: '요청 보내기',
+    zh: '发送请求'
+  },
+  'friends.requestSent': {
+    en: 'Friend request sent successfully!',
+    ja: 'フレンド申請を送信しました！',
+    es: '¡Solicitud de amistad enviada con éxito!',
+    fr: 'Demande d\'ami envoyée avec succès!',
+    de: 'Freundschaftsanfrage erfolgreich gesendet!',
+    ko: '친구 요청을 성공적으로 보냈습니다!',
+    zh: '好友请求发送成功！'
+  },
+  'friends.requestFailed': {
+    en: 'Failed to send friend request. Please try again.',
+    ja: 'フレンド申請の送信に失敗しました。もう一度お試しください。',
+    es: 'No se pudo enviar la solicitud de amistad. Inténtalo de nuevo.',
+    fr: 'Échec de l\'envoi de la demande d\'ami. Veuillez réessayer.',
+    de: 'Freundschaftsanfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut.',
+    ko: '친구 요청 전송에 실패했습니다. 다시 시도하세요.',
+    zh: '发送好友请求失败。请重试。'
+  },
+  'friends.acceptFailed': {
+    en: 'Failed to accept friend request. Please try again.',
+    ja: 'フレンド承認に失敗しました。もう一度お試しください。',
+    es: 'No se pudo aceptar la solicitud de amistad. Inténtalo de nuevo.',
+    fr: 'Échec de l\'acceptation de la demande d\'ami. Veuillez réessayer.',
+    de: 'Freundschaftsanfrage konnte nicht akzeptiert werden. Bitte versuchen Sie es erneut.',
+    ko: '친구 요청 수락에 실패했습니다. 다시 시도하세요.',
+    zh: '接受好友请求失败。请重试。'
   }
 };
 
