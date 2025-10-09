@@ -390,15 +390,15 @@ const Friends: React.FC = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2">
-                            <h3 className="font-medium text-gray-900">{friend.name || 'Unknown User'}</h3>
+                            <h3 className="font-medium text-gray-900">{friend.name || '不明なユーザー'}</h3>
                             {friend.has_unread_messages && (
                               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 truncate">{friend.introduction || 'No introduction'}</p>
+                          <p className="text-sm text-gray-600 truncate">{friend.introduction || '自己紹介なし'}</p>
                           {friend.last_message_time && (
                             <p className="text-xs text-gray-500 mt-1">
-                              Last message: {formatLastMessage(friend.last_message_time)}
+                              最新メッセージ: {formatLastMessage(friend.last_message_time)}
                             </p>
                           )}
                         </div>
@@ -408,7 +408,7 @@ const Friends: React.FC = () => {
                         <button
                           onClick={() => handleStartConversation(friend)}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Start conversation"
+                          title="会話を開始"
                         >
                           <MessageCircle className="w-5 h-5" />
                         </button>
@@ -443,20 +443,20 @@ const Friends: React.FC = () => {
         <div className="space-y-6">
           {/* Quick Stats */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Your Network</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">あなたのネットワーク</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Total Friends</span>
+                <span className="text-gray-600">合計フレンド数</span>
                 <span className="font-medium text-gray-900">{friends.length}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Online Now</span>
+                <span className="text-gray-600">現在オンライン</span>
                 <span className="font-medium text-green-600">
                   {friends.filter(f => f.status === 'online').length}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Unread Messages</span>
+                <span className="text-gray-600">未読メッセージ</span>
                 <span className="font-medium text-blue-600">
                   {friends.filter(f => f.has_unread_messages).length}
                 </span>
@@ -466,12 +466,12 @@ const Friends: React.FC = () => {
 
           {/* Tips */}
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
-            <h3 className="font-semibold text-blue-900 mb-3">Tips</h3>
+            <h3 className="font-semibold text-blue-900 mb-3">ヒント</h3>
             <ul className="text-sm text-blue-800 space-y-2">
-              <li>• Send voice messages for richer conversations</li>
-              <li>• AI can remember context across friend chats</li>
-              <li>• Use voice profiles for personalized responses</li>
-              <li>• Friends can share AI memories</li>
+              <li>• 音声メッセージでより豊かな会話を</li>
+              <li>• AIはフレンドとのチャット全体で文脈を記憶します</li>
+              <li>• 音声プロフィールでパーソナライズされた応答を</li>
+              <li>• フレンドとAIメモリを共有できます</li>
             </ul>
           </div>
         </div>
@@ -482,13 +482,13 @@ const Friends: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Add New Friend</h3>
+              <h3 className="text-lg font-semibold text-gray-900">新しいフレンドを追加</h3>
             </div>
             
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Friend's User ID
+                  フレンドのユーザーID
                 </label>
                 <input
                   type="text"
@@ -508,14 +508,14 @@ const Friends: React.FC = () => {
                 onClick={() => setShowAddFriend(false)}
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                キャンセル
               </button>
               <button
                 onClick={handleSendFriendRequest}
                 disabled={!newFriendId.trim()}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                Send Request
+                申請を送信
               </button>
             </div>
           </div>
