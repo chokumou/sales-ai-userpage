@@ -226,80 +226,62 @@ const NeKotaDiary: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header - シンプルで可愛い */}
-      <div className="relative">
-        {/* マスキングテープ風装飾 */}
-        <div className="absolute -top-4 left-8 w-28 h-8 bg-gradient-to-r from-pink-300 to-rose-300 opacity-80 transform -rotate-2 rounded-sm shadow-md"></div>
-        
-        <div className="flex items-center justify-between bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 border-3 border-pink-200 rounded-3xl p-8 shadow-xl relative">
-          <div className="flex items-center space-x-5">
-            <div className="w-20 h-20 bg-gradient-to-br from-pink-400 via-purple-400 to-blue-400 rounded-full flex items-center justify-center shadow-xl transform -rotate-6 hover:rotate-0 transition-transform">
-              <BookOpen className="w-10 h-10 text-white" />
-            </div>
-            <div>
-              <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-                ネコタの日記帳 📔✨
-              </h2>
-              <p className="text-base text-purple-600 mt-2 font-bold" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-                会話から自動生成される思い出と辞書 💕
-              </p>
-            </div>
-          </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-2xl hover:from-pink-500 hover:to-rose-500 transition-all shadow-lg hover:shadow-xl transform hover:scale-110 font-bold text-lg"
-              style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
-            >
-              <Plus className="w-6 h-6" />
-              <span>新しい日記</span>
-            </button>
-            <button
-              onClick={() => setShowGlossary(!showGlossary)}
-              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-teal-400 to-cyan-400 text-white rounded-2xl hover:from-teal-500 hover:to-cyan-500 transition-all shadow-lg hover:shadow-xl transform hover:scale-110 font-bold text-lg"
-              style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
-            >
-              <Brain className="w-6 h-6" />
-              <span>辞書管理</span>
-            </button>
+      {/* Header - シンプル */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <BookOpen className="w-8 h-8 text-blue-500" />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">ネコタの日記</h2>
+            <p className="text-sm text-gray-600">会話から自動生成される日記と辞書</p>
           </div>
         </div>
-        
-        {/* キラキラ装飾 */}
-        <div className="absolute -top-3 right-8 text-3xl animate-pulse">✨</div>
-        <div className="absolute -bottom-2 left-12 text-2xl animate-bounce">🌸</div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>新しい日記</span>
+          </button>
+          <button
+            onClick={() => setShowGlossary(!showGlossary)}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Brain className="w-4 h-4" />
+            <span>辞書管理</span>
+          </button>
+        </div>
       </div>
 
-      {/* Messages - 可愛いデザイン */}
+      {/* Messages */}
       {error && (
-        <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-300 rounded-xl shadow-md">
-          <AlertCircle className="w-6 h-6 text-red-500" />
-          <span className="text-red-700 font-medium" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>{error}</span>
+        <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="w-5 h-5 text-red-500" />
+          <span className="text-red-700">{error}</span>
         </div>
       )}
       {success && (
-        <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-300 rounded-xl shadow-md">
-          <CheckCircle className="w-6 h-6 text-green-500" />
-          <span className="text-green-700 font-medium" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>{success}</span>
+        <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <CheckCircle className="w-5 h-5 text-green-500" />
+          <span className="text-green-700">{success}</span>
         </div>
       )}
 
-      {/* Search - ノート風 */}
-      <div className="flex items-center space-x-3 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-3 shadow-md">
+      {/* Search */}
+      <div className="flex items-center space-x-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="🔍 日記や辞書を検索..."
+            placeholder="日記や辞書を検索..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-white/70"
-            style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <button
           onClick={loadDiaryData}
-          className="p-3 bg-gradient-to-r from-purple-400 to-pink-400 text-white rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all shadow-md hover:shadow-lg"
+          className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
         >
           <RefreshCw className="w-5 h-5" />
         </button>
@@ -314,8 +296,7 @@ const NeKotaDiary: React.FC = () => {
           {diaryData && diaryData.entries.length > 0 && (
             <button
               onClick={clearAllDiary}
-              className="text-sm text-red-500 hover:text-red-700 transition-colors px-3 py-1 border border-red-300 rounded-full hover:bg-red-50"
-              style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+              className="text-sm text-red-600 hover:text-red-800 transition-colors"
             >
               すべて削除
             </button>
@@ -356,23 +337,21 @@ const NeKotaDiary: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-end space-x-3 pt-6 border-t-2 border-dashed border-amber-300">
+                <div className="flex justify-end space-x-2 pt-4 border-t border-amber-300">
                   <button
                     onClick={() => {
                       setEditingIndex(-1);
                       setEditingText(filteredEntries.map(entry => entry.t).join('\n'));
                     }}
-                    className="px-5 py-2 bg-gradient-to-r from-amber-400 to-orange-400 text-white rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all shadow-md hover:shadow-lg"
-                    style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    ✏️ 編集
+                    編集
                   </button>
                   <button
                     onClick={clearAllDiary}
-                    className="px-5 py-2 bg-gradient-to-r from-red-400 to-rose-400 text-white rounded-xl hover:from-red-500 hover:to-rose-500 transition-all shadow-md hover:shadow-lg"
-                    style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
-                    🗑️ すべて削除
+                    すべて削除
                   </button>
                 </div>
               </div>
@@ -386,23 +365,21 @@ const NeKotaDiary: React.FC = () => {
                   rows={10}
                   placeholder="日記の内容を入力してください（各行が1つのエントリになります）"
                 />
-                <div className="flex space-x-3">
+                <div className="flex space-x-2">
                   <button
                     onClick={() => editDiaryEntry(editingIndex)}
-                    className="px-5 py-2 bg-gradient-to-r from-amber-400 to-orange-400 text-white rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all shadow-md"
-                    style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    💾 保存
+                    保存
                   </button>
                   <button
                     onClick={() => {
                       setEditingIndex(null);
                       setEditingText('');
                     }}
-                    className="px-5 py-2 bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl hover:from-gray-500 hover:to-gray-600 transition-all shadow-md"
-                    style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                   >
-                    ✖️ キャンセル
+                    キャンセル
                   </button>
                 </div>
               </div>
@@ -414,9 +391,9 @@ const NeKotaDiary: React.FC = () => {
       {/* Glossary Section - ノート風 */}
       {showGlossary && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-xl p-5 shadow-md">
-            <h3 className="text-2xl font-black text-teal-900" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-              📚 辞書 ({filteredGlossary.length}語)
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">
+              辞書 ({filteredGlossary.length}語)
             </h3>
             <div className="flex space-x-2">
               <input
@@ -424,23 +401,20 @@ const NeKotaDiary: React.FC = () => {
                 placeholder="用語"
                 value={newTerm}
                 onChange={(e) => setNewTerm(e.target.value)}
-                className="px-4 py-2 border-2 border-teal-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
-                style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+                className="px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
               <input
                 type="text"
                 placeholder="意味"
                 value={newMeaning}
                 onChange={(e) => setNewMeaning(e.target.value)}
-                className="px-4 py-2 border-2 border-teal-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
-                style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+                className="px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
               <button
                 onClick={addGlossaryEntry}
-                className="px-4 py-2 bg-gradient-to-r from-teal-400 to-cyan-400 text-white rounded-xl hover:from-teal-500 hover:to-cyan-500 transition-all shadow-md"
-                style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
               >
-                ➕ 追加
+                追加
               </button>
             </div>
           </div>
@@ -480,45 +454,35 @@ const NeKotaDiary: React.FC = () => {
         </div>
       )}
 
-      {/* Add Entry Modal - ノート風 */}
+      {/* Add Entry Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 border-4 border-amber-300 rounded-3xl p-8 w-full max-w-md shadow-2xl" style={{
-            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(212, 165, 116, 0.2) 31px, rgba(212, 165, 116, 0.2) 32px)',
-          }}>
-            {/* マスキングテープ風装飾 */}
-            <div className="absolute -top-3 left-1/4 w-20 h-6 bg-gradient-to-r from-pink-300 to-rose-300 opacity-70 transform -rotate-3 rounded-sm shadow-sm"></div>
-            
-            <h3 className="text-2xl font-bold mb-6 text-amber-900 flex items-center space-x-2" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-              <span>✨</span>
-              <span>新しい日記を追加</span>
-              <span>✨</span>
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">
+              新しい日記を追加
             </h3>
             <textarea
               value={newEntry}
               onChange={(e) => setNewEntry(e.target.value)}
-              placeholder="今日の出来事や感想を書いてください... 🌸"
-              className="w-full p-4 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-400 focus:border-amber-400 bg-white/70 shadow-inner"
-              style={{ fontFamily: "'Zen Maru Gothic', sans-serif", fontSize: '16px', lineHeight: '32px' }}
+              placeholder="今日の出来事や感想を書いてください..."
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               rows={6}
             />
-            <div className="flex space-x-3 mt-6">
+            <div className="flex space-x-2 mt-4">
               <button
                 onClick={addDiaryEntry}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-xl hover:from-pink-500 hover:to-rose-500 transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-bold"
-                style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                💕 追加
+                追加
               </button>
               <button
                 onClick={() => {
                   setShowAddModal(false);
                   setNewEntry('');
                 }}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-gray-300 to-gray-400 text-white rounded-xl hover:from-gray-400 hover:to-gray-500 transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-bold"
-                style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
+                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
-                ✖️ キャンセル
+                キャンセル
               </button>
             </div>
           </div>
