@@ -81,12 +81,12 @@ const Memory: React.FC = () => {
   const handleCreateMemory = async () => {
     console.log('[DEBUG] handleCreateMemory called', { user, newMemoryText, newMemoryCategory });
     if (!user || !newMemoryText.trim()) {
-      setError('メモリの内容を入力してください。');
+      setError(t('memory.errorRequired'));
       return;
     }
 
     if (newMemoryText.length > 1000) {
-      setError('メモリの内容は1000文字以内で入力してください。');
+      setError(t('memory.errorTooLong'));
       return;
     }
 
@@ -113,18 +113,18 @@ const Memory: React.FC = () => {
       setNewMemoryText('');
       setNewMemoryCategory('');
       setShowAddModal(false);
-      setSuccess('メモリが正常に追加されました。');
+      setSuccess(t('memory.successCreated'));
       
     } catch (error) {
       console.error('[DEBUG] Error creating memory:', error);
-      setError(error instanceof Error ? error.message : 'メモリの作成に失敗しました。');
+      setError(error instanceof Error ? error.message : t('memory.errorCreating'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeleteMemory = async (memoryId: string) => {
-    if (!confirm('このメモリを削除してもよろしいですか？')) return;
+    if (!confirm(t('memory.confirmDelete'))) return;
 
     try {
       setError('');
@@ -197,9 +197,9 @@ const Memory: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">AIメモリ</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('memory.title')}</h1>
           <p className="text-gray-600 mt-2">
-            AIが会話で覚えておくべき重要な情報を保存・管理します。
+            {t('memory.description')}
           </p>
         </div>
         <div className="mt-4 sm:mt-0 flex items-center space-x-2">
@@ -211,7 +211,7 @@ const Memory: React.FC = () => {
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
-            <span>メモリ追加</span>
+            <span>{t('memory.addMemory')}</span>
           </button>
         </div>
       </div>
@@ -244,7 +244,7 @@ const Memory: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="メモリを検索..."
+              placeholder={t('memory.search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -258,7 +258,7 @@ const Memory: React.FC = () => {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white min-w-[150px]"
             >
-              <option value="">全カテゴリ</option>
+              <option value="">{t('memory.allCategories')}</option>
               {categories.map(category => (
                 <option key={category} value={category}>{category}</option>
               ))}
@@ -273,12 +273,12 @@ const Memory: React.FC = () => {
           <div className="text-center py-16">
             <Brain className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {memories.length === 0 ? 'メモリがありません' : '検索条件に一致するメモリがありません'}
+              {memories.length === 0 ? t('memory.noMemories') : t('memory.noMatch')}
             </h3>
             <p className="text-gray-600 mb-6">
               {memories.length === 0 
-                ? '最初のメモリを追加して、AIの知識ベースを構築しましょう。'
-                : '検索条件やカテゴリフィルターを調整してください。'
+                ? t('memory.createFirst')
+                : t('memory.adjustSearch')
               }
             </p>
             {memories.length === 0 && (
@@ -286,7 +286,7 @@ const Memory: React.FC = () => {
                 onClick={() => setShowAddModal(true)}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                最初のメモリを追加
+                {t('memory.createFirstButton')}
               </button>
             )}
           </div>
@@ -316,14 +316,14 @@ const Memory: React.FC = () => {
                     <button
                       onClick={() => setEditingMemory(memory)}
                       className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="メモリを編集"
+                      title={t('memory.edit')}
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteMemory(memory.id)}
                       className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="メモリを削除"
+                      title={t('memory.delete')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -383,7 +383,7 @@ const Memory: React.FC = () => {
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">新しいメモリを追加</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('memory.addNew')}</h3>
                 <button
                   onClick={() => {
                     setShowAddModal(false);
@@ -402,12 +402,12 @@ const Memory: React.FC = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  メモリの内容 <span className="text-red-500">*</span>
+                  {t('memory.memoryText')} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={newMemoryText}
                   onChange={(e) => setNewMemoryText(e.target.value)}
-                  placeholder="AIに覚えてもらいたい情報を入力してください..."
+                  placeholder={t('memory.enterText')}
                   rows={6}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
                     isCharacterLimitExceeded() ? 'border-red-300' : 'border-gray-300'
@@ -419,7 +419,7 @@ const Memory: React.FC = () => {
                     AIが会話で参照できる重要な情報を入力してください
                   </div>
                   <div className="text-xs text-gray-500">
-                    {getCharacterCount()} / 1000
+                    {getCharacterCount()} / 1000 {t('memory.characterCount')}
                   </div>
                 </div>
               </div>
@@ -428,7 +428,7 @@ const Memory: React.FC = () => {
                 className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? '作成中...' : 'メモリを作成'}
+                {isSubmitting ? t('memory.saving') : t('memory.save')}
               </button>
             </div>
           </div>
