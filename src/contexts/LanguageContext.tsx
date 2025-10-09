@@ -28,6 +28,15 @@ const translations: Translations = {
     ko: '음성 등록',
     zh: '语音注册'
   },
+  'nav.messages': {
+    en: 'Letter',
+    ja: 'レター',
+    es: 'Carta',
+    fr: 'Lettre',
+    de: 'Brief',
+    ko: '편지',
+    zh: '信件'
+  },
   'nav.memory': {
     en: 'Memory',
     ja: 'メモリ',

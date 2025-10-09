@@ -32,8 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
 
   const navItems = [
     { to: '/', icon: Home, label: t('nav.dashboard') },
-    { to: '/voice', icon: Mic, label: t('nav.voice') },
-    { to: '/messages', icon: MessageCircle, label: t('nav.messages') || 'Messages' },
+    { to: '/messages', icon: MessageCircle, label: t('nav.messages') || 'レター' },
     { to: '/memory', icon: Brain, label: t('nav.memory') },
     { to: '/friends', icon: Users, label: t('nav.friends') },
     // Alarm page removed - voice alarm only

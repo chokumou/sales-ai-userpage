@@ -275,7 +275,7 @@ const Messages: React.FC = () => {
                 <MessageSquare className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+                <h1 className="text-2xl font-bold text-gray-900">レター</h1>
                 <p className="text-gray-600">友達とのメッセージを管理します</p>
                 <p className="text-sm text-gray-500">
                   保存済みメッセージ: {messageCount}件（500件を超えると古いものから自動削除されます）
@@ -287,7 +287,7 @@ const Messages: React.FC = () => {
               className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              <span>Add Message</span>
+              <span>レターを送る</span>
             </button>
           </div>
         </div>
@@ -296,12 +296,12 @@ const Messages: React.FC = () => {
       {showCreateForm && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Create New Message
+              新しいレターを作成
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Recipient
+                  宛先
                 </label>
                 <select
                   value={formData.recipient}
@@ -309,7 +309,7 @@ const Messages: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 >
-                  <option value="">Select recipient</option>
+                  <option value="">宛先を選択</option>
                   {friends.map((friend) => (
                     <option key={friend.user_id} value={friend.user_id}>
                       {friend.name}
@@ -319,12 +319,12 @@ const Messages: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Message
+                  メッセージ
                 </label>
                 <textarea
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  placeholder="Enter message content..."
+                  placeholder="メッセージを入力..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={3}
                   required
@@ -335,14 +335,14 @@ const Messages: React.FC = () => {
                   type="submit"
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Send Message
+                  レターを送信
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
                   className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
                 >
-                  Cancel
+                  キャンセル
                 </button>
               </div>
             </form>
@@ -355,7 +355,7 @@ const Messages: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search messages..."
+              placeholder="メッセージを検索..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -369,12 +369,12 @@ const Messages: React.FC = () => {
             <div className="text-center py-16">
               <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {messages.length === 0 ? 'No messages yet' : 'No messages match your search'}
+                {messages.length === 0 ? 'まだメッセージがありません' : '検索結果が見つかりません'}
               </h3>
               <p className="text-gray-600 mb-6">
                 {messages.length === 0 
-                  ? 'Send your first message to start communicating with friends.'
-                  : 'Try adjusting your search criteria.'
+                  ? '友達に最初のレターを送ってみましょう。'
+                  : '検索条件を変更してみてください。'
                 }
               </p>
               {messages.length === 0 && (
@@ -382,7 +382,7 @@ const Messages: React.FC = () => {
                   onClick={() => setShowCreateForm(true)}
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Send First Message
+                  最初のレターを送る
                 </button>
               )}
             </div>
@@ -398,7 +398,7 @@ const Messages: React.FC = () => {
                           <div className="flex items-center space-x-2">
                             <User className="w-4 h-4 text-gray-400" />
                             <span className="font-medium text-gray-900">
-                              {message.sender_name || 'Unknown sender'}
+                              {message.sender_name || '不明な送信者'}
                             </span>
                           </div>
                           
@@ -409,20 +409,20 @@ const Messages: React.FC = () => {
                                 ? 'bg-purple-100 text-purple-600' 
                                 : 'bg-gray-100 text-gray-600'
                             }`}>
-                              {message.source === 'voice' ? '🎤 Voice' : '💻 Web'}
+                              {message.source === 'voice' ? '🎤 音声' : '💻 Web'}
                             </span>
                           )}
                           
                           {/* Read/Unread Status */}
                           <div className={`w-2 h-2 rounded-full ${
                             message.status === "read" ? 'bg-green-500' : 'bg-red-500'
-                          }`} title={message.status === "read" ? "Read" : "Unread"}></div>
+                          }`} title={message.status === "read" ? "既読" : "未読"}></div>
                         </div>
                         
                         {/* Message Content */}
                         <div className="mb-3">
                           <p className="text-gray-900">
-                            {message.transcribed_text || 'No message content'}
+                            {message.transcribed_text || 'メッセージ内容がありません'}
                           </p>
                         </div>
                         
@@ -438,7 +438,7 @@ const Messages: React.FC = () => {
                         <button
                           onClick={() => handleDeleteMessage(message.id)}
                           className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
+                          title="削除"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
