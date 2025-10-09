@@ -266,10 +266,9 @@ const Messages: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
@@ -293,9 +292,9 @@ const Messages: React.FC = () => {
           </div>
         </div>
 
-        {/* Create Form */}
-        {showCreateForm && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      {/* Create Form */}
+      {showCreateForm && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Create New Message
             </h2>
@@ -347,11 +346,11 @@ const Messages: React.FC = () => {
                 </button>
               </div>
             </form>
-          </div>
-        )}
+        </div>
+      )}
 
-        {/* Search */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      {/* Search */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -361,11 +360,11 @@ const Messages: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-          </div>
         </div>
+      </div>
 
-        {/* Messages List */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      {/* Messages List */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           {filteredMessages.length === 0 ? (
             <div className="text-center py-16">
               <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -469,7 +468,6 @@ const Messages: React.FC = () => {
               )}
             </>
           )}
-        </div>
       </div>
     </div>
   );
