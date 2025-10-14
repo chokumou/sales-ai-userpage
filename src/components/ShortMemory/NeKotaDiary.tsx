@@ -287,11 +287,11 @@ const NeKotaDiary: React.FC = () => {
         </button>
       </div>
 
-      {/* Diary Entries - ノート風 */}
+      {/* Diary Entries - シンプル */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between px-2">
-          <h3 className="text-2xl font-black text-amber-900" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-            📖 日記エントリ ({filteredEntries.length}件)
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900">
+            日記エントリ ({filteredEntries.length}件)
           </h3>
           {diaryData && diaryData.entries.length > 0 && (
             <button
@@ -304,40 +304,31 @@ const NeKotaDiary: React.FC = () => {
         </div>
 
         {filteredEntries.length === 0 ? (
-          <div className="relative bg-gradient-to-br from-pink-50 to-purple-50 border-3 border-pink-200 rounded-3xl p-12 text-center shadow-xl">
-            <div className="text-7xl mb-6 animate-bounce">📝✨</div>
-            <p className="text-purple-600 text-xl font-bold" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-              {searchQuery ? '🔍 検索結果が見つかりません' : '💕 まだ日記がありません'}
+          <div className="text-center py-8 bg-gray-50 border border-gray-200 rounded-lg">
+            <p className="text-gray-600 text-lg font-bold" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
+              {searchQuery ? '検索結果が見つかりません' : 'まだ日記がありません'}
             </p>
-            <p className="text-purple-400 text-sm mt-2" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
+            <p className="text-gray-400 text-sm mt-2" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
               {!searchQuery && '最初の日記を書いてみましょう！'}
             </p>
           </div>
         ) : (
-          <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl shadow-2xl" style={{
-            backgroundImage: `
-              linear-gradient(90deg, #e07a5f 0px, #e07a5f 2px, transparent 2px, transparent 100%),
-              repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(212, 165, 116, 0.3) 31px, rgba(212, 165, 116, 0.3) 32px)
-            `,
-            backgroundPosition: '40px 0, 0 0',
-            backgroundSize: '100% 100%, 100% 100%',
-          }}>
-            {/* ページめくり効果 */}
-            <div className="absolute -bottom-2 -right-2 w-16 h-16 bg-amber-100 border-l-2 border-t-2 border-amber-300 rounded-tl-3xl"></div>
-            
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
             {editingIndex === null ? (
-              <div className="space-y-4 pl-20 pr-8 py-8">
-                <div className="leading-loose whitespace-pre-line" style={{ fontFamily: "'Zen Maru Gothic', sans-serif", fontSize: '18px', lineHeight: '36px' }}>
+              <div className="space-y-4 p-6">
+                <div className="space-y-4">
                   {filteredEntries.map((entry, index) => (
-                    <div key={index} className="mb-5 hover:bg-amber-100/40 rounded-xl p-3 transition-all transform hover:scale-102">
-                      <span className="text-amber-950 text-lg font-bold">✿ {entry.t}</span>
-                      <span className="text-amber-500 text-sm ml-3 block mt-2 font-medium">
-                        🕐 {formatDate(entry.ts)}
-                      </span>
+                    <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
+                      <div className="text-gray-900 text-base font-bold" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
+                        {entry.t}
+                      </div>
+                      <div className="text-gray-500 text-sm mt-2 font-medium" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
+                        {formatDate(entry.ts)}
+                      </div>
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-end space-x-2 pt-4 border-t border-amber-300">
+                <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
                   <button
                     onClick={() => {
                       setEditingIndex(-1);
@@ -356,12 +347,12 @@ const NeKotaDiary: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="space-y-3 p-8">
+              <div className="space-y-3 p-6">
                 <textarea
                   value={editingText}
                   onChange={(e) => setEditingText(e.target.value)}
-                  className="w-full p-4 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-400 focus:border-amber-400 bg-white/50"
-                  style={{ fontFamily: "'Zen Maru Gothic', sans-serif", fontSize: '16px', lineHeight: '32px' }}
+                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}
                   rows={10}
                   placeholder="日記の内容を入力してください（各行が1つのエントリになります）"
                 />
@@ -388,7 +379,7 @@ const NeKotaDiary: React.FC = () => {
         )}
       </div>
 
-      {/* Glossary Section - ノート風 */}
+      {/* Glossary Section - シンプル */}
       {showGlossary && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -420,35 +411,35 @@ const NeKotaDiary: React.FC = () => {
           </div>
 
           {filteredGlossary.length === 0 ? (
-            <div className="text-center py-8 bg-teal-50/50 border-2 border-dashed border-teal-200 rounded-xl">
-              <p className="text-teal-600 text-lg" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-                {searchQuery ? '🔍 検索結果が見つかりません' : '📖 辞書が空です'}
+            <div className="text-center py-8 bg-gray-50 border border-gray-200 rounded-lg">
+              <p className="text-gray-600 text-lg font-bold" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
+                {searchQuery ? '検索結果が見つかりません' : '辞書が空です'}
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredGlossary.map(([term, meaning]) => (
-                <div key={term} className="relative bg-gradient-to-br from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-xl p-5 shadow-md hover:shadow-xl transition-all transform hover:scale-105">
-                  {/* 付箋風の装飾 */}
-                  <div className="absolute -top-2 -right-2 w-10 h-10 bg-yellow-300 rounded-full opacity-70 shadow-sm"></div>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="font-black text-teal-900 text-xl" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-                        📌 {term}
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div className="space-y-4 p-6">
+                {filteredGlossary.map(([term, meaning]) => (
+                  <div key={term} className="border-b border-gray-100 pb-4 last:border-b-0">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-bold text-gray-900 text-lg" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
+                          {term}
+                        </div>
+                        <div className="text-gray-700 mt-2 font-medium" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
+                          {meaning}
+                        </div>
                       </div>
-                      <div className="text-base text-teal-700 mt-3 font-bold" style={{ fontFamily: "'Zen Maru Gothic', sans-serif" }}>
-                        💡 {meaning}
-                      </div>
+                      <button
+                        onClick={() => deleteGlossaryEntry(term)}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors ml-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => deleteGlossaryEntry(term)}
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors ml-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
