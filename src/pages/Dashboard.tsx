@@ -149,9 +149,17 @@ const Dashboard: React.FC = () => {
     console.log('Model change debug:', {
       model,
       user: user,
+      userId: user.id,
       subscriptionPlan: stats.subscriptionPlan,
       isPremium: stats.subscriptionPlan === 'premium'
     });
+
+    // user.idが正しく取得できているか確認
+    if (!user.id) {
+      console.error('❌ user.id is missing!', user);
+      setError('ユーザーIDが取得できません');
+      return;
+    }
 
     try {
       await userAPI.updateModel(user.id, model);
