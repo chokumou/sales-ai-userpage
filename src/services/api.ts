@@ -536,7 +536,9 @@ class APIService {
 
     updateModel: (userId: string, model: string) => {
       console.log('🔍 [DEBUG] updateModel called with:', { userId, model });
-      return this.request<any>(`/api/user/model?user_id=${userId}`, {
+      const url = `/api/user/model?user_id=${userId}`;
+      console.log('🔍 [DEBUG] Request URL:', url);
+      return this.request<any>(url, {
         method: 'PUT',
         body: JSON.stringify({ model_name: model }),
       });
