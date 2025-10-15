@@ -535,7 +535,7 @@ class APIService {
       }),
 
     updateModel: (userId: string, model: string) =>
-      this.request<any>('/api/user/model', {
+      this.request<any>(`/api/user/model?user_id=${userId}`, {
         method: 'PUT',
         body: JSON.stringify({ model_name: model }),
       }),
