@@ -534,11 +534,13 @@ class APIService {
         return { model: 'deepseek', model_name: 'deepseek', model_version: 'latest' };
       }),
 
-    updateModel: (userId: string, model: string) =>
-      this.request<any>(`/api/user/model?user_id=${userId}`, {
+    updateModel: (userId: string, model: string) => {
+      console.log('🔍 [DEBUG] updateModel called with:', { userId, model });
+      return this.request<any>(`/api/user/model?user_id=${userId}`, {
         method: 'PUT',
         body: JSON.stringify({ model_name: model }),
-      }),
+      });
+    },
 
     getPremiumStatus: (userId: string) =>
       this.request<{ user_id: string; is_premium: boolean }>(`/api/users/${userId}/premium-status`).catch((error) => {
