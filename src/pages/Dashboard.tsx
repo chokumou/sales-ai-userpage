@@ -145,10 +145,19 @@ const Dashboard: React.FC = () => {
   const handleModelChange = async (model: string) => {
     if (!user) return;
 
+    // プレミアム制限のデバッグ
+    console.log('Model change debug:', {
+      model,
+      user: user,
+      subscriptionPlan: stats.subscriptionPlan,
+      isPremium: stats.subscriptionPlan === 'premium'
+    });
+
     try {
       await userAPI.updateModel(user.id, model);
       setSelectedModel(model);
       setStats(prev => ({ ...prev, currentModel: model }));
+      console.log('Model updated successfully:', model);
     } catch (error) {
       console.error('Dashboard: Error updating model:', error);
       setError('モデルの更新に失敗しました');
