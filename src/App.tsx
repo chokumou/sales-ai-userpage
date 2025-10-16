@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import LoginForm from './components/Auth/LoginForm';
+import EmailLoginForm from './components/Auth/EmailLoginForm';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Messages from './pages/Messages';
@@ -41,6 +42,7 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={user && isAuthenticated ? <Navigate to="/" /> : <LoginForm />} />
+      <Route path="/email-login" element={user && isAuthenticated ? <Navigate to="/" /> : <EmailLoginForm />} />
       <Route path="/RegisterDevice" element={<DeviceRegistration />} />
       <Route path="/success" element={<Success />} />
       <Route path="/cancel" element={<Cancel />} />

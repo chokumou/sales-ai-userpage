@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, AlertCircle, Smartphone, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { api } from '../../services/api';
-import { User } from '../../types';
 
-const LoginForm: React.FC = () => {
-  const [deviceNumber, setDeviceNumber] = useState('');
+const EmailLoginForm: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { login, isAuthenticated } = useAuth();
+  const { login } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!deviceNumber.trim()) {
-      setError('デバイス番号を入力してください');
+    if (!email.trim() || !password.trim()) {
+      setError('メールアドレスとパスワードを入力してください');
       return;
     }
 
@@ -27,42 +27,9 @@ const LoginForm: React.FC = () => {
     setError('');
 
     try {
-      // デバイス番号でログイン
-      const response = await api.device.exists(deviceNumber.trim());
-      
-      if (response.exists && response.token && response.user) {
-        // AuthContextのlogin関数を呼び出し
-        await login(response.token, response.user);
-        navigate('/');
-      } else {
-        setError('デバイスが見つからないか、ログインできませんでした');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'ログインに失敗しました');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async (demoUserId: string) => {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      // デモユーザーの場合はAPIを呼び出さずに直接ログイン
-      const isPremium = demoUserId === 'admin' || demoUserId === 'demo_user';
-      
-      const demoUser: User = {
-        id: demoUserId,
-        username: demoUserId,
-        email: `${demoUserId}@nekota.app`,
-        premium_until: isPremium ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null,
-        stripe_customer_id: isPremium ? `cus_demo_${demoUserId}` : null,
-        created_at: new Date().toISOString(),
-      };
-      
-      await login(`mock_jwt_token_${demoUserId}`, demoUser);
-      navigate('/');
+      // TODO: メール+パスワードログインのAPI実装が必要
+      // 現在は仮実装
+      setError('メールログイン機能は準備中です。デバイス番号でログインしてください。');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'ログインに失敗しました');
     } finally {
@@ -87,7 +54,7 @@ const LoginForm: React.FC = () => {
         {/* Login Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            ログイン
+            メールログイン
           </h2>
 
           {error && (
@@ -98,17 +65,33 @@ const LoginForm: React.FC = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Device Number */}
+            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                デバイス番号
+                メールアドレス
               </label>
               <input
-                type="text"
-                value={deviceNumber}
-                onChange={(e) => setDeviceNumber(e.target.value)}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="デバイス番号を入力してください"
+                placeholder="メールアドレスを入力してください"
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                パスワード
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                placeholder="パスワードを入力してください"
                 required
                 disabled={isLoading}
               />
@@ -117,7 +100,7 @@ const LoginForm: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading || !deviceNumber.trim()}
+              disabled={isLoading || !email.trim() || !password.trim()}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
             >
               {isLoading ? (
@@ -131,45 +114,15 @@ const LoginForm: React.FC = () => {
             </button>
           </form>
 
-          {/* Email Login Link */}
+          {/* Device Login Link */}
           <div className="mt-6 text-center">
             <button
-              onClick={() => navigate('/email-login')}
+              onClick={() => navigate('/login')}
               className="text-sm text-gray-600 hover:text-blue-600 transition-colors flex items-center justify-center space-x-1"
             >
-              <Mail className="w-4 h-4" />
-              <span>メールアドレスでログイン</span>
+              <Smartphone className="w-4 h-4" />
+              <span>デバイス番号でログイン</span>
             </button>
-          </div>
-
-          {/* Demo Credentials */}
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">デモアカウント:</h3>
-            <div className="space-y-2">
-              <button
-                onClick={() => handleDemoLogin('demo_user')}
-                disabled={isLoading}
-                className="w-full text-left p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <div className="font-medium text-gray-900">demo_user</div>
-                <div className="text-sm text-gray-600">プレミアムユーザー（ChatGPT利用可能）</div>
-              </button>
-              
-              <button
-                onClick={() => handleDemoLogin('admin')}
-                disabled={isLoading}
-                className="w-full text-left p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <div className="font-medium text-gray-900">admin</div>
-                <div className="text-sm text-gray-600">管理者アカウント（全機能利用可能）</div>
-              </button>
-            </div>
-            
-            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-700">
-                <strong>任意のユーザーID:</strong> 上記以外のIDでもログイン可能です（フリープランとして作成されます）
-              </p>
-            </div>
           </div>
 
           {/* Device Registration Button */}
@@ -191,4 +144,4 @@ const LoginForm: React.FC = () => {
   );
 };
 
-export default LoginForm;
+export default EmailLoginForm;
