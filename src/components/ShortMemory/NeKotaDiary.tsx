@@ -132,14 +132,16 @@ const NeKotaDiary: React.FC = () => {
     if (!confirm('すべての日記を削除しますか？この操作は元に戻せません。')) return;
 
     try {
-      // 個別削除で対応（clear APIの問題回避）
+      // 個別削除で対応（常にインデックス0を削除し続ける）
       if (diaryData?.entries && Array.isArray(diaryData.entries)) {
-        // 逆順で削除（インデックスの問題回避）
-        for (let i = diaryData.entries.length - 1; i >= 0; i--) {
+        const totalEntries = diaryData.entries.length;
+        
+        // 常にインデックス0を削除し続ける（削除後に自動的に詰まる）
+        for (let i = 0; i < totalEntries; i++) {
           try {
-            await api.shortMemory.deleteEntry(i);
+            await api.shortMemory.deleteEntry(0);  // 常に0番目を削除
           } catch (deleteErr) {
-            console.warn(`Failed to delete entry ${i}:`, deleteErr);
+            console.error(`Failed to delete entry (iteration ${i}):`, deleteErr);
           }
         }
       }
@@ -243,13 +245,6 @@ const NeKotaDiary: React.FC = () => {
             <Plus className="w-4 h-4" />
             <span>新しい日記</span>
           </button>
-          <button
-            onClick={() => setShowGlossary(!showGlossary)}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-          >
-            <Brain className="w-4 h-4" />
-            <span>辞書管理</span>
-          </button>
         </div>
       </div>
 
@@ -293,14 +288,6 @@ const NeKotaDiary: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900">
             日記エントリ ({filteredEntries.length}件)
           </h3>
-          {diaryData && diaryData.entries.length > 0 && (
-            <button
-              onClick={clearAllDiary}
-              className="text-sm text-red-600 hover:text-red-800 transition-colors"
-            >
-              すべて削除
-            </button>
-          )}
         </div>
 
         {filteredEntries.length === 0 ? (
