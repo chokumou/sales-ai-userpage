@@ -132,6 +132,8 @@ const NeKotaDiary: React.FC = () => {
     if (!confirm('すべての日記を削除しますか？この操作は元に戻せません。')) return;
 
     try {
+      setIsLoading(true);  // ローディング表示
+      
       // 個別削除で対応（常にインデックス0を削除し続ける）
       if (diaryData?.entries && Array.isArray(diaryData.entries)) {
         const totalEntries = diaryData.entries.length;
@@ -145,11 +147,16 @@ const NeKotaDiary: React.FC = () => {
           }
         }
       }
-      setSuccess('すべての日記を削除しました');
+      
+      // データをクリア＆リロード
+      setDiaryData(null);
       await loadDiaryData();
+      setSuccess('すべての日記を削除しました');
     } catch (err) {
       setError('日記の削除に失敗しました');
       console.error('Failed to clear diary:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
