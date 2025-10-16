@@ -26,6 +26,7 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState('deepseek');
+  const [selectedPrompt, setSelectedPrompt] = useState('1');
 
   // デバッグ: コンポーネントマウント時の状態確認
   useEffect(() => {
@@ -134,6 +135,7 @@ const Dashboard: React.FC = () => {
       });
 
       setSelectedModel(modelData?.model || 'deepseek');
+      setSelectedPrompt(modelData?.prompt_type || '1');
     } catch (error) {
       console.error('Dashboard: Error loading dashboard data:', error);
       setError('データの読み込みに失敗しました');
@@ -169,6 +171,25 @@ const Dashboard: React.FC = () => {
     } catch (error) {
       console.error('Dashboard: Error updating model:', error);
       setError('モデルの更新に失敗しました');
+    }
+  };
+
+  const handlePromptChange = async (promptType: string) => {
+    if (!user) return;
+
+    if (!user.id) {
+      console.error('❌ user.id is missing!', user);
+      setError('ユーザーIDが取得できません');
+      return;
+    }
+
+    try {
+      await userAPI.updatePrompt(user.id, promptType);
+      setSelectedPrompt(promptType);
+      console.log('Prompt updated successfully:', promptType);
+    } catch (error) {
+      console.error('Dashboard: Error updating prompt:', error);
+      setError('プロンプトの更新に失敗しました');
     }
   };
 
@@ -376,6 +397,70 @@ const Dashboard: React.FC = () => {
               )}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* AI Prompt Selection */}
+      <div className="bg-white rounded-xl border border-gray-200 p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">キャラクター設定</h2>
+            <p className="text-gray-600 mt-1">ネコ太の性格を選択できます</p>
+          </div>
+          <BookOpen className="w-6 h-6 text-gray-400" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+              selectedPrompt === '1'
+                ? 'border-pink-500 bg-pink-50'
+                : 'border-gray-200 bg-white hover:border-gray-300'
+            }`}
+            onClick={() => handlePromptChange('1')}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">通常モード</h3>
+              {selectedPrompt === '1' && (
+                <div className="w-3 h-3 rounded-full bg-pink-500"></div>
+              )}
+            </div>
+            <p className="text-gray-600 text-sm">天然で不思議系、無邪気で奔放なネコ太</p>
+          </div>
+
+          <div
+            className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+              selectedPrompt === '2'
+                ? 'border-indigo-500 bg-indigo-50'
+                : 'border-gray-200 bg-white hover:border-gray-300'
+            }`}
+            onClick={() => handlePromptChange('2')}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">クールモード</h3>
+              {selectedPrompt === '2' && (
+                <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+              )}
+            </div>
+            <p className="text-gray-600 text-sm">賢くて冷静、論理的に考えるネコ太</p>
+          </div>
+
+          <div
+            className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+              selectedPrompt === '3'
+                ? 'border-yellow-500 bg-yellow-50'
+                : 'border-gray-200 bg-white hover:border-gray-300'
+            }`}
+            onClick={() => handlePromptChange('3')}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">元気モード</h3>
+              {selectedPrompt === '3' && (
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              )}
+            </div>
+            <p className="text-gray-600 text-sm">超元気で明るい、ポジティブなネコ太</p>
+          </div>
         </div>
       </div>
 

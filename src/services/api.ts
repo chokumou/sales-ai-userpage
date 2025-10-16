@@ -544,6 +544,16 @@ class APIService {
       });
     },
 
+    updatePrompt: (userId: string, promptType: string) => {
+      console.log('🔍 [DEBUG] updatePrompt called with:', { userId, promptType });
+      const url = `/api/user/model?user_id=${userId}`;
+      console.log('🔍 [DEBUG] Request URL:', url);
+      return this.request<any>(url, {
+        method: 'PUT',
+        body: JSON.stringify({ prompt_type: promptType }),
+      });
+    },
+
     getPremiumStatus: (userId: string) =>
       this.request<{ user_id: string; is_premium: boolean }>(`/api/users/${userId}/premium-status`).catch((error) => {
         console.error('Error getting premium status:', error);
