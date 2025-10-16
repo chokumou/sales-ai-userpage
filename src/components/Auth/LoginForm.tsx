@@ -44,38 +44,12 @@ const LoginForm: React.FC = () => {
     }
   };
 
-  const handleDemoLogin = async (demoUserId: string) => {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      // デモユーザーの場合はAPIを呼び出さずに直接ログイン
-      const isPremium = demoUserId === 'admin' || demoUserId === 'demo_user';
-      
-      const demoUser: User = {
-        id: demoUserId,
-        username: demoUserId,
-        email: `${demoUserId}@nekota.app`,
-        premium_until: isPremium ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null,
-        stripe_customer_id: isPremium ? `cus_demo_${demoUserId}` : null,
-        created_at: new Date().toISOString(),
-      };
-      
-      await login(`mock_jwt_token_${demoUserId}`, demoUser);
-      navigate('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'ログインに失敗しました');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
+          <div className="inline-flex items-center justify-center w-30 h-30 mb-4">
             <img 
               src="/Group 1.png" 
               alt="Nekota Logo" 
@@ -142,36 +116,6 @@ const LoginForm: React.FC = () => {
             </button>
           </div>
 
-          {/* Demo Credentials */}
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">デモアカウント:</h3>
-            <div className="space-y-2">
-              <button
-                onClick={() => handleDemoLogin('demo_user')}
-                disabled={isLoading}
-                className="w-full text-left p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <div className="font-medium text-gray-900">demo_user</div>
-                <div className="text-sm text-gray-600">プレミアムユーザー（ChatGPT利用可能）</div>
-              </button>
-              
-              <button
-                onClick={() => handleDemoLogin('admin')}
-                disabled={isLoading}
-                className="w-full text-left p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <div className="font-medium text-gray-900">admin</div>
-                <div className="text-sm text-gray-600">管理者アカウント（全機能利用可能）</div>
-              </button>
-            </div>
-            
-            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-700">
-                <strong>任意のユーザーID:</strong> 上記以外のIDでもログイン可能です（フリープランとして作成されます）
-              </p>
-            </div>
-          </div>
-
           {/* Device Registration Button */}
           <div className="mt-6">
             <button
@@ -181,9 +125,6 @@ const LoginForm: React.FC = () => {
               <Smartphone className="w-5 h-5 mr-2" />
               デバイス登録
             </button>
-            <p className="text-xs text-gray-500 text-center mt-2">
-              新しいデバイスを登録する場合はこちら
-            </p>
           </div>
         </div>
       </div>
