@@ -131,7 +131,7 @@ const Dashboard: React.FC = () => {
         totalFriends: Array.isArray(friendsData) ? friendsData.length : 0,
         totalMemories: memoriesData?.total || 0,
         currentModel: modelData?.model || 'deepseek',
-        subscriptionPlan: user?.subscription?.plan || 'free'
+        subscriptionPlan: user?.is_premium ? 'premium' : 'free'
       });
 
       setSelectedModel(modelData?.model || 'deepseek');
