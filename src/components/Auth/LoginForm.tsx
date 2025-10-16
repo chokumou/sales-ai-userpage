@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, AlertCircle, Smartphone, Mail } from 'lucide-react';
+import { Loader2, AlertCircle, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { api } from '../../services/api';
@@ -114,17 +114,6 @@ const LoginForm: React.FC = () => {
             >
               <Mail className="w-4 h-4" />
               <span>メールアドレスでログイン</span>
-            </button>
-          </div>
-
-          {/* Device Registration Button */}
-          <div className="mt-6">
-            <button
-              onClick={() => navigate('/RegisterDevice')}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium py-3 px-4 rounded-lg hover:from-green-600 hover:to-emerald-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center"
-            >
-              <Smartphone className="w-5 h-5 mr-2" />
-              デバイス登録
             </button>
           </div>
         </div>
