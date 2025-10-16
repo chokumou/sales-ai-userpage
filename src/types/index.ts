@@ -2,9 +2,16 @@ export interface User {
   id: string;
   username?: string | null;
   email?: string | null;
+  is_premium?: boolean;
   premium_until?: string | null;
   stripe_customer_id?: string | null;
   created_at: string;
+  name?: string;
+  introduction?: string;
+  profile?: {
+    name?: string;
+    introduction?: string;
+  };
 }
 
 export interface Message {

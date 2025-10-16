@@ -84,17 +84,15 @@ const Dashboard: React.FC = () => {
       setError(null);
       console.log('Dashboard: Loading dashboard data for user:', user);
       
-      // プレミアムステータスを最新の状態に更新
-      // try {
-      //   const userStatus = await userAPI.getUserStatus(user.id);
-      //   console.log('Dashboard: User status:', userStatus);
-      //   if (userStatus.is_premium && user.subscription?.plan !== 'premium') {
-      //     console.log('Dashboard: Updating premium status to true');
-      //     updatePremiumStatus(true);
-      //   }
-      // } catch (error) {
-      //   console.error('Dashboard: Error checking user status:', error);
-      // }
+      // プレミアムステータスを最新の状態に取得（毎回APIから取得、キャッシュしない）
+      let isPremium = user?.is_premium || false;
+      try {
+        const premiumResponse = await api.get(`/api/users/${user.id}/premium-status`);
+        console.log('Dashboard: Premium status response:', premiumResponse);
+        isPremium = premiumResponse.is_premium || false;
+      } catch (error) {
+        console.error('Dashboard: Error checking premium status:', error);
+      }
       
       // Load user profile and stats with better error handling
       const profileData = await userAPI.getProfile(user.id).catch((error) => {
@@ -131,7 +129,7 @@ const Dashboard: React.FC = () => {
         totalFriends: Array.isArray(friendsData) ? friendsData.length : 0,
         totalMemories: memoriesData?.total || 0,
         currentModel: modelData?.model || 'deepseek',
-        subscriptionPlan: user?.is_premium ? 'premium' : 'free'
+        subscriptionPlan: isPremium ? 'premium' : 'free'
       });
 
       setSelectedModel(modelData?.model || 'deepseek');
