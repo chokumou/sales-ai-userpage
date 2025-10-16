@@ -163,6 +163,14 @@ const Dashboard: React.FC = () => {
       return;
     }
 
+    // プレミアム制限チェック
+    const selectedModelOption = modelOptions.find(m => m.id === model);
+    if (selectedModelOption?.isPremium && stats.subscriptionPlan === 'free') {
+      console.warn('❌ Free user tried to select premium model:', model);
+      setError('このモデルはプレミアムプランでのみ利用可能です');
+      return;
+    }
+
     try {
       await userAPI.updateModel(user.id, model);
       setSelectedModel(model);
@@ -364,12 +372,20 @@ const Dashboard: React.FC = () => {
           {modelOptions.map((model) => (
             <div
               key={model.id}
-              className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+              className={`relative p-6 rounded-xl border-2 transition-all duration-200 ${
                 selectedModel === model.id
                   ? `border-${model.color}-500 bg-${model.color}-50`
                   : 'border-gray-200 bg-white hover:border-gray-300'
+              } ${
+                model.isPremium && stats.subscriptionPlan === 'free'
+                  ? 'opacity-60 cursor-not-allowed'
+                  : 'cursor-pointer'
               }`}
-              onClick={() => handleModelChange(model.id)}
+              onClick={() => {
+                if (!(model.isPremium && stats.subscriptionPlan === 'free')) {
+                  handleModelChange(model.id);
+                }
+              }}
             >
               {model.isPremium && stats.subscriptionPlan === 'free' && (
                 <div className="absolute -top-2 -right-2">
