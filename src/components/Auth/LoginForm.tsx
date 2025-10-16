@@ -49,11 +49,12 @@ const LoginForm: React.FC = () => {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
+          <div className="inline-flex items-center justify-center mb-4">
             <img 
               src="/Group 1.png" 
               alt="Nekota Logo" 
-              className="w-full h-full object-contain"
+              style={{ width: '200px', height: 'auto' }}
+              className="object-contain"
             />
           </div>
         </div>
