@@ -49,7 +49,7 @@ const LoginForm: React.FC = () => {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 mb-4">
+          <div className="inline-flex items-center justify-center w-30 h-30 mb-4">
             <img 
               src="/Group 1.png" 
               alt="Nekota Logo" 
