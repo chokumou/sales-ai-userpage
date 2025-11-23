@@ -137,67 +137,27 @@ const Memory: React.FC = () => {
         timestamp: m.timestamp || (m as any).created_at || (m as any).updated_at
       }));
       
-      // 念のため、フロントエンドでもシステム自動登録のメモリーを除外
+      // フロントエンド側のフィルタリングを最小限に
       // API側でexclude_system=trueを送っているので、基本的には除外済み
-      // ただし、古いデータやAPI側で対応していない場合に備えてフィルタリング
-      const excludedReasons: string[] = [];
+      // ただし、念のため明示的にis_system=trueのもののみ除外
       const userMemories = allMemories.filter(m => {
-        let excluded = false;
-        let reason = '';
-        
-        // まず、現在のユーザーのメモリーかどうかを確認
+        // 現在のユーザーのメモリーかどうかを確認
         if (m.user_id !== user.id) {
-          excluded = true;
-          reason = `user_id mismatch (expected: ${user.id}, got: ${m.user_id})`;
+          console.log(`❌ Excluded memory ${m.id}: user_id mismatch (expected: ${user.id}, got: ${m.user_id})`);
+          return false;
         }
+        
         // is_systemが明示的にtrueの場合は除外
-        else if (m.is_system === true) {
-          excluded = true;
-          reason = 'is_system=true';
-        }
-        // source_typeが'general_question'などのシステム自動登録の場合は除外
-        // ただし、source_typeが空文字列やnullの場合は除外しない（古いデータ対応）
-        else if (m.source_type && m.source_type.trim() !== '') {
-          const systemSourceTypes = ['general_question', 'auto', 'system'];
-          const sourceTypeLower = m.source_type.trim().toLowerCase();
-          if (systemSourceTypes.includes(sourceTypeLower)) {
-            excluded = true;
-            reason = `source_type=${m.source_type}`;
-          }
-        }
-        // テキストが"Q: "で始まる場合は一般質問の回答として除外
-        // ただし、is_systemやsource_typeが明示的に設定されていない場合は除外しない（古いデータ対応）
-        else if (m.text && m.text.trim().startsWith('Q: ') && (m.is_system === true || (m.source_type && ['general_question', 'auto', 'system'].includes(m.source_type.trim().toLowerCase())))) {
-          excluded = true;
-          reason = 'text starts with "Q: " and is system';
+        if (m.is_system === true) {
+          console.log(`❌ Excluded memory ${m.id}: is_system=true`);
+          return false;
         }
         
-        if (excluded) {
-          excludedReasons.push(`Memory ${m.id}: ${reason} - ${m.text?.substring(0, 50)}...`);
-          console.log(`❌ Excluded memory ${m.id}: ${reason}`, {
-            user_id: m.user_id,
-            expected_user_id: user.id,
-            is_system: m.is_system,
-            source_type: m.source_type,
-            text_preview: m.text?.substring(0, 50)
-          });
-        } else {
-          console.log(`✅ Included memory ${m.id}:`, {
-            user_id: m.user_id,
-            is_system: m.is_system,
-            source_type: m.source_type,
-            text_preview: m.text?.substring(0, 50)
-          });
-        }
-        
-        return !excluded;
+        // それ以外はすべて表示（古いメモリーも含む）
+        return true;
       });
       
-      if (excludedReasons.length > 0) {
-        console.log(`Filtered ${userMemories.length} out of ${allMemories.length} memories. Excluded:`, excludedReasons);
-      } else {
-        console.log(`All ${allMemories.length} memories included (no filtering applied)`);
-      }
+      console.log(`Filtered ${userMemories.length} out of ${allMemories.length} memories`);
       
       if (isInitial) {
         setMemories(userMemories);
