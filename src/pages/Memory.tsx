@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Brain, Plus, Search, Trash2, Edit3, Calendar, Filter, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -27,9 +27,9 @@ const Memory: React.FC = () => {
   const { t } = useLanguage();
   const [memories, setMemories] = useState<Memory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalMemories, setTotalMemories] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newMemoryText, setNewMemoryText] = useState('');
@@ -41,11 +41,36 @@ const Memory: React.FC = () => {
   const [success, setSuccess] = useState<string>('');
 
   const categories = ['Personal', 'Work', 'Ideas', 'Important', 'Other'];
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   useEffect(() => {
-    loadMemories();
-  }, [user, currentPage]);
+    if (user) {
+      // 初期読み込み
+      setMemories([]);
+      setOffset(0);
+      setHasMore(true);
+      loadMemories(0, true);
+    }
+  }, [user]);
+
+  // 無限スクロール: スクロール位置を監視
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isLoadingMore || !hasMore || !user) return;
+      
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // 下部100px手前で読み込み
+      if (scrollTop + windowHeight >= documentHeight - 100) {
+        loadMoreMemories();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isLoadingMore, hasMore, user, loadMoreMemories]);
 
   // Clear messages after 5 seconds
   useEffect(() => {
@@ -58,132 +83,82 @@ const Memory: React.FC = () => {
     }
   }, [error, success]);
 
-  const loadMemories = async () => {
+  const loadMemories = async (currentOffset: number = 0, isInitial: boolean = false) => {
     if (!user) return;
 
     try {
-      setIsLoading(true);
+      if (isInitial) {
+        setIsLoading(true);
+      } else {
+        setIsLoadingMore(true);
+      }
       setError('');
       
-      console.log('Loading memories for user:', user.id, 'page:', currentPage);
+      console.log('Loading memories for user:', user.id, 'offset:', currentOffset, 'limit:', itemsPerPage);
       
-      const response = await memoryAPI.list(user.id, currentPage, itemsPerPage);
+      // APIリクエスト時にシステム自動登録のメモリーを除外するパラメータを追加
+      // exclude_system=true でシステム自動登録を除外（API側で対応が必要な場合は後で実装）
+      const response = await memoryAPI.list(user.id, currentOffset, itemsPerPage, true);
       console.log('Memories loaded (raw):', response);
       
-      // レスポンスの構造を確認（配列かオブジェクトか）
-      let memoriesArray: Memory[];
-      let totalCount = 0;
-      let totalPagesCount = 1;
-      
-      if (Array.isArray(response)) {
-        // 配列の場合（後方互換性）
-        memoriesArray = response;
-        totalCount = response.length;
-      } else if (response && typeof response === 'object' && 'memories' in response) {
-        // オブジェクトの場合（{memories: [...], total: 125, page: 1, limit: 10}）
-        memoriesArray = (response as MemoryResponse).memories || [];
-        totalCount = (response as MemoryResponse).total || memoriesArray.length;
-        totalPagesCount = (response as MemoryResponse).pages || Math.ceil(totalCount / itemsPerPage);
-        console.log('MemoryResponse structure:', {
-          memories: memoriesArray.length,
-          total: totalCount,
-          page: (response as MemoryResponse).page,
-          pages: totalPagesCount
-        });
-      } else {
-        memoriesArray = [];
-      }
+      // レスポンスは配列として返される（API側でシステム自動登録を除外済み）
+      const memoriesArray: Memory[] = Array.isArray(response) ? response : [];
       
       console.log('Memories loaded length:', memoriesArray?.length);
-      console.log('First memory structure:', memoriesArray && memoriesArray.length > 0 ? memoriesArray[0] : 'No memories');
-      // 特定のメモリーIDが含まれているか確認
-      const targetMemoryId = 'eae0266b-b8a6-42e5-8bb2-ce25c5a22404';
-      const foundMemory = memoriesArray?.find((m: Memory) => m.id === targetMemoryId);
-      console.log(`🔍 Looking for memory ${targetMemoryId}:`, foundMemory ? 'FOUND' : 'NOT FOUND in current page');
-      if (foundMemory) {
-        console.log('  Found memory details:', foundMemory);
-      }
-      // システム自動登録のメモリーを除外（ユーザーが自分で登録した内容だけを表示）
-      // source_typeが設定されているメモリー（例: 'general_question'）はシステム自動登録として除外
-      // is_systemフラグが明示的にtrueの場合も除外
-      // テキストが"Q: "で始まる場合もシステム自動登録（一般質問の回答）として除外
       // APIレスポンスのcreated_atをtimestampにマッピング
+      // システム自動登録のメモリーはAPI側で除外されている想定（フロントエンドでも念のためフィルタリング）
       const allMemories = memoriesArray.map(m => ({
         ...m,
         timestamp: m.timestamp || (m as any).created_at || (m as any).updated_at
       }));
-      const excludedMemories: string[] = [];
+      
+      // 念のため、フロントエンドでもシステム自動登録のメモリーを除外
       const userMemories = allMemories.filter(m => {
-        let excluded = false;
-        let reason = '';
-        
-        // デバッグ: 各メモリーの全情報をログ出力
-        console.log(`🔍 Memory ${m.id}:`, {
-          is_system: m.is_system,
-          source_type: m.source_type,
-          text_preview: m.text?.substring(0, 100),
-          category: m.category,
-          timestamp: m.timestamp,
-          created_at: (m as any).created_at,
-          updated_at: (m as any).updated_at,
-          full_object: m
-        });
-        // timestampの詳細を確認
-        if (m.timestamp) {
-          const dateTest = new Date(m.timestamp);
-          console.log(`  📅 timestamp value: "${m.timestamp}", parsed: ${dateTest}, isValid: ${!isNaN(dateTest.getTime())}`);
-        } else {
-          console.log(`  ⚠️ timestamp is missing or null/undefined`);
-        }
-        
-        // システム自動登録のメモリーを除外する条件（厳密に判定）
-        // 1. is_systemが明示的にtrueの場合
-        if (m.is_system === true) {
-          excluded = true;
-          reason = 'is_system=true';
-        }
-        // 2. source_typeが'general_question'などのシステム自動登録の場合
-        else if (m.source_type && m.source_type.trim() !== '') {
+        // is_systemが明示的にtrueの場合は除外
+        if (m.is_system === true) return false;
+        // source_typeが'general_question'などのシステム自動登録の場合は除外
+        if (m.source_type && m.source_type.trim() !== '') {
           const systemSourceTypes = ['general_question', 'auto', 'system'];
-          if (systemSourceTypes.includes(m.source_type.trim().toLowerCase())) {
-            excluded = true;
-            reason = `source_type=${m.source_type} (system auto)`;
-          }
-          // source_typeが設定されていても、システム自動登録でない場合は表示
+          if (systemSourceTypes.includes(m.source_type.trim().toLowerCase())) return false;
         }
-        // 3. テキストが"Q: "で始まる場合は一般質問の回答として除外（既存データ対応）
-        else if (m.text && m.text.trim().startsWith('Q: ')) {
-          excluded = true;
-          reason = 'text starts with "Q: "';
-        }
-        // それ以外はすべて表示（既存のメモリーも含む）
-        
-        if (excluded) {
-          excludedMemories.push(`Memory ${m.id}: ${reason} - ${m.text?.substring(0, 50)}...`);
-          console.log(`❌ Excluded ${m.id}: ${reason}`);
-        } else {
-          console.log(`✅ Included ${m.id}: user registered memory`);
-        }
-        
-        return !excluded;
+        // テキストが"Q: "で始まる場合は一般質問の回答として除外
+        if (m.text && m.text.trim().startsWith('Q: ')) return false;
+        return true;
       });
       
-      console.log(`Filtered memories: ${userMemories.length} out of ${allMemories.length} (excluding system)`);
-      if (excludedMemories.length > 0) {
-        console.log('Excluded memories:', excludedMemories);
+      if (isInitial) {
+        setMemories(userMemories);
+      } else {
+        // 追加読み込み: 既存のメモリーに追加
+        setMemories(prev => [...prev, ...userMemories]);
       }
-      setMemories(userMemories);
-      // ページネーション情報を設定
-      setTotalPages(totalPagesCount);
-      setTotalMemories(totalCount);
+      
+      // 次の読み込みがあるかチェック
+      const hasMoreData = userMemories.length === itemsPerPage;
+      setHasMore(hasMoreData);
+      setOffset(currentOffset + userMemories.length);
+      
+      console.log(`Loaded ${userMemories.length} memories (offset: ${currentOffset}, hasMore: ${hasMoreData})`);
     } catch (error) {
       console.error('Error loading memories:', error);
       setError('\u30e1\u30e2\u30ea\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002');
-      setMemories([]);
+      if (isInitial) {
+        setMemories([]);
+      }
     } finally {
-      setIsLoading(false);
+      if (isInitial) {
+        setIsLoading(false);
+      } else {
+        setIsLoadingMore(false);
+      }
     }
   };
+
+  const loadMoreMemories = useCallback(() => {
+    if (!isLoadingMore && hasMore && user) {
+      loadMemories(offset, false);
+    }
+  }, [isLoadingMore, hasMore, user, offset]);
 
   const handleCreateMemory = async () => {
     console.log('[DEBUG] handleCreateMemory called', { user, newMemoryText, newMemoryCategory });
@@ -214,9 +189,11 @@ const Memory: React.FC = () => {
       console.log('[DEBUG] Create API response:', createResponse);
       console.log('[DEBUG] Create API response timestamp:', createResponse?.timestamp, createResponse?.created_at, createResponse?.updated_at);
       
-      // 追加後にページを1にリセットしてから再取得
-      setCurrentPage(1);
-      await loadMemories();
+      // 追加後に再取得（初期読み込み）
+      setMemories([]);
+      setOffset(0);
+      setHasMore(true);
+      await loadMemories(0, true);
       
       // Reset form
       setNewMemoryText('');
@@ -244,7 +221,10 @@ const Memory: React.FC = () => {
       console.log('Memory deleted successfully');
       
       // Reload memories
-      await loadMemories();
+      setMemories([]);
+      setOffset(0);
+      setHasMore(true);
+      await loadMemories(0, true);
       setSuccess('メモリが削除されました。');
       
     } catch (error) {
@@ -265,9 +245,6 @@ const Memory: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
 
   const formatDate = (dateString: string) => {
     if (!dateString) {
@@ -457,45 +434,16 @@ const Memory: React.FC = () => {
         )}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-6">
-          <div className="text-sm text-gray-700">
-            ページ {currentPage} / {totalPages} （全 {totalMemories} 件）
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage <= 1}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              前へ
-            </button>
-            {[...Array(Math.min(5, totalPages))].map((_, i) => {
-              const page = i + Math.max(1, currentPage - 2);
-              if (page > totalPages) return null;
-              return (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`px-3 py-2 text-sm rounded-lg ${
-                    currentPage === page
-                      ? 'bg-blue-600 text-white'
-                      : 'border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {page}
-                </button>
-              );
-            })}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              次へ
-            </button>
-          </div>
+      {/* 無限スクロール: ローディング表示 */}
+      {isLoadingMore && (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 mt-2">読み込み中...</p>
+        </div>
+      )}
+      {!hasMore && memories.length > 0 && (
+        <div className="text-center py-8 text-gray-500">
+          <p>すべてのメモリーを表示しました</p>
         </div>
       )}
 

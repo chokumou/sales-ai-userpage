@@ -723,15 +723,25 @@ class APIService {
       });
     },
 
-    list: async (userId: string, page: number = 1, limit: number = 20) => {
-      const response = await this.request<any>(`/api/memory/?user_id=${userId}&page=${page}&limit=${limit}`);
+    list: async (userId: string, offset: number = 0, limit: number = 20, excludeSystem: boolean = false) => {
+      // offsetベースのページネーション（無限スクロール用）
+      // exclude_system=trueでシステム自動登録のメモリーを除外
+      const params = new URLSearchParams({
+        user_id: userId,
+        offset: offset.toString(),
+        limit: limit.toString()
+      });
+      if (excludeSystem) {
+        params.append('exclude_system', 'true');
+      }
+      const response = await this.request<any>(`/api/memory/?${params.toString()}`);
       // レスポンスが配列の場合はそのまま返す（後方互換性）
       if (Array.isArray(response)) {
         return response;
       }
-      // レスポンスがオブジェクトの場合は、memories配列とページネーション情報を返す
+      // レスポンスがオブジェクトの場合は、memories配列を返す
       if (response && typeof response === 'object' && 'memories' in response) {
-        return response; // {memories: [...], total: 125, page: 1, limit: 10} の形式
+        return response.memories || [];
       }
       // フォールバック: ensureArrayを使用
       return ensureArray(response, 'memories');
