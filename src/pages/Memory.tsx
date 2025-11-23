@@ -85,8 +85,18 @@ const Memory: React.FC = () => {
           source_type: m.source_type,
           text_preview: m.text?.substring(0, 100),
           category: m.category,
-          timestamp: m.timestamp
+          timestamp: m.timestamp,
+          created_at: (m as any).created_at,
+          updated_at: (m as any).updated_at,
+          full_object: m
         });
+        // timestampの詳細を確認
+        if (m.timestamp) {
+          const dateTest = new Date(m.timestamp);
+          console.log(`  📅 timestamp value: "${m.timestamp}", parsed: ${dateTest}, isValid: ${!isNaN(dateTest.getTime())}`);
+        } else {
+          console.log(`  ⚠️ timestamp is missing or null/undefined`);
+        }
         
         // システム自動登録のメモリーを除外する条件（厳密に判定）
         // 1. is_systemが明示的にtrueの場合
@@ -159,9 +169,11 @@ const Memory: React.FC = () => {
         category: newMemoryCategory || undefined
       });
 
-      await memoryAPI.create(user.id, newMemoryText.trim(), newMemoryCategory || undefined);
+      const createResponse = await memoryAPI.create(user.id, newMemoryText.trim(), newMemoryCategory || undefined);
       
       console.log('[DEBUG] Memory created successfully');
+      console.log('[DEBUG] Create API response:', createResponse);
+      console.log('[DEBUG] Create API response timestamp:', createResponse?.timestamp, createResponse?.created_at, createResponse?.updated_at);
       
       // 追加後にページを1にリセットしてから再取得
       setCurrentPage(1);
@@ -219,7 +231,16 @@ const Memory: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ja-JP', {
+    if (!dateString) {
+      console.warn('⚠️ formatDate: dateString is empty or null');
+      return '日付不明';
+    }
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      console.warn('⚠️ formatDate: Invalid date string:', dateString);
+      return '日付不明';
+    }
+    return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
