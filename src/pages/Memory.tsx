@@ -73,21 +73,47 @@ const Memory: React.FC = () => {
       // source_typeが設定されているメモリー（例: 'general_question'）はシステム自動登録として除外
       // is_systemフラグが明示的にtrueの場合も除外
       // テキストが"Q: "で始まる場合もシステム自動登録（一般質問の回答）として除外
-      const userMemories = (response as Memory[]).filter(m => {
-        // デバッグ: 各メモリーの識別情報を確認
-        if (m.is_system !== undefined || m.source_type !== undefined) {
-          console.log(`Memory ${m.id}: is_system = ${m.is_system}, source_type = ${m.source_type}, text preview = ${m.text?.substring(0, 50)}`);
-        }
+      const allMemories = response as Memory[];
+      const excludedMemories: string[] = [];
+      const userMemories = allMemories.filter(m => {
+        let excluded = false;
+        let reason = '';
+        
         // is_systemが明示的にtrueの場合は除外
-        if (m.is_system === true) return false;
-        // source_typeが設定されている場合はシステム自動登録として除外
-        if (m.source_type && m.source_type !== '') return false;
+        if (m.is_system === true) {
+          excluded = true;
+          reason = 'is_system=true';
+        }
+        // source_typeが'general_question'などのシステム自動登録の場合は除外
+        // ただし、source_typeが'manual'や'user'などの場合は表示する
+        else if (m.source_type && m.source_type.trim() !== '') {
+          const systemSourceTypes = ['general_question', 'auto', 'system'];
+          if (systemSourceTypes.includes(m.source_type.trim().toLowerCase())) {
+            excluded = true;
+            reason = `source_type=${m.source_type} (system auto)`;
+          }
+          // source_typeが設定されていても、システム自動登録でない場合は表示
+        }
         // テキストが"Q: "で始まる場合は一般質問の回答として除外（既存データ対応）
-        if (m.text && m.text.trim().startsWith('Q: ')) return false;
-        // それ以外はユーザー登録として表示
-        return true;
+        else if (m.text && m.text.trim().startsWith('Q: ')) {
+          excluded = true;
+          reason = 'text starts with "Q: "';
+        }
+        
+        if (excluded) {
+          excludedMemories.push(`Memory ${m.id}: ${reason} - ${m.text?.substring(0, 50)}...`);
+          console.log(`❌ Excluded ${m.id}: ${reason}`);
+        } else {
+          console.log(`✅ Included ${m.id}: user registered memory`);
+        }
+        
+        return !excluded;
       });
-      console.log(`Filtered memories: ${userMemories.length} out of ${(response as Memory[]).length} (excluding system)`);
+      
+      console.log(`Filtered memories: ${userMemories.length} out of ${allMemories.length} (excluding system)`);
+      if (excludedMemories.length > 0) {
+        console.log('Excluded memories:', excludedMemories);
+      }
       setMemories(userMemories);
       setTotalPages(1); // ページネーション不要なら1固定
       setTotalMemories(userMemories.length);
