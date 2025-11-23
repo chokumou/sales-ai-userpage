@@ -107,6 +107,13 @@ const Memory: React.FC = () => {
       const memoriesArray: Memory[] = Array.isArray(response) ? response : [];
       
       console.log('Memories loaded length:', memoriesArray?.length);
+      console.log('Sample memory structure:', memoriesArray.length > 0 ? {
+        id: memoriesArray[0].id,
+        is_system: memoriesArray[0].is_system,
+        source_type: memoriesArray[0].source_type,
+        text_preview: memoriesArray[0].text?.substring(0, 50),
+        created_at: (memoriesArray[0] as any).created_at
+      } : 'No memories');
       // APIレスポンスのcreated_atをtimestampにマッピング
       // システム自動登録のメモリーはAPI側で除外されている想定（フロントエンドでも念のためフィルタリング）
       const allMemories = memoriesArray.map(m => ({
@@ -115,18 +122,58 @@ const Memory: React.FC = () => {
       }));
       
       // 念のため、フロントエンドでもシステム自動登録のメモリーを除外
+      // API側でexclude_system=trueを送っているので、基本的には除外済み
+      // ただし、古いデータやAPI側で対応していない場合に備えてフィルタリング
+      const excludedReasons: string[] = [];
       const userMemories = allMemories.filter(m => {
+        let excluded = false;
+        let reason = '';
+        
         // is_systemが明示的にtrueの場合は除外
-        if (m.is_system === true) return false;
+        if (m.is_system === true) {
+          excluded = true;
+          reason = 'is_system=true';
+        }
         // source_typeが'general_question'などのシステム自動登録の場合は除外
-        if (m.source_type && m.source_type.trim() !== '') {
+        // ただし、source_typeが空文字列やnullの場合は除外しない（古いデータ対応）
+        else if (m.source_type && m.source_type.trim() !== '') {
           const systemSourceTypes = ['general_question', 'auto', 'system'];
-          if (systemSourceTypes.includes(m.source_type.trim().toLowerCase())) return false;
+          const sourceTypeLower = m.source_type.trim().toLowerCase();
+          if (systemSourceTypes.includes(sourceTypeLower)) {
+            excluded = true;
+            reason = `source_type=${m.source_type}`;
+          }
         }
         // テキストが"Q: "で始まる場合は一般質問の回答として除外
-        if (m.text && m.text.trim().startsWith('Q: ')) return false;
-        return true;
+        // ただし、is_systemやsource_typeが明示的に設定されていない場合は除外しない（古いデータ対応）
+        else if (m.text && m.text.trim().startsWith('Q: ') && (m.is_system === true || (m.source_type && ['general_question', 'auto', 'system'].includes(m.source_type.trim().toLowerCase())))) {
+          excluded = true;
+          reason = 'text starts with "Q: " and is system';
+        }
+        
+        if (excluded) {
+          excludedReasons.push(`Memory ${m.id}: ${reason} - ${m.text?.substring(0, 50)}...`);
+          console.log(`❌ Excluded memory ${m.id}: ${reason}`, {
+            is_system: m.is_system,
+            source_type: m.source_type,
+            text_preview: m.text?.substring(0, 50)
+          });
+        } else {
+          console.log(`✅ Included memory ${m.id}:`, {
+            is_system: m.is_system,
+            source_type: m.source_type,
+            text_preview: m.text?.substring(0, 50)
+          });
+        }
+        
+        return !excluded;
       });
+      
+      if (excludedReasons.length > 0) {
+        console.log(`Filtered ${userMemories.length} out of ${allMemories.length} memories. Excluded:`, excludedReasons);
+      } else {
+        console.log(`All ${allMemories.length} memories included (no filtering applied)`);
+      }
       
       if (isInitial) {
         setMemories(userMemories);

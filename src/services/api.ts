@@ -741,6 +741,7 @@ class APIService {
       }
       // レスポンスがオブジェクトの場合は、memories配列を返す
       if (response && typeof response === 'object' && 'memories' in response) {
+        console.log('API response has memories array:', response.memories?.length, 'total:', response.total);
         return response.memories || [];
       }
       // フォールバック: ensureArrayを使用
