@@ -114,6 +114,22 @@ const Memory: React.FC = () => {
         text_preview: memoriesArray[0].text?.substring(0, 50),
         created_at: (memoriesArray[0] as any).created_at
       } : 'No memories');
+      
+      // 特定のメモリーIDを探す（デバッグ用）
+      const targetMemoryId = '26d04ea5-fc40-4b26-89e2-ac2423f95d73';
+      const targetMemory = memoriesArray.find(m => m.id === targetMemoryId);
+      if (targetMemory) {
+        console.log('🔍 Found target memory:', {
+          id: targetMemory.id,
+          user_id: targetMemory.user_id,
+          is_system: targetMemory.is_system,
+          source_type: targetMemory.source_type,
+          text: targetMemory.text,
+          full_object: targetMemory
+        });
+      } else {
+        console.log('🔍 Target memory NOT FOUND in API response');
+      }
       // APIレスポンスのcreated_atをtimestampにマッピング
       // システム自動登録のメモリーはAPI側で除外されている想定（フロントエンドでも念のためフィルタリング）
       const allMemories = memoriesArray.map(m => ({
@@ -129,8 +145,13 @@ const Memory: React.FC = () => {
         let excluded = false;
         let reason = '';
         
+        // まず、現在のユーザーのメモリーかどうかを確認
+        if (m.user_id !== user.id) {
+          excluded = true;
+          reason = `user_id mismatch (expected: ${user.id}, got: ${m.user_id})`;
+        }
         // is_systemが明示的にtrueの場合は除外
-        if (m.is_system === true) {
+        else if (m.is_system === true) {
           excluded = true;
           reason = 'is_system=true';
         }
@@ -154,12 +175,15 @@ const Memory: React.FC = () => {
         if (excluded) {
           excludedReasons.push(`Memory ${m.id}: ${reason} - ${m.text?.substring(0, 50)}...`);
           console.log(`❌ Excluded memory ${m.id}: ${reason}`, {
+            user_id: m.user_id,
+            expected_user_id: user.id,
             is_system: m.is_system,
             source_type: m.source_type,
             text_preview: m.text?.substring(0, 50)
           });
         } else {
           console.log(`✅ Included memory ${m.id}:`, {
+            user_id: m.user_id,
             is_system: m.is_system,
             source_type: m.source_type,
             text_preview: m.text?.substring(0, 50)
