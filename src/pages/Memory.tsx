@@ -73,7 +73,11 @@ const Memory: React.FC = () => {
       // source_typeが設定されているメモリー（例: 'general_question'）はシステム自動登録として除外
       // is_systemフラグが明示的にtrueの場合も除外
       // テキストが"Q: "で始まる場合もシステム自動登録（一般質問の回答）として除外
-      const allMemories = response as Memory[];
+      // APIレスポンスのcreated_atをtimestampにマッピング
+      const allMemories = (response as Memory[]).map(m => ({
+        ...m,
+        timestamp: m.timestamp || (m as any).created_at || (m as any).updated_at
+      }));
       const excludedMemories: string[] = [];
       const userMemories = allMemories.filter(m => {
         let excluded = false;
