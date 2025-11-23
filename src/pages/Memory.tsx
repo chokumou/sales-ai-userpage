@@ -72,19 +72,22 @@ const Memory: React.FC = () => {
       // システム自動登録のメモリーを除外（ユーザーが自分で登録した内容だけを表示）
       // source_typeが設定されているメモリー（例: 'general_question'）はシステム自動登録として除外
       // is_systemフラグが明示的にtrueの場合も除外
+      // テキストが"Q: "で始まる場合もシステム自動登録（一般質問の回答）として除外
       const userMemories = (response as Memory[]).filter(m => {
         // デバッグ: 各メモリーの識別情報を確認
         if (m.is_system !== undefined || m.source_type !== undefined) {
-          console.log(`Memory ${m.id}: is_system = ${m.is_system}, source_type = ${m.source_type}`);
+          console.log(`Memory ${m.id}: is_system = ${m.is_system}, source_type = ${m.source_type}, text preview = ${m.text?.substring(0, 50)}`);
         }
         // is_systemが明示的にtrueの場合は除外
         if (m.is_system === true) return false;
         // source_typeが設定されている場合はシステム自動登録として除外
         if (m.source_type && m.source_type !== '') return false;
+        // テキストが"Q: "で始まる場合は一般質問の回答として除外（既存データ対応）
+        if (m.text && m.text.trim().startsWith('Q: ')) return false;
         // それ以外はユーザー登録として表示
         return true;
       });
-      console.log('Filtered memories (excluding system):', userMemories);
+      console.log(`Filtered memories: ${userMemories.length} out of ${(response as Memory[]).length} (excluding system)`);
       setMemories(userMemories);
       setTotalPages(1); // ページネーション不要なら1固定
       setTotalMemories(userMemories.length);
@@ -167,6 +170,7 @@ const Memory: React.FC = () => {
     // システム自動登録のメモリーは既に除外されているが、念のため再度チェック
     if (memory.is_system === true) return false;
     if (memory.source_type && memory.source_type !== '') return false;
+    if (memory.text && memory.text.trim().startsWith('Q: ')) return false;
     const matchesSearch = searchQuery === '' || 
       memory.text.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === '' || 
