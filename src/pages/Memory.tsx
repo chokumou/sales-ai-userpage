@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Brain, Plus, Search, Trash2, Edit3, Calendar, Filter, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -71,7 +71,8 @@ const Memory: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isLoadingMore, hasMore, user, loadMoreMemories]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoadingMore, hasMore, user, offset]);
 
   // Clear messages after 5 seconds
   useEffect(() => {
@@ -84,7 +85,7 @@ const Memory: React.FC = () => {
     }
   }, [error, success]);
 
-  const loadMemories = useCallback(async (currentOffset: number = 0, isInitial: boolean = false) => {
+  const loadMemories = async (currentOffset: number = 0, isInitial: boolean = false) => {
     if (!user) return;
 
     try {
@@ -153,13 +154,13 @@ const Memory: React.FC = () => {
         setIsLoadingMore(false);
       }
     }
-  }, [user]);
+  };
 
-  const loadMoreMemories = useCallback(() => {
+  const loadMoreMemories = () => {
     if (!isLoadingMore && hasMore && user) {
       loadMemories(offset, false);
     }
-  }, [isLoadingMore, hasMore, user, offset, loadMemories]);
+  };
 
   const handleCreateMemory = async () => {
     console.log('[DEBUG] handleCreateMemory called', { user, newMemoryText, newMemoryCategory });
