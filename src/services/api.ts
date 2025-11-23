@@ -730,14 +730,39 @@ class APIService {
       const params = new URLSearchParams({
         user_id: userId,
         offset: offset.toString(),
-        limit: limit.toString()
+        limit: limit.toString(),
+        select: 'id,text,created_at,is_system,category,user_id' // is_systemを含める
       });
       if (excludeSystem) {
         params.append('exclude_system', 'true');
       }
       const response = await this.request<any>(`/api/memory/?${params.toString()}`);
+      
+      // デバッグ: APIレスポンスの構造を確認
+      console.log('[API DEBUG] Raw response:', response);
+      if (response && typeof response === 'object' && 'memories' in response) {
+        const memories = response.memories || [];
+        if (memories.length > 0) {
+          console.log('[API DEBUG] First memory from API:', {
+            id: memories[0].id,
+            is_system: memories[0].is_system,
+            is_system_type: typeof memories[0].is_system,
+            has_is_system: 'is_system' in memories[0],
+            keys: Object.keys(memories[0])
+          });
+        }
+      }
+      
       // レスポンスが配列の場合はそのまま返す（後方互換性）
       if (Array.isArray(response)) {
+        if (response.length > 0) {
+          console.log('[API DEBUG] Array response - First item:', {
+            id: response[0].id,
+            is_system: response[0].is_system,
+            has_is_system: 'is_system' in response[0],
+            keys: Object.keys(response[0])
+          });
+        }
         return response;
       }
       // レスポンスがオブジェクトの場合は、memories配列を返す
