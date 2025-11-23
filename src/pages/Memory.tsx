@@ -102,6 +102,17 @@ const Memory: React.FC = () => {
       // レスポンスは配列として返される（API側でシステム自動登録を除外済み）
       const memoriesArray: Memory[] = Array.isArray(response) ? response : [];
       
+      // デバッグ: APIレスポンスのis_systemを確認
+      console.log('[DEBUG] API Response memories count:', memoriesArray.length);
+      if (memoriesArray.length > 0) {
+        console.log('[DEBUG] First memory:', {
+          id: memoriesArray[0].id,
+          is_system: memoriesArray[0].is_system,
+          is_system_type: typeof memoriesArray[0].is_system,
+          text_preview: memoriesArray[0].text?.substring(0, 50)
+        });
+      }
+      
       // APIレスポンスのcreated_atをtimestampにマッピング
       const allMemories = memoriesArray.map(m => ({
         ...m,
@@ -116,13 +127,17 @@ const Memory: React.FC = () => {
         }
         
         // is_systemがtrueの場合は非表示（除外）
-        if (m.is_system === true) {
+        if (m.is_system === true || m.is_system === 'true' || m.is_system === 1) {
+          console.log(`[FILTER] Excluding memory ${m.id}: is_system=${m.is_system} (type: ${typeof m.is_system})`);
           return false;
         }
         
         // is_systemがfalse、undefined、nullの場合は表示
+        console.log(`[FILTER] Including memory ${m.id}: is_system=${m.is_system} (type: ${typeof m.is_system})`);
         return true;
       });
+      
+      console.log(`[DEBUG] Filtered: ${userMemories.length} out of ${allMemories.length} memories`);
       
       if (isInitial) {
         setMemories(userMemories);
