@@ -51,7 +51,7 @@ const Memory: React.FC = () => {
       setHasMore(true);
       loadMemories(0, true);
     }
-  }, [user]);
+  }, [user, loadMemories]);
 
   // 無限スクロール: スクロール位置を監視
   useEffect(() => {
@@ -83,7 +83,7 @@ const Memory: React.FC = () => {
     }
   }, [error, success]);
 
-  const loadMemories = async (currentOffset: number = 0, isInitial: boolean = false) => {
+  const loadMemories = useCallback(async (currentOffset: number = 0, isInitial: boolean = false) => {
     if (!user) return;
 
     try {
@@ -152,13 +152,13 @@ const Memory: React.FC = () => {
         setIsLoadingMore(false);
       }
     }
-  };
+  }, [user]);
 
   const loadMoreMemories = useCallback(() => {
     if (!isLoadingMore && hasMore && user) {
       loadMemories(offset, false);
     }
-  }, [isLoadingMore, hasMore, user, offset]);
+  }, [isLoadingMore, hasMore, user, offset, loadMemories]);
 
   const handleCreateMemory = async () => {
     console.log('[DEBUG] handleCreateMemory called', { user, newMemoryText, newMemoryCategory });
