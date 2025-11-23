@@ -51,7 +51,8 @@ const Memory: React.FC = () => {
       setHasMore(true);
       loadMemories(0, true);
     }
-  }, [user, loadMemories]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // 無限スクロール: スクロール位置を監視
   useEffect(() => {
@@ -277,7 +278,7 @@ const Memory: React.FC = () => {
   console.log('[DEBUG] memories to render:', memories);
   console.log('[DEBUG] filteredMemories to render:', filteredMemories);
 
-  if (isLoading && currentPage === 1) {
+  if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto space-y-6 animate-pulse">
         <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -303,7 +304,7 @@ const Memory: React.FC = () => {
         </div>
         <div className="mt-4 sm:mt-0 flex items-center space-x-2">
           <span className="text-sm text-gray-500">
-            {totalMemories} 件のメモリ
+            {memories.length} 件のメモリ
           </span>
           <button
             onClick={() => setShowAddModal(true)}
