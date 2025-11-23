@@ -18,7 +18,8 @@ interface MemoryResponse {
   memories: Memory[];
   total: number;
   page: number;
-  pages: number;
+  pages?: number;
+  limit?: number;
 }
 
 const Memory: React.FC = () => {
@@ -67,12 +68,37 @@ const Memory: React.FC = () => {
       console.log('Loading memories for user:', user.id, 'page:', currentPage);
       
       const response = await memoryAPI.list(user.id, currentPage, itemsPerPage);
-      console.log('Memories loaded:', response);
-      console.log('Memories loaded length:', response?.length);
-      console.log('First memory structure:', response && response.length > 0 ? response[0] : 'No memories');
+      console.log('Memories loaded (raw):', response);
+      
+      // レスポンスの構造を確認（配列かオブジェクトか）
+      let memoriesArray: Memory[];
+      let totalCount = 0;
+      let totalPagesCount = 1;
+      
+      if (Array.isArray(response)) {
+        // 配列の場合（後方互換性）
+        memoriesArray = response;
+        totalCount = response.length;
+      } else if (response && typeof response === 'object' && 'memories' in response) {
+        // オブジェクトの場合（{memories: [...], total: 125, page: 1, limit: 10}）
+        memoriesArray = (response as MemoryResponse).memories || [];
+        totalCount = (response as MemoryResponse).total || memoriesArray.length;
+        totalPagesCount = (response as MemoryResponse).pages || Math.ceil(totalCount / itemsPerPage);
+        console.log('MemoryResponse structure:', {
+          memories: memoriesArray.length,
+          total: totalCount,
+          page: (response as MemoryResponse).page,
+          pages: totalPagesCount
+        });
+      } else {
+        memoriesArray = [];
+      }
+      
+      console.log('Memories loaded length:', memoriesArray?.length);
+      console.log('First memory structure:', memoriesArray && memoriesArray.length > 0 ? memoriesArray[0] : 'No memories');
       // 特定のメモリーIDが含まれているか確認
       const targetMemoryId = 'eae0266b-b8a6-42e5-8bb2-ce25c5a22404';
-      const foundMemory = response?.find((m: Memory) => m.id === targetMemoryId);
+      const foundMemory = memoriesArray?.find((m: Memory) => m.id === targetMemoryId);
       console.log(`🔍 Looking for memory ${targetMemoryId}:`, foundMemory ? 'FOUND' : 'NOT FOUND in current page');
       if (foundMemory) {
         console.log('  Found memory details:', foundMemory);
@@ -82,7 +108,7 @@ const Memory: React.FC = () => {
       // is_systemフラグが明示的にtrueの場合も除外
       // テキストが"Q: "で始まる場合もシステム自動登録（一般質問の回答）として除外
       // APIレスポンスのcreated_atをtimestampにマッピング
-      const allMemories = (response as Memory[]).map(m => ({
+      const allMemories = memoriesArray.map(m => ({
         ...m,
         timestamp: m.timestamp || (m as any).created_at || (m as any).updated_at
       }));
@@ -147,8 +173,9 @@ const Memory: React.FC = () => {
         console.log('Excluded memories:', excludedMemories);
       }
       setMemories(userMemories);
-      setTotalPages(1); // ページネーション不要なら1固定
-      setTotalMemories(userMemories.length);
+      // ページネーション情報を設定
+      setTotalPages(totalPagesCount);
+      setTotalMemories(totalCount);
     } catch (error) {
       console.error('Error loading memories:', error);
       setError('\u30e1\u30e2\u30ea\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002');
