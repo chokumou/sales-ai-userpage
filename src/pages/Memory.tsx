@@ -68,7 +68,15 @@ const Memory: React.FC = () => {
       
       const response = await memoryAPI.list(user.id, currentPage, itemsPerPage);
       console.log('Memories loaded:', response);
+      console.log('Memories loaded length:', response?.length);
       console.log('First memory structure:', response && response.length > 0 ? response[0] : 'No memories');
+      // 特定のメモリーIDが含まれているか確認
+      const targetMemoryId = 'eae0266b-b8a6-42e5-8bb2-ce25c5a22404';
+      const foundMemory = response?.find((m: Memory) => m.id === targetMemoryId);
+      console.log(`🔍 Looking for memory ${targetMemoryId}:`, foundMemory ? 'FOUND' : 'NOT FOUND in current page');
+      if (foundMemory) {
+        console.log('  Found memory details:', foundMemory);
+      }
       // システム自動登録のメモリーを除外（ユーザーが自分で登録した内容だけを表示）
       // source_typeが設定されているメモリー（例: 'general_question'）はシステム自動登録として除外
       // is_systemフラグが明示的にtrueの場合も除外
