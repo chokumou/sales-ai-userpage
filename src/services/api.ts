@@ -718,7 +718,8 @@ class APIService {
         body: JSON.stringify({ 
           user_id: userId, 
           text: text.trim(),
-          category: category || null
+          category: category || null,
+          is_system: false  // ユーザーが自分で登録したメモリー
         }),
       });
     },

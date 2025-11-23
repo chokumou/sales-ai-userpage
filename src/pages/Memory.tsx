@@ -96,88 +96,34 @@ const Memory: React.FC = () => {
       }
       setError('');
       
-      console.log('Loading memories for user:', user.id, 'offset:', currentOffset, 'limit:', itemsPerPage);
-      
-      // APIリクエスト: exclude_systemパラメータを送らない（すべて取得してフロントエンドでフィルタリング）
-      const response = await memoryAPI.list(user.id, currentOffset, itemsPerPage, false);
-      console.log('Memories loaded (raw):', response);
+      // APIリクエスト: exclude_system=trueでシステム自動登録のメモリーを除外
+      const response = await memoryAPI.list(user.id, currentOffset, itemsPerPage, true);
       
       // レスポンスは配列として返される（API側でシステム自動登録を除外済み）
       const memoriesArray: Memory[] = Array.isArray(response) ? response : [];
-      
-      console.log('Memories loaded length:', memoriesArray?.length);
-      console.log('Sample memory structure:', memoriesArray.length > 0 ? {
-        id: memoriesArray[0].id,
-        is_system: memoriesArray[0].is_system,
-        source_type: memoriesArray[0].source_type,
-        text_preview: memoriesArray[0].text?.substring(0, 50),
-        created_at: (memoriesArray[0] as any).created_at
-      } : 'No memories');
-      
-      // 特定のメモリーIDを探す（デバッグ用）
-      const targetMemoryId = '26d04ea5-fc40-4b26-89e2-ac2423f95d73';
-      const targetMemory = memoriesArray.find(m => m.id === targetMemoryId);
-      if (targetMemory) {
-        console.log('🔍 Found target memory:', {
-          id: targetMemory.id,
-          user_id: targetMemory.user_id,
-          is_system: targetMemory.is_system,
-          source_type: targetMemory.source_type,
-          text: targetMemory.text,
-          full_object: targetMemory
-        });
-      } else {
-        console.log('🔍 Target memory NOT FOUND in API response');
-      }
       // APIレスポンスのcreated_atをtimestampにマッピング
-      // システム自動登録のメモリーはAPI側で除外されている想定（フロントエンドでも念のためフィルタリング）
+      // API側でis_system=falseのメモリーのみを返すように設定済み
       const allMemories = memoriesArray.map(m => ({
         ...m,
         timestamp: m.timestamp || (m as any).created_at || (m as any).updated_at
       }));
       
-      // フロントエンド側のフィルタリング
-      // API側でuser_idでフィルタリング済みなので、user_idが含まれていない場合はすべて表示
-      // ただし、明示的にis_system=trueのものは除外
+      // フロントエンド側のフィルタリング（念のため）
+      // is_systemがtrueのメモリー（自動登録）は除外し、ユーザーが自分で登録したメモリーのみを表示
       const userMemories = allMemories.filter(m => {
         // user_idが含まれている場合は、現在のユーザーのメモリーかどうかを確認
         if (m.user_id && m.user_id !== user.id) {
-          console.log(`❌ Excluded memory ${m.id}: user_id mismatch (expected: ${user.id}, got: ${m.user_id})`);
           return false;
         }
         
-        // is_systemが明示的にtrueの場合は除外
+        // is_systemがtrueの場合は除外（自動登録メモリー）
         if (m.is_system === true) {
-          console.log(`❌ Excluded memory ${m.id}: is_system=true`);
           return false;
         }
         
-        // source_typeが'general_question'などのシステム自動登録の場合は除外
-        if (m.source_type && m.source_type.trim() !== '') {
-          const systemSourceTypes = ['general_question', 'auto', 'system'];
-          if (systemSourceTypes.includes(m.source_type.trim().toLowerCase())) {
-            console.log(`❌ Excluded memory ${m.id}: source_type=${m.source_type}`);
-            return false;
-          }
-        }
-        
-        // テキストが"Q: "で始まる場合は一般質問の回答として除外（自動登録メモリー）
-        if (m.text && m.text.trim().startsWith('Q: ')) {
-          console.log(`❌ Excluded memory ${m.id}: text starts with "Q: " (auto-registered)`);
-          return false;
-        }
-        
-        // それ以外はすべて表示（古いメモリーも含む）
-        console.log(`✅ Included memory ${m.id}:`, {
-          user_id: m.user_id,
-          is_system: m.is_system,
-          source_type: m.source_type,
-          text_preview: m.text?.substring(0, 50)
-        });
+        // それ以外はすべて表示（ユーザーが自分で登録したメモリー）
         return true;
       });
-      
-      console.log(`Filtered ${userMemories.length} out of ${allMemories.length} memories`);
       
       if (isInitial) {
         setMemories(userMemories);
@@ -190,8 +136,6 @@ const Memory: React.FC = () => {
       const hasMoreData = userMemories.length === itemsPerPage;
       setHasMore(hasMoreData);
       setOffset(currentOffset + userMemories.length);
-      
-      console.log(`Loaded ${userMemories.length} memories (offset: ${currentOffset}, hasMore: ${hasMoreData})`);
     } catch (error) {
       console.error('Error loading memories:', error);
       setError('\u30e1\u30e2\u30ea\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002');
@@ -214,7 +158,6 @@ const Memory: React.FC = () => {
   };
 
   const handleCreateMemory = async () => {
-    console.log('[DEBUG] handleCreateMemory called', { user, newMemoryText, newMemoryCategory });
     if (!user || !newMemoryText.trim()) {
       setError(t('memory.errorRequired'));
       return;
@@ -230,17 +173,7 @@ const Memory: React.FC = () => {
     setSuccess('');
 
     try {
-      console.log('[DEBUG] Creating memory:', {
-        user_id: user.id,
-        text: newMemoryText.trim(),
-        category: newMemoryCategory || undefined
-      });
-
-      const createResponse = await memoryAPI.create(user.id, newMemoryText.trim(), newMemoryCategory || undefined);
-      
-      console.log('[DEBUG] Memory created successfully');
-      console.log('[DEBUG] Create API response:', createResponse);
-      console.log('[DEBUG] Create API response timestamp:', createResponse?.timestamp, createResponse?.created_at, createResponse?.updated_at);
+      await memoryAPI.create(user.id, newMemoryText.trim(), newMemoryCategory || undefined);
       
       // 追加後に再取得（初期読み込み）
       setMemories([]);
@@ -255,7 +188,6 @@ const Memory: React.FC = () => {
       setSuccess(t('memory.successCreated'));
       
     } catch (error) {
-      console.error('[DEBUG] Error creating memory:', error);
       setError(error instanceof Error ? error.message : t('memory.errorCreating'));
     } finally {
       setIsSubmitting(false);
@@ -267,11 +199,7 @@ const Memory: React.FC = () => {
 
     try {
       setError('');
-      console.log('Deleting memory:', memoryId);
-      
       await memoryAPI.delete(memoryId);
-      
-      console.log('Memory deleted successfully');
       
       // Reload memories
       setMemories([]);
@@ -281,16 +209,15 @@ const Memory: React.FC = () => {
       setSuccess('メモリが削除されました。');
       
     } catch (error) {
-      console.error('Error deleting memory:', error);
       setError('メモリの削除に失敗しました。');
     }
   };
 
   const filteredMemories = memories.filter(memory => {
-    // システム自動登録のメモリーは既に除外されているが、念のため再度チェック
+    // is_systemがtrueのメモリー（自動登録）は除外
     if (memory.is_system === true) return false;
-    if (memory.source_type && memory.source_type !== '') return false;
-    if (memory.text && memory.text.trim().startsWith('Q: ')) return false;
+    
+    // 検索とカテゴリフィルタリング
     const matchesSearch = searchQuery === '' || 
       memory.text.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === '' || 
@@ -326,9 +253,6 @@ const Memory: React.FC = () => {
     return newMemoryText.length > 1000;
   };
 
-  // メモリリスト描画直前にデバッグログ
-  console.log('[DEBUG] memories to render:', memories);
-  console.log('[DEBUG] filteredMemories to render:', filteredMemories);
 
   if (isLoading) {
     return (
