@@ -101,27 +101,32 @@ const Memory: React.FC = () => {
       
       // レスポンスは配列として返される（API側でシステム自動登録を除外済み）
       const memoriesArray: Memory[] = Array.isArray(response) ? response : [];
+      
       // APIレスポンスのcreated_atをtimestampにマッピング
-      // API側でis_system=falseのメモリーのみを返すように設定済み
       const allMemories = memoriesArray.map(m => ({
         ...m,
         timestamp: m.timestamp || (m as any).created_at || (m as any).updated_at
       }));
       
-      // フロントエンド側のフィルタリング（念のため）
-      // is_systemがtrueのメモリー（自動登録）は除外し、ユーザーが自分で登録したメモリーのみを表示
+      // フロントエンド側のフィルタリング（厳密に）
+      // is_systemがfalseのメモリー（ユーザー登録）のみを表示
       const userMemories = allMemories.filter(m => {
         // user_idが含まれている場合は、現在のユーザーのメモリーかどうかを確認
         if (m.user_id && m.user_id !== user.id) {
           return false;
         }
         
-        // is_systemがtrueの場合は除外（自動登録メモリー）
+        // is_systemが明示的にfalseのもののみを表示
+        // is_systemがtrue、undefined、nullの場合はすべて除外
         if (m.is_system === true) {
+          console.log(`[FILTER] Excluding memory ${m.id}: is_system=true`);
+          return false;
+        }
+        if (m.is_system !== false) {
+          console.log(`[FILTER] Excluding memory ${m.id}: is_system=${m.is_system} (not false)`);
           return false;
         }
         
-        // それ以外はすべて表示（ユーザーが自分で登録したメモリー）
         return true;
       });
       
@@ -214,8 +219,9 @@ const Memory: React.FC = () => {
   };
 
   const filteredMemories = memories.filter(memory => {
-    // is_systemがtrueのメモリー（自動登録）は除外
-    if (memory.is_system === true) return false;
+    // is_systemがfalseのもののみを表示（ユーザーが自分で登録したメモリー）
+    // is_systemがtrue、undefined、nullの場合は除外
+    if (memory.is_system !== false) return false;
     
     // 検索とカテゴリフィルタリング
     const matchesSearch = searchQuery === '' || 
