@@ -79,13 +79,22 @@ const Memory: React.FC = () => {
         let excluded = false;
         let reason = '';
         
-        // is_systemが明示的にtrueの場合は除外
+        // デバッグ: 各メモリーの全情報をログ出力
+        console.log(`🔍 Memory ${m.id}:`, {
+          is_system: m.is_system,
+          source_type: m.source_type,
+          text_preview: m.text?.substring(0, 100),
+          category: m.category,
+          timestamp: m.timestamp
+        });
+        
+        // システム自動登録のメモリーを除外する条件（厳密に判定）
+        // 1. is_systemが明示的にtrueの場合
         if (m.is_system === true) {
           excluded = true;
           reason = 'is_system=true';
         }
-        // source_typeが'general_question'などのシステム自動登録の場合は除外
-        // ただし、source_typeが'manual'や'user'などの場合は表示する
+        // 2. source_typeが'general_question'などのシステム自動登録の場合
         else if (m.source_type && m.source_type.trim() !== '') {
           const systemSourceTypes = ['general_question', 'auto', 'system'];
           if (systemSourceTypes.includes(m.source_type.trim().toLowerCase())) {
@@ -94,11 +103,12 @@ const Memory: React.FC = () => {
           }
           // source_typeが設定されていても、システム自動登録でない場合は表示
         }
-        // テキストが"Q: "で始まる場合は一般質問の回答として除外（既存データ対応）
+        // 3. テキストが"Q: "で始まる場合は一般質問の回答として除外（既存データ対応）
         else if (m.text && m.text.trim().startsWith('Q: ')) {
           excluded = true;
           reason = 'text starts with "Q: "';
         }
+        // それ以外はすべて表示（既存のメモリーも含む）
         
         if (excluded) {
           excludedMemories.push(`Memory ${m.id}: ${reason} - ${m.text?.substring(0, 50)}...`);
