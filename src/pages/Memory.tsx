@@ -108,25 +108,19 @@ const Memory: React.FC = () => {
         timestamp: m.timestamp || (m as any).created_at || (m as any).updated_at
       }));
       
-      // フロントエンド側のフィルタリング（厳密に）
-      // is_systemがfalseのメモリー（ユーザー登録）のみを表示
+      // シンプルなフィルタリング: is_system=trueのメモリーは非表示、それ以外は表示
       const userMemories = allMemories.filter(m => {
         // user_idが含まれている場合は、現在のユーザーのメモリーかどうかを確認
         if (m.user_id && m.user_id !== user.id) {
           return false;
         }
         
-        // is_systemが明示的にfalseのもののみを表示
-        // is_systemがtrue、undefined、nullの場合はすべて除外
+        // is_systemがtrueの場合は非表示（除外）
         if (m.is_system === true) {
-          console.log(`[FILTER] Excluding memory ${m.id}: is_system=true`);
-          return false;
-        }
-        if (m.is_system !== false) {
-          console.log(`[FILTER] Excluding memory ${m.id}: is_system=${m.is_system} (not false)`);
           return false;
         }
         
+        // is_systemがfalse、undefined、nullの場合は表示
         return true;
       });
       
@@ -219,9 +213,9 @@ const Memory: React.FC = () => {
   };
 
   const filteredMemories = memories.filter(memory => {
-    // is_systemがfalseのもののみを表示（ユーザーが自分で登録したメモリー）
-    // is_systemがtrue、undefined、nullの場合は除外
-    if (memory.is_system !== false) return false;
+    // is_systemがtrueの場合は除外（自動登録メモリー）
+    // is_systemがfalse、undefined、nullの場合は表示（ユーザー登録メモリー）
+    if (memory.is_system === true) return false;
     
     // 検索とカテゴリフィルタリング
     const matchesSearch = searchQuery === '' || 
