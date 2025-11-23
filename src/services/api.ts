@@ -730,8 +730,7 @@ class APIService {
       const params = new URLSearchParams({
         user_id: userId,
         offset: offset.toString(),
-        limit: limit.toString(),
-        select: 'id,text,created_at,is_system,category,user_id' // is_systemを含める
+        limit: limit.toString()
       });
       if (excludeSystem) {
         params.append('exclude_system', 'true');
