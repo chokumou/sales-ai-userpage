@@ -11,6 +11,7 @@ interface Memory {
   timestamp: string;
   category?: string;
   is_system?: boolean;
+  source_type?: string;
 }
 
 interface MemoryResponse {
@@ -67,8 +68,23 @@ const Memory: React.FC = () => {
       
       const response = await memoryAPI.list(user.id, currentPage, itemsPerPage);
       console.log('Memories loaded:', response);
+      console.log('First memory structure:', response && response.length > 0 ? response[0] : 'No memories');
       // システム自動登録のメモリーを除外（ユーザーが自分で登録した内容だけを表示）
-      const userMemories = (response as Memory[]).filter(m => !m.is_system);
+      // source_typeが設定されているメモリー（例: 'general_question'）はシステム自動登録として除外
+      // is_systemフラグが明示的にtrueの場合も除外
+      const userMemories = (response as Memory[]).filter(m => {
+        // デバッグ: 各メモリーの識別情報を確認
+        if (m.is_system !== undefined || m.source_type !== undefined) {
+          console.log(`Memory ${m.id}: is_system = ${m.is_system}, source_type = ${m.source_type}`);
+        }
+        // is_systemが明示的にtrueの場合は除外
+        if (m.is_system === true) return false;
+        // source_typeが設定されている場合はシステム自動登録として除外
+        if (m.source_type && m.source_type !== '') return false;
+        // それ以外はユーザー登録として表示
+        return true;
+      });
+      console.log('Filtered memories (excluding system):', userMemories);
       setMemories(userMemories);
       setTotalPages(1); // ページネーション不要なら1固定
       setTotalMemories(userMemories.length);
@@ -149,7 +165,8 @@ const Memory: React.FC = () => {
 
   const filteredMemories = memories.filter(memory => {
     // システム自動登録のメモリーは既に除外されているが、念のため再度チェック
-    if (memory.is_system) return false;
+    if (memory.is_system === true) return false;
+    if (memory.source_type && memory.source_type !== '') return false;
     const matchesSearch = searchQuery === '' || 
       memory.text.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === '' || 
