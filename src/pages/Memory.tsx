@@ -98,9 +98,8 @@ const Memory: React.FC = () => {
       
       console.log('Loading memories for user:', user.id, 'offset:', currentOffset, 'limit:', itemsPerPage);
       
-      // APIリクエスト時にシステム自動登録のメモリーを除外するパラメータを追加
-      // exclude_system=true でシステム自動登録を除外（API側で対応が必要な場合は後で実装）
-      const response = await memoryAPI.list(user.id, currentOffset, itemsPerPage, true);
+      // APIリクエスト: exclude_systemパラメータを送らない（すべて取得してフロントエンドでフィルタリング）
+      const response = await memoryAPI.list(user.id, currentOffset, itemsPerPage, false);
       console.log('Memories loaded (raw):', response);
       
       // レスポンスは配列として返される（API側でシステム自動登録を除外済み）
@@ -137,12 +136,12 @@ const Memory: React.FC = () => {
         timestamp: m.timestamp || (m as any).created_at || (m as any).updated_at
       }));
       
-      // フロントエンド側のフィルタリングを最小限に
-      // API側でexclude_system=trueを送っているので、基本的には除外済み
-      // ただし、念のため明示的にis_system=trueのもののみ除外
+      // フロントエンド側のフィルタリング
+      // API側でuser_idでフィルタリング済みなので、user_idが含まれていない場合はすべて表示
+      // ただし、明示的にis_system=trueのものは除外
       const userMemories = allMemories.filter(m => {
-        // 現在のユーザーのメモリーかどうかを確認
-        if (m.user_id !== user.id) {
+        // user_idが含まれている場合は、現在のユーザーのメモリーかどうかを確認
+        if (m.user_id && m.user_id !== user.id) {
           console.log(`❌ Excluded memory ${m.id}: user_id mismatch (expected: ${user.id}, got: ${m.user_id})`);
           return false;
         }
@@ -153,7 +152,28 @@ const Memory: React.FC = () => {
           return false;
         }
         
+        // source_typeが'general_question'などのシステム自動登録の場合は除外
+        if (m.source_type && m.source_type.trim() !== '') {
+          const systemSourceTypes = ['general_question', 'auto', 'system'];
+          if (systemSourceTypes.includes(m.source_type.trim().toLowerCase())) {
+            console.log(`❌ Excluded memory ${m.id}: source_type=${m.source_type}`);
+            return false;
+          }
+        }
+        
+        // テキストが"Q: "で始まる場合は一般質問の回答として除外（自動登録メモリー）
+        if (m.text && m.text.trim().startsWith('Q: ')) {
+          console.log(`❌ Excluded memory ${m.id}: text starts with "Q: " (auto-registered)`);
+          return false;
+        }
+        
         // それ以外はすべて表示（古いメモリーも含む）
+        console.log(`✅ Included memory ${m.id}:`, {
+          user_id: m.user_id,
+          is_system: m.is_system,
+          source_type: m.source_type,
+          text_preview: m.text?.substring(0, 50)
+        });
         return true;
       });
       
