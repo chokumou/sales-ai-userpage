@@ -10,6 +10,7 @@ interface Memory {
   text: string;
   timestamp: string;
   category?: string;
+  is_system?: boolean;
 }
 
 interface MemoryResponse {
@@ -66,9 +67,11 @@ const Memory: React.FC = () => {
       
       const response = await memoryAPI.list(user.id, currentPage, itemsPerPage);
       console.log('Memories loaded:', response);
-      setMemories(response as Memory[]);
+      // システム自動登録のメモリーを除外（ユーザーが自分で登録した内容だけを表示）
+      const userMemories = (response as Memory[]).filter(m => !m.is_system);
+      setMemories(userMemories);
       setTotalPages(1); // ページネーション不要なら1固定
-      setTotalMemories((response as Memory[]).length);
+      setTotalMemories(userMemories.length);
     } catch (error) {
       console.error('Error loading memories:', error);
       setError('\u30e1\u30e2\u30ea\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002');
@@ -145,6 +148,8 @@ const Memory: React.FC = () => {
   };
 
   const filteredMemories = memories.filter(memory => {
+    // システム自動登録のメモリーは既に除外されているが、念のため再度チェック
+    if (memory.is_system) return false;
     const matchesSearch = searchQuery === '' || 
       memory.text.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === '' || 
