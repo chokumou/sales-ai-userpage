@@ -101,7 +101,8 @@ const Dashboard: React.FC = () => {
       });
 
       // メモリ数を取得（完全なレスポンスを取得するため直接APIを呼ぶ）
-      const memoriesData = await api.get<any>(`/api/memory/?user_id=${user.id}&page=1&limit=1`).catch((error) => {
+      // exclude_system=trueでユーザー登録のメモリーのみをカウント
+      const memoriesData = await api.get<any>(`/api/memory/?user_id=${user.id}&offset=0&limit=1&exclude_system=true`).catch((error) => {
         console.error('Dashboard: Error loading memories:', error);
         return { total: 0 };
       });
