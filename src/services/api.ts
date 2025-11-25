@@ -773,6 +773,12 @@ class APIService {
       return ensureArray(response, 'memories');
     },
 
+    update: (memoryId: string, text: string) =>
+      this.request<any>(`/api/memory/${memoryId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ text }),
+      }),
+
     delete: (memoryId: string) =>
       this.request<any>(`/api/memory/${memoryId}`, {
         method: 'DELETE',

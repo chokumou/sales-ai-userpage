@@ -35,6 +35,7 @@ const Memory: React.FC = () => {
   const [newMemoryText, setNewMemoryText] = useState('');
   const [newMemoryCategory, setNewMemoryCategory] = useState('');
   const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
+  const [editingText, setEditingText] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
@@ -203,6 +204,40 @@ const Memory: React.FC = () => {
       
     } catch (error) {
       setError(error instanceof Error ? error.message : t('memory.errorCreating'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateMemory = async () => {
+    if (!editingMemory) return;
+    
+    if (editingText.trim().length === 0) {
+      setError('メモリの内容を入力してください。');
+      return;
+    }
+    
+    if (editingText.length > 1000) {
+      setError('メモリは1000文字以内で入力してください。');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError('');
+      await memoryAPI.update(editingMemory.id, editingText.trim());
+      
+      // Reload memories
+      setMemories([]);
+      setOffset(0);
+      setHasMore(true);
+      await loadMemories(0, true);
+      setEditingMemory(null);
+      setEditingText('');
+      setSuccess('メモリが更新されました。');
+      
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'メモリの更新に失敗しました。');
     } finally {
       setIsSubmitting(false);
     }
@@ -405,7 +440,10 @@ const Memory: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-2 ml-4">
                     <button
-                      onClick={() => setEditingMemory(memory)}
+                      onClick={() => {
+                        setEditingMemory(memory);
+                        setEditingText(memory.text);
+                      }}
                       className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       title={t('memory.edit')}
                     >
@@ -491,6 +529,63 @@ const Memory: React.FC = () => {
                 disabled={isSubmitting}
               >
                 {isSubmitting ? t('memory.saving') : t('memory.save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Memory Modal */}
+      {editingMemory && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">メモリを編集</h3>
+                <button
+                  onClick={() => {
+                    setEditingMemory(null);
+                    setEditingText('');
+                    setError('');
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={isSubmitting}
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  メモリの内容 <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={editingText}
+                  onChange={(e) => setEditingText(e.target.value)}
+                  placeholder="メモリの内容を入力してください"
+                  rows={6}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                    editingText.length > 1000 ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  disabled={isSubmitting}
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <div className="text-xs text-gray-500">
+                    AIが会話で参照できる重要な情報を入力してください
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {editingText.length} / 1000 文字
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleUpdateMemory}
+                className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={isSubmitting || editingText.trim().length === 0 || editingText.length > 1000}
+              >
+                {isSubmitting ? '保存中...' : '保存'}
               </button>
             </div>
           </div>
