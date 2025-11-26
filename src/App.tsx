@@ -18,6 +18,7 @@ import DeviceRegistration from './pages/DeviceRegistration';
 import Success from './pages/Success';
 import Cancel from './pages/Cancel';
 import ErrorPage from './pages/ErrorPage';
+import Install from './pages/Install';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -52,6 +53,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/RegisterDevice" element={<DeviceRegistration />} />
       <Route path="/success" element={<Success />} />
       <Route path="/cancel" element={<Cancel />} />
+      <Route path="/install" element={<Install />} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
