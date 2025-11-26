@@ -104,14 +104,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             api.setToken(token);
             console.log('AuthContext: Token set successfully');
             
-            setUser(userData);
-            setIsAuthenticated(true);
-            console.log('AuthContext: User authenticated successfully');
+            // トークンの有効性を確認（ユーザープロフィールを取得して検証）
+            try {
+              const profileResponse = await api.get(`/api/users/${userData.id}/profile`);
+              console.log('AuthContext: Token validation successful');
+              
+              // 最新のユーザー情報で更新
+              const updatedUser = {
+                ...userData,
+                name: profileResponse.name || userData.name,
+                introduction: profileResponse.introduction || userData.introduction
+              };
+              
+              setUser(updatedUser);
+              setIsAuthenticated(true);
+              // 最新のユーザー情報をlocalStorageに保存
+              localStorage.setItem('nekota_user', JSON.stringify(updatedUser));
+              console.log('AuthContext: User authenticated successfully');
+            } catch (validationError) {
+              console.error('AuthContext: Token validation failed:', validationError);
+              // トークンが無効な場合はローカルストレージをクリア
+              localStorage.removeItem('nekota_user');
+              localStorage.removeItem('nekota_token');
+              api.setToken(null);
+              console.log('AuthContext: Invalid token, cleared storage');
+            }
           } catch (error) {
             console.error('AuthContext: Error parsing stored user data:', error);
             // エラーが発生した場合はローカルストレージをクリア
             localStorage.removeItem('nekota_user');
             localStorage.removeItem('nekota_token');
+            const api = getAPIService();
+            api.setToken(null);
           }
         } else {
           console.log('AuthContext: No stored user data found');
