@@ -683,6 +683,18 @@ class APIService {
         body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
       }),
 
+    testReject: (fromUserId: string, toUserId: string) =>
+      this.request<any>('/api/friend/test/reject', {
+        method: 'POST',
+        body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
+      }),
+
+    testDelete: (fromUserId: string, toUserId: string) =>
+      this.request<any>('/api/friend/test/delete', {
+        method: 'POST',
+        body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
+      }),
+
     testList: async (userId: string) => {
       const response = await this.request<any>(`/api/friend/test/list/${userId}`);
       return ensureArray(response, 'friends');

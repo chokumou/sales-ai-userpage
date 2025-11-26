@@ -698,6 +698,15 @@ const translations: Translations = {
     ko: '첫 번째 친구 추가',
     zh: '添加您的第一位朋友'
   },
+  'friends.removeFriend': {
+    en: 'Remove Friend',
+    ja: '友達を外す',
+    es: 'Eliminar Amigo',
+    fr: 'Retirer l\'Ami',
+    de: 'Freund Entfernen',
+    ko: '친구 제거',
+    zh: '移除朋友'
+  },
   'friends.lastMessage': {
     en: 'Last message',
     ja: '最新メッセージ',

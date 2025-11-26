@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, MessageCircle, UserCheck, UserX, Search, Send, Mic } from 'lucide-react';
+import { Users, Plus, MessageCircle, UserCheck, UserX, Search, Send, Mic, UserMinus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { friendAPI, messageAPI } from '../services/api';
@@ -185,8 +185,21 @@ const Friends: React.FC = () => {
     }
   };
 
-  const handleRejectFriendRequest = (fromUserId: string) => {
-    setReceivedRequests(prev => prev.filter(req => req.user_id_a !== fromUserId));
+  const handleRejectFriendRequest = async (fromUserId: string) => {
+    if (!user) return;
+    
+    if (!window.confirm('この友達申請を拒否しますか？拒否後も再度申請できます。')) return;
+    
+    try {
+      // バックエンドAPIを呼び出して申請を拒否（削除）
+      await friendAPI.testReject(fromUserId, user.id);
+      // フロントエンドの状態からも削除
+      setReceivedRequests(prev => prev.filter(req => req.user_id_a !== fromUserId));
+      alert('友達申請を拒否しました。');
+    } catch (error) {
+      console.error('Error rejecting friend request:', error);
+      alert('友達申請の拒否に失敗しました。');
+    }
   };
 
   const handleStartConversation = (friend: Friend) => {
@@ -239,6 +252,26 @@ const Friends: React.FC = () => {
       alert('申請を削除しました');
     } catch (error) {
       alert('申請の削除に失敗しました');
+    }
+  };
+
+  // 友達を外す（友達関係を削除）
+  const handleRemoveFriend = async (friendId: string) => {
+    if (!user) return;
+    
+    if (!window.confirm('この友達を外しますか？友達関係が解除されます。')) return;
+    
+    try {
+      // バックエンドAPIを呼び出して友達関係を削除
+      await friendAPI.testDelete(user.id, friendId);
+      // フロントエンドの状態からも削除
+      setFriends(prev => prev.filter(f => f.user_id !== friendId));
+      alert('友達を外しました。');
+      // 友達リストを再読み込み
+      await loadFriends();
+    } catch (error) {
+      console.error('Error removing friend:', error);
+      alert('友達を外す処理に失敗しました。');
     }
   };
 
@@ -414,6 +447,13 @@ const Friends: React.FC = () => {
                           title={t('friends.startConversation')}
                         >
                           <MessageCircle className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleRemoveFriend(friend.user_id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title={t('friends.removeFriend')}
+                        >
+                          <UserMinus className="w-5 h-5" />
                         </button>
                       </div>
                     </div>
