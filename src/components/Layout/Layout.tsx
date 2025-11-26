@@ -21,6 +21,35 @@ const Layout: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // PWAインストールバナーの抑制
+  useEffect(() => {
+    // インストール済みかチェック（standalone mode = アプリとして起動）
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches;
+    
+    // インストール済みの場合は、自動バナーを抑制
+    if (isInstalled) {
+      return;
+    }
+
+    // /installページでは抑制しない（そのページでインストールできるようにする）
+    if (window.location.pathname === '/install') {
+      return;
+    }
+
+    // その他のページでは、自動バナーを抑制
+    // （ユーザーが明示的に/installページでインストールするため）
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      // バナーを抑制（ユーザーが/installページでインストールできる）
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Mobile Menu Button */}

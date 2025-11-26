@@ -1,7 +1,9 @@
-友達申請拒否処理と友達を外す機能の実装
+PWA機能の実装
 
-- 友達申請拒否時にバックエンドAPIを呼び出すように修正（testReject追加）
-- 拒否後も再度申請できるように改善
-- 友達を外す機能を追加（testDelete追加）
-- 友達リストに「友達を外す」ボタンを追加
-- 翻訳キーを追加（friends.removeFriend）
+- vite-plugin-pwaを追加してPWA機能を有効化
+- manifest.jsonとService Workerを自動生成
+- インストール手順ページ（/install）を追加
+- OS別（Android/iOS）のインストール手順を表示
+- PWAアイコンを追加（192x192, 512x512, apple-touch-icon）
+- オフライン対応とAPIキャッシュ設定
+- QRコードからのアクセスに対応

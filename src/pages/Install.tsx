@@ -8,6 +8,7 @@ const Install: React.FC = () => {
   const [isAndroid, setIsAndroid] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
     // OS判定
@@ -18,23 +19,70 @@ const Install: React.FC = () => {
     setIsIOS(isIOSDevice);
     setIsAndroid(isAndroidDevice);
 
+    // デバッグ情報を収集
+    const debugMessages: string[] = [];
+    debugMessages.push(`User Agent: ${userAgent}`);
+    debugMessages.push(`Is iOS: ${isIOSDevice}`);
+    debugMessages.push(`Is Android: ${isAndroidDevice}`);
+    debugMessages.push(`Is Standalone: ${window.matchMedia('(display-mode: standalone)').matches}`);
+    debugMessages.push(`Is HTTPS: ${window.location.protocol === 'https:'}`);
+    debugMessages.push(`Service Worker: ${'serviceWorker' in navigator ? 'Supported' : 'Not supported'}`);
+    
+    // Service Workerの登録状態を確認
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        if (registrations.length > 0) {
+          debugMessages.push(`Service Worker registered: ${registrations.length} registration(s)`);
+          registrations.forEach((reg, index) => {
+            debugMessages.push(`  Registration ${index + 1}: ${reg.scope}`);
+          });
+        } else {
+          debugMessages.push('⚠️ Service Worker not registered');
+        }
+        setDebugInfo(debugMessages.join('\n'));
+      });
+    }
+
     // PWAインストール済みかチェック
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
+      debugMessages.push('Already installed (standalone mode)');
+      setDebugInfo(debugMessages.join('\n'));
+      return; // インストール済みの場合は何もしない
     }
 
     // Android用のインストールプロンプトをキャッチ
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      debugMessages.push('Install prompt received!');
+      setDebugInfo(debugMessages.join('\n'));
+      console.log('Install prompt available', e);
     };
 
+    // beforeinstallpromptイベントを待つ
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    debugMessages.push('Waiting for beforeinstallprompt event...');
+    setDebugInfo(debugMessages.join('\n'));
+
+    // 少し待ってから、イベントが発火しなかった場合のデバッグ情報を更新
+    const timeout = setTimeout(() => {
+      if (!deferredPrompt) {
+        debugMessages.push('⚠️ beforeinstallprompt event not received after 3 seconds');
+        debugMessages.push('Possible reasons:');
+        debugMessages.push('1. Already installed');
+        debugMessages.push('2. PWA criteria not met');
+        debugMessages.push('3. Browser does not support');
+        debugMessages.push('4. Service Worker not registered');
+        setDebugInfo(debugMessages.join('\n'));
+      }
+    }, 3000);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      clearTimeout(timeout);
     };
-  }, []);
+  }, [deferredPrompt]);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
@@ -114,7 +162,7 @@ const Install: React.FC = () => {
                     「インストール」をタップしてください
                   </p>
                 </div>
-                {deferredPrompt && (
+                {deferredPrompt ? (
                   <button
                     onClick={handleInstallClick}
                     className="w-full mt-6 inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
@@ -122,6 +170,31 @@ const Install: React.FC = () => {
                     <Download className="w-5 h-5 mr-2" />
                     今すぐインストール
                   </button>
+                ) : (
+                  <div className="mt-6 space-y-4">
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800 font-bold mb-2">
+                        ⚠️ インストールボタンが表示されません
+                      </p>
+                      <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
+                        <li>Chromeブラウザで開いているか確認してください</li>
+                        <li>ページをリロードしてみてください</li>
+                        <li>数秒待ってから再度確認してください</li>
+                        <li>既にインストール済みの場合は、ホーム画面のアイコンから起動できます</li>
+                      </ul>
+                    </div>
+                    {/* デバッグ情報（開発用） */}
+                    {debugInfo && (
+                      <details className="mt-4">
+                        <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800">
+                          デバッグ情報を表示
+                        </summary>
+                        <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-40">
+                          {debugInfo}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
