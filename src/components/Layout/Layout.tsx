@@ -75,7 +75,7 @@ const Layout: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <div className={`p-6 ${isMobile ? 'pt-20 pl-20' : ''}`}>
+        <div className={`p-6 ${isMobile ? 'pt-20' : ''}`}>
           <Outlet />
         </div>
       </main>
