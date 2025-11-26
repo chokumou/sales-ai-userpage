@@ -565,11 +565,11 @@ class APIService {
   // Message API
   message = {
     // 友達とのメッセージ一覧を取得（ページネーション対応）
-    getList: (friendId: string, limit: number = 5, offset: number = 0) => {
+    getList: (friendId: string, limit: number = 5, offset: number = 0, direction: 'received' | 'sent' = 'received') => {
       if (!friendId || friendId === 'undefined') {
         throw new Error('友達IDが指定されていません');
       }
-      return this.request<{ messages: any[]; total_count: number }>(`/api/message/list?friend_id=${friendId}&limit=${limit}&offset=${offset}`);
+      return this.request<{ messages: any[]; total_count: number }>(`/api/message/list?friend_id=${friendId}&limit=${limit}&offset=${offset}&direction=${direction}`);
     },
 
     // 音声メッセージを送信

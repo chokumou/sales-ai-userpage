@@ -23,6 +23,8 @@ interface Friend {
   introduction?: string;
 }
 
+type MessageDirection = 'received' | 'sent';
+
 const Messages: React.FC = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -39,13 +41,14 @@ const Messages: React.FC = () => {
   const [messageCount, setMessageCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [friendOffsets, setFriendOffsets] = useState<Record<string, number>>({});
+  const [direction, setDirection] = useState<MessageDirection>('received');
   const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user) {
       loadData();
     }
-  }, [user]);
+  }, [user, direction]);
 
   // 無限スクロール用のIntersection Observer
   useEffect(() => {
@@ -77,18 +80,20 @@ const Messages: React.FC = () => {
       const friendsList = await friendAPI.list(user.id);
       setFriends(friendsList || []);
       
-      // 全友達からのメッセージを取得（初期5件）
+      // 全友達とのメッセージを取得（初期5件）
       const allMessages: Message[] = [];
       let totalMessages = 0;
       const offsets: Record<string, number> = {};
       
       for (const friend of friendsList || []) {
         try {
-          const response = await messageAPI.getList(friend.user_id);
+          const response = await messageAPI.getList(friend.user_id, 5, 0, direction);
           if (response.messages) {
             const friendMessages = response.messages.map((msg: any) => ({
               ...msg,
-              sender_name: msg.from_user_name || friend.name
+              sender_name: direction === 'received' 
+                ? (msg.from_user_name || friend.name)
+                : (user.name || t('messages.me'))
             }));
             allMessages.push(...friendMessages);
             totalMessages += response.total_count || 0;
@@ -129,12 +134,14 @@ const Messages: React.FC = () => {
           const currentOffset = friendOffsets[friend.user_id] || 0;
           
           // オフセットを指定して追加取得
-          const response = await messageAPI.getList(friend.user_id, 5, currentOffset);
+          const response = await messageAPI.getList(friend.user_id, 5, currentOffset, direction);
           
           if (response.messages) {
             const friendMessages = response.messages.map((msg: any) => ({
               ...msg,
-              sender_name: msg.from_user_name || friend.name
+              sender_name: direction === 'received'
+                ? (msg.from_user_name || friend.name)
+                : (user.name || t('messages.me'))
             }));
             additionalMessages.push(...friendMessages);
             newOffsets[friend.user_id] = currentOffset + friendMessages.length;
@@ -351,6 +358,32 @@ const Messages: React.FC = () => {
         </div>
       )}
 
+      {/* Tabs */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex space-x-1 border-b border-gray-200">
+          <button
+            onClick={() => setDirection('received')}
+            className={`px-4 py-2 font-medium text-sm transition-colors ${
+              direction === 'received'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {t('messages.received')}
+          </button>
+          <button
+            onClick={() => setDirection('sent')}
+            className={`px-4 py-2 font-medium text-sm transition-colors ${
+              direction === 'sent'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {t('messages.sent')}
+          </button>
+        </div>
+      </div>
+
       {/* Search */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="relative">
@@ -396,12 +429,20 @@ const Messages: React.FC = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-3 mb-3">
-                          {/* Sender Name */}
+                          {/* Sender/Recipient Name */}
                           <div className="flex items-center space-x-2">
                             <User className="w-4 h-4 text-gray-400" />
                             <span className="font-medium text-gray-900">
-                              {message.sender_name || t('messages.unknownSender')}
+                              {direction === 'received' 
+                                ? (message.sender_name || t('messages.unknownSender'))
+                                : (message.sender_name || t('messages.me'))
+                              }
                             </span>
+                            {direction === 'sent' && (
+                              <span className="text-sm text-gray-500">
+                                → {friends.find(f => f.user_id === message.to_user_id)?.name || t('messages.unknownRecipient')}
+                              </span>
+                            )}
                           </div>
                           
                           {/* Source Badge */}
@@ -415,10 +456,12 @@ const Messages: React.FC = () => {
                             </span>
                           )}
                           
-                          {/* Read/Unread Status */}
-                          <div className={`w-2 h-2 rounded-full ${
-                            message.status === "read" ? 'bg-green-500' : 'bg-red-500'
-                          }`} title={message.status === "read" ? t('messages.read') : t('messages.unread')}></div>
+                          {/* Read/Unread Status (受信メッセージのみ表示) */}
+                          {direction === 'received' && (
+                            <div className={`w-2 h-2 rounded-full ${
+                              message.status === "read" ? 'bg-green-500' : 'bg-red-500'
+                            }`} title={message.status === "read" ? t('messages.read') : t('messages.unread')}></div>
+                          )}
                         </div>
                         
                         {/* Message Content */}

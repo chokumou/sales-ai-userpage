@@ -523,8 +523,44 @@ const translations: Translations = {
     es: 'Todos los mensajes mostrados',
     fr: 'Tous les messages affichés',
     de: 'Alle Nachrichten angezeigt',
-    ko: '모든 메시지 표示됨',
+    ko: '모든 메시지 표시됨',
     zh: '已显示所有消息'
+  },
+  'messages.received': {
+    en: 'Received',
+    ja: '受信',
+    es: 'Recibidos',
+    fr: 'Reçus',
+    de: 'Empfangen',
+    ko: '수신',
+    zh: '已接收'
+  },
+  'messages.sent': {
+    en: 'Sent',
+    ja: '送信',
+    es: 'Enviados',
+    fr: 'Envoyés',
+    de: 'Gesendet',
+    ko: '발신',
+    zh: '已发送'
+  },
+  'messages.me': {
+    en: 'Me',
+    ja: '自分',
+    es: 'Yo',
+    fr: 'Moi',
+    de: 'Ich',
+    ko: '나',
+    zh: '我'
+  },
+  'messages.unknownRecipient': {
+    en: 'Unknown recipient',
+    ja: '不明な受信者',
+    es: 'Destinatario desconocido',
+    fr: 'Destinataire inconnu',
+    de: 'Unbekannter Empfänger',
+    ko: '알 수 없는 수신자',
+    zh: '未知收件人'
   },
   // Friends
   'friends.title': {
