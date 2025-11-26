@@ -17,6 +17,7 @@ import Admin from './pages/Admin';
 import DeviceRegistration from './pages/DeviceRegistration';
 import Success from './pages/Success';
 import Cancel from './pages/Cancel';
+import ErrorPage from './pages/ErrorPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -29,6 +30,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
+  }
+
+  // ユーザーIDが取得できない場合はエラーページを表示
+  if (user && isAuthenticated && (!user.id || user.id === '' || user.id === 'undefined')) {
+    return <ErrorPage message="ユーザーIDが取得できませんでした。ログイン画面から再度ログインしてください。" />;
   }
 
   return user && isAuthenticated ? <>{children}</> : <Navigate to="/login" />;

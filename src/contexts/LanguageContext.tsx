@@ -2224,6 +2224,43 @@ const translations: Translations = {
     de: 'Erweitert',
     ko: '고급',
     zh: '高级'
+  },
+  // Error
+  'error.title': {
+    en: 'Error',
+    ja: 'エラー',
+    es: 'Error',
+    fr: 'Erreur',
+    de: 'Fehler',
+    ko: '오류',
+    zh: '错误'
+  },
+  'error.userIdNotFound': {
+    en: 'User ID could not be retrieved.',
+    ja: 'ユーザーIDが取得できませんでした。',
+    es: 'No se pudo obtener el ID de usuario.',
+    fr: "L'ID utilisateur n'a pas pu être récupéré.",
+    de: 'Benutzer-ID konnte nicht abgerufen werden.',
+    ko: '사용자 ID를 가져올 수 없습니다.',
+    zh: '无法获取用户ID。'
+  },
+  'error.loginRequired': {
+    en: 'Login is required. Please log in again from the login page.',
+    ja: 'ログインが必要です。ログイン画面から再度ログインしてください。',
+    es: 'Se requiere inicio de sesión. Por favor, inicie sesión nuevamente desde la página de inicio de sesión.',
+    fr: 'La connexion est requise. Veuillez vous connecter à nouveau depuis la page de connexion.',
+    de: 'Anmeldung erforderlich. Bitte melden Sie sich erneut von der Anmeldeseite an.',
+    ko: '로그인이 필요합니다. 로그인 페이지에서 다시 로그인하세요.',
+    zh: '需要登录。请从登录页面再次登录。'
+  },
+  'error.goToLogin': {
+    en: 'Go to Login',
+    ja: 'ログイン画面へ戻る',
+    es: 'Ir a Iniciar Sesión',
+    fr: 'Aller à la Connexion',
+    de: 'Zur Anmeldung',
+    ko: '로그인으로 이동',
+    zh: '前往登录'
   }
 };
 
