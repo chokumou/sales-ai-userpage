@@ -93,7 +93,10 @@ const Messages: React.FC = () => {
               ...msg,
               sender_name: direction === 'received' 
                 ? (msg.from_user_name || friend.name)
-                : (user.name || t('messages.me'))
+                : (msg.from_user_name || user.name || t('messages.me')),
+              recipient_name: direction === 'sent' 
+                ? (friendsList.find(f => f.user_id === msg.to_user_id)?.name || t('messages.unknownRecipient'))
+                : undefined
             }));
             allMessages.push(...friendMessages);
             totalMessages += response.total_count || 0;
@@ -141,7 +144,10 @@ const Messages: React.FC = () => {
               ...msg,
               sender_name: direction === 'received'
                 ? (msg.from_user_name || friend.name)
-                : (user.name || t('messages.me'))
+                : (msg.from_user_name || user.name || t('messages.me')),
+              recipient_name: direction === 'sent' 
+                ? (friends.find(f => f.user_id === msg.to_user_id)?.name || t('messages.unknownRecipient'))
+                : undefined
             }));
             additionalMessages.push(...friendMessages);
             newOffsets[friend.user_id] = currentOffset + friendMessages.length;
@@ -440,7 +446,7 @@ const Messages: React.FC = () => {
                             </span>
                             {direction === 'sent' && (
                               <span className="text-sm text-gray-500">
-                                → {friends.find(f => f.user_id === message.to_user_id)?.name || t('messages.unknownRecipient')}
+                                → {(message as any).recipient_name || friends.find(f => f.user_id === message.to_user_id)?.name || t('messages.unknownRecipient')}
                               </span>
                             )}
                           </div>
