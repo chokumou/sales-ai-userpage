@@ -365,24 +365,24 @@ const Messages: React.FC = () => {
       )}
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex space-x-1 border-b border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-0">
+        <div className="flex">
           <button
             onClick={() => setDirection('received')}
-            className={`px-4 py-2 font-medium text-sm transition-colors ${
+            className={`flex-1 px-6 py-4 font-semibold text-base transition-all ${
               direction === 'received'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-blue-600 bg-blue-50 border-b-4 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-b-2 border-transparent'
             }`}
           >
             {t('messages.received')}
           </button>
           <button
             onClick={() => setDirection('sent')}
-            className={`px-4 py-2 font-medium text-sm transition-colors ${
+            className={`flex-1 px-6 py-4 font-semibold text-base transition-all ${
               direction === 'sent'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-blue-600 bg-blue-50 border-b-4 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-b-2 border-transparent'
             }`}
           >
             {t('messages.sent')}
@@ -462,12 +462,10 @@ const Messages: React.FC = () => {
                             </span>
                           )}
                           
-                          {/* Read/Unread Status (受信メッセージのみ表示) */}
-                          {direction === 'received' && (
-                            <div className={`w-2 h-2 rounded-full ${
-                              message.status === "read" ? 'bg-green-500' : 'bg-red-500'
-                            }`} title={message.status === "read" ? t('messages.read') : t('messages.unread')}></div>
-                          )}
+                          {/* Read/Unread Status */}
+                          <div className={`w-2 h-2 rounded-full ${
+                            message.status === "read" ? 'bg-green-500' : 'bg-red-500'
+                          }`} title={message.status === "read" ? t('messages.read') : t('messages.unread')}></div>
                         </div>
                         
                         {/* Message Content */}
