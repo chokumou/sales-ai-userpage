@@ -22,9 +22,10 @@ import { useLanguage } from '../../contexts/LanguageContext';
 interface SidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
+  onNavClick?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, onNavClick }) => {
   const { user, logout } = useAuth();
   const { t, language, setLanguage, languages } = useLanguage();
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
 
   return (
     <div
-      className={`bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex flex-col ${
+      className={`bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex flex-col h-full ${
         isCollapsed ? 'w-16' : 'w-64'
       }`}
     >
@@ -103,6 +104,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={onNavClick}
             className={({ isActive }) =>
               `flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
                 isActive
@@ -159,7 +161,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       {/* Logout */}
       <div className="p-4 border-t border-gray-200">
         <button
-          onClick={handleLogout}
+          onClick={() => {
+            handleLogout();
+            if (onNavClick) onNavClick();
+          }}
           className="flex items-center space-x-3 w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
