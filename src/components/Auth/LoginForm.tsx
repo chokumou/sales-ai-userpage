@@ -27,17 +27,67 @@ const LoginForm: React.FC = () => {
     setError('');
 
     try {
+      const deviceNum = deviceNumber.trim();
+      console.log('🔐 LoginForm: Attempting login with device number:', deviceNum);
+      
+      // 既存のlocalStorageを確認（ログイン前にクリア）
+      const existingToken = localStorage.getItem('nekota_token');
+      const existingUser = localStorage.getItem('nekota_user');
+      console.log('🔐 LoginForm: Existing localStorage BEFORE login:', {
+        hasToken: !!existingToken,
+        hasUser: !!existingUser,
+        userData: existingUser ? JSON.parse(existingUser) : null
+      });
+      
+      // ログイン前に既存の認証情報をクリア（別のアカウントの情報が残らないようにする）
+      localStorage.removeItem('nekota_token');
+      localStorage.removeItem('nekota_user');
+      console.log('🔐 LoginForm: Cleared existing localStorage before login');
+      
       // デバイス番号でログイン
-      const response = await api.device.exists(deviceNumber.trim());
+      const response = await api.device.exists(deviceNum);
+      console.log('🔐 LoginForm: API response from /api/device/exists:', {
+        exists: response.exists,
+        hasToken: !!response.token,
+        hasUser: !!response.user,
+        userId: response.user?.id,
+        userName: response.user?.name,
+        userIntroduction: response.user?.introduction,
+        fullUserData: response.user
+      });
       
       if (response.exists && response.token && response.user) {
+        // トークンからユーザーIDを確認
+        try {
+          const tokenPayload = JSON.parse(atob(response.token.split('.')[1]));
+          const tokenUserId = tokenPayload.user_id || tokenPayload.sub;
+          console.log('🔐 LoginForm: Token payload:', {
+            tokenUserId,
+            responseUserId: response.user.id,
+            match: tokenUserId === response.user.id
+          });
+          
+          if (tokenUserId !== response.user.id) {
+            console.error('❌ LoginForm: User ID mismatch!', {
+              tokenUserId,
+              responseUserId: response.user.id
+            });
+            setError('ユーザー情報の不一致が検出されました。再度ログインしてください。');
+            return;
+          }
+        } catch (e) {
+          console.warn('⚠️ LoginForm: Could not decode token:', e);
+        }
+        
         // AuthContextのlogin関数を呼び出し
+        console.log('🔐 LoginForm: Calling login with user:', response.user.id);
         await login(response.token, response.user);
         navigate('/');
       } else {
         setError('デバイスが見つからないか、ログインできませんでした');
       }
     } catch (err) {
+      console.error('❌ LoginForm: Login error:', err);
       setError(err instanceof Error ? err.message : 'ログインに失敗しました');
     } finally {
       setIsLoading(false);
