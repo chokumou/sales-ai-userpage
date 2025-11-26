@@ -39,8 +39,27 @@ const Install: React.FC = () => {
         } else {
           debugMessages.push('⚠️ Service Worker not registered');
         }
-        setDebugInfo(debugMessages.join('\n'));
+        
+        // manifest.jsonの確認
+        fetch('/manifest.webmanifest')
+          .then(res => res.json())
+          .then(manifest => {
+            debugMessages.push(`Manifest loaded: ${manifest.name || 'N/A'}`);
+            debugMessages.push(`Icons count: ${manifest.icons?.length || 0}`);
+            if (manifest.icons) {
+              manifest.icons.forEach((icon: any, index: number) => {
+                debugMessages.push(`  Icon ${index + 1}: ${icon.src} (${icon.sizes})`);
+              });
+            }
+            setDebugInfo(debugMessages.join('\n'));
+          })
+          .catch(err => {
+            debugMessages.push(`⚠️ Manifest error: ${err.message}`);
+            setDebugInfo(debugMessages.join('\n'));
+          });
       });
+    } else {
+      setDebugInfo(debugMessages.join('\n'));
     }
 
     // PWAインストール済みかチェック
