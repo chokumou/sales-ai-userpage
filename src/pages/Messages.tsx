@@ -42,6 +42,7 @@ const Messages: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [friendOffsets, setFriendOffsets] = useState<Record<string, number>>({});
   const [direction, setDirection] = useState<MessageDirection>('received');
+  const [showNekotaMessages, setShowNekotaMessages] = useState(false); // ねこたからのメッセージをデフォルトで非表示
   const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

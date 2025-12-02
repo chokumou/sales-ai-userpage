@@ -14,7 +14,8 @@ import {
   Globe,
   User,
   // Clock icon removed - alarm page deleted
-  MessageCircle
+  MessageCircle,
+  UserCheck
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -33,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, onNavClick }) 
 
   const navItems = [
     { to: '/', icon: Home, label: t('nav.dashboard') },
+    { to: '/customers', icon: UserCheck, label: '顧客管理' },
     { to: '/messages', icon: MessageCircle, label: t('nav.messages') },
     { to: '/memory', icon: Brain, label: t('nav.memory') },
     { to: '/friends', icon: Users, label: t('nav.friends') },

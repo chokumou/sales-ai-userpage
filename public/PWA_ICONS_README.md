@@ -38,3 +38,6 @@ Copy-Item "public/Group 1.png" "public/apple-touch-icon.png"
 
 ただし、本番環境では適切なサイズのアイコンを使用してください。
 
+
+
+

@@ -1,9 +1,7 @@
-PWA機能の実装
+PWAアプリ起動時の認証問題を修正
 
-- vite-plugin-pwaを追加してPWA機能を有効化
-- manifest.jsonとService Workerを自動生成
-- インストール手順ページ（/install）を追加
-- OS別（Android/iOS）のインストール手順を表示
-- PWAアイコンを追加（192x192, 512x512, apple-touch-icon）
-- オフライン対応とAPIキャッシュ設定
-- QRコードからのアクセスに対応
+- エンドポイントの不一致を修正（/api/users/${id}/profile → /api/profile?user_id=${id}）
+- レスポンス構造の不一致を修正（profileResponse.name → profileResponse.profile.name）
+- トークン検証失敗時のエラーハンドリングを強化（必ずlocalStorageをクリアして認証状態をリセット）
+- ログイン前に既存のlocalStorageをクリアするように改善
+- デバッグログを追加して問題の原因を特定しやすく改善

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWAアイコン生成ツール</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .icon-preview {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>PWAアイコン生成ツール</h1>
+    <p>このページを開いて、各サイズのアイコンを生成・ダウンロードしてください。</p>
+    
+    <div id="previews"></div>
+    
+    <script>
+        function createIcon(size, useTransparent = false) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // 透過背景の場合は何も描画しない（透明のまま）
+            if (!useTransparent) {
+                // 背景（青から紫へのグラデーション）
+                const gradient = ctx.createLinearGradient(0, 0, size, size);
+                gradient.addColorStop(0, '#3b82f6');
+                gradient.addColorStop(1, '#8b5cf6');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, size, size);
+                
+                // 角丸
+                ctx.globalCompositeOperation = 'destination-in';
+                ctx.beginPath();
+                const radius = size * 0.2;
+                ctx.moveTo(radius, 0);
+                ctx.lineTo(size - radius, 0);
+                ctx.quadraticCurveTo(size, 0, size, radius);
+                ctx.lineTo(size, size - radius);
+                ctx.quadraticCurveTo(size, size, size - radius, size);
+                ctx.lineTo(radius, size);
+                ctx.quadraticCurveTo(0, size, 0, size - radius);
+                ctx.lineTo(0, radius);
+                ctx.quadraticCurveTo(0, 0, radius, 0);
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            // テキスト「N」（透過背景の場合は黒、背景ありの場合は白）
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = useTransparent ? '#3b82f6' : 'white';
+            ctx.font = `bold ${size * 0.6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('N', size / 2, size / 2);
+            
+            return canvas;
+        }
+        
+        function downloadCanvas(canvas, filename) {
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+        
+        const sizes = [
+            { size: 192, filename: 'pwa-192x192.png' },
+            { size: 512, filename: 'pwa-512x512.png' },
+            { size: 180, filename: 'apple-touch-icon.png' }
+        ];
+        
+        const previewsDiv = document.getElementById('previews');
+        
+        // 透過/不透過の切り替えボタン
+        const toggleButton = document.createElement('button');
+        let useTransparent = false;
+        toggleButton.textContent = '透過背景に切り替え';
+        toggleButton.style.marginBottom = '20px';
+        toggleButton.onclick = () => {
+            useTransparent = !useTransparent;
+            toggleButton.textContent = useTransparent ? '背景ありに切り替え' : '透過背景に切り替え';
+            // プレビューを再生成
+            previewsDiv.innerHTML = '';
+            previewsDiv.appendChild(toggleButton);
+            sizes.forEach(({ size, filename }) => {
+                const div = document.createElement('div');
+                div.className = 'icon-preview';
+                
+                const canvas = createIcon(size, useTransparent);
+                div.appendChild(canvas);
+                
+                const button = document.createElement('button');
+                button.textContent = `ダウンロード: ${filename}`;
+                button.onclick = () => downloadCanvas(canvas, filename);
+                div.appendChild(button);
+                
+                const br = document.createElement('br');
+                div.appendChild(br);
+                
+                previewsDiv.appendChild(div);
+            });
+            
+            // 一括ダウンロードボタンを再追加
+            const batchButton = document.createElement('button');
+            batchButton.textContent = 'すべてダウンロード';
+            batchButton.style.marginTop = '20px';
+            batchButton.onclick = () => {
+                sizes.forEach(({ size, filename }) => {
+                    const canvas = createIcon(size, useTransparent);
+                    setTimeout(() => downloadCanvas(canvas, filename), 100);
+                });
+            };
+            previewsDiv.appendChild(batchButton);
+        };
+        previewsDiv.appendChild(toggleButton);
+        
+        sizes.forEach(({ size, filename }) => {
+            const div = document.createElement('div');
+            div.className = 'icon-preview';
+            
+            const canvas = createIcon(size, useTransparent);
+            div.appendChild(canvas);
+            
+            const button = document.createElement('button');
+            button.textContent = `ダウンロード: ${filename}`;
+            button.onclick = () => downloadCanvas(canvas, filename);
+            div.appendChild(button);
+            
+            const br = document.createElement('br');
+            div.appendChild(br);
+            
+            previewsDiv.appendChild(div);
+        });
+        
+        // 一括ダウンロードボタン
+        const batchButton = document.createElement('button');
+        batchButton.textContent = 'すべてダウンロード';
+        batchButton.style.marginTop = '20px';
+        batchButton.onclick = () => {
+            sizes.forEach(({ size, filename }) => {
+                const canvas = createIcon(size, useTransparent);
+                setTimeout(() => downloadCanvas(canvas, filename), 100);
+            });
+        };
+        previewsDiv.appendChild(batchButton);
+    </script>
+</body>
+</html>
+
