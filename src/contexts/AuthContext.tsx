@@ -148,10 +148,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             
             // トークンの有効性を確認（ユーザープロフィールを取得して検証）
             try {
-              // 正しいエンドポイントを使用: /api/profile?user_id=${userData.id}
-              const profileResponse = await api.get(`/api/profile?user_id=${userData.id}`);
+              // トークンから取得したユーザーIDを使用（localStorageの古いIDではなく）
+              const userIdToUse = tokenUserId || userData.id;
+              if (!userIdToUse) {
+                throw new Error('User ID not found in token or stored data');
+              }
+              
+              // 正しいエンドポイントを使用: /api/profile?user_id=${userIdToUse}
+              const profileResponse = await api.get(`/api/profile?user_id=${userIdToUse}`);
               console.log('🔍 AuthContext: Token validation successful, profile:', {
-                userId: profileResponse.id || userData.id,
+                userId: profileResponse.id || userIdToUse,
                 userName: profileResponse.profile?.name || profileResponse.name,
                 userIntroduction: profileResponse.profile?.introduction || profileResponse.introduction,
                 fullResponse: profileResponse
@@ -161,9 +167,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const profileName = profileResponse.profile?.name || profileResponse.name || null;
               const profileIntroduction = profileResponse.profile?.introduction || profileResponse.introduction || null;
               
-              // 最新のユーザー情報で更新（プロフィール情報があれば上書き、なければ既存の値を保持）
+              // 最新のユーザー情報で更新（トークンから取得したユーザーIDを使用）
               const updatedUser = {
                 ...userData,
+                id: userIdToUse, // トークンから取得した正しいユーザーIDを設定
                 name: profileName !== null && profileName !== '' ? profileName : userData.name,
                 introduction: profileIntroduction !== null && profileIntroduction !== '' ? profileIntroduction : userData.introduction,
                 profile: {
